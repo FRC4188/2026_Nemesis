@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotBase;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -27,6 +28,20 @@ public final class Constants {
     public static final double B_WIDTH = A_WIDTH + 2*BUMPER;
     public static final double B_CROSS = Math.hypot(B_LENGTH, B_WIDTH);
 
+    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
+
+  }
+
+  public static enum Mode {
+    REAL,
+    SIM,
+    REPLAY
+  }
+
+  public static enum PIDTuning {
+    NONE,
+    DRIVE_MOD,
+    TURN_MOD
   }
 
   public static class Controller {
