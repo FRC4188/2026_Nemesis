@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 public final class FieldConstants { // first time going off of an onshape cad of field
@@ -60,8 +61,9 @@ public final class FieldConstants { // first time going off of an onshape cad of
         public static final Translation2d left_far_corner = new Translation2d(Units.inchesToMeters(158.61) + hub_length, Units.inchesToMeters(135.34) + hub_length);
 
         // Optimal Scoring Location
-        public static final Translation2d hub_center = new Translation2d(Units.inchesToMeters(158.61) + hub_length / 2, Units.inchesToMeters(135.34) + hub_width / 2);
-        public static final double opening_radius = Units.inchesToMeters(27.62 / 2);
+        public static final Translation3d hub_center = new Translation3d(Units.inchesToMeters(158.61) + hub_length / 2, Units.inchesToMeters(135.34) + hub_width / 2, Units.inchesToMeters(71.87));
+        public static final double small_opening_radius = Units.inchesToMeters(27.62 / 2);
+        public static final double large_opening_radius = Units.inchesToMeters(48.19 / 2);
     }
 
     public static class FuelField {
@@ -72,6 +74,8 @@ public final class FieldConstants { // first time going off of an onshape cad of
         public static final Translation2d left_close_corner = new Translation2d(Units.inchesToMeters(289.66), Units.inchesToMeters(67.89) + fuelfield_width);
         public static final Translation2d right_far_corner = new Translation2d(Units.inchesToMeters(289.66) + fuelfield_length, Units.inchesToMeters(67.89));
         public static final Translation2d left_far_corner = new Translation2d(Units.inchesToMeters(289.66) + fuelfield_length, Units.inchesToMeters(67.89) + fuelfield_width);
+        public static final Translation2d right_midline_corner = new Translation2d(Units.inchesToMeters(289.66) + fuelfield_length / 2, Units.inchesToMeters(67.89));
+        public static final Translation2d left_midline_corner = new Translation2d(Units.inchesToMeters(289.66) + fuelfield_length / 2, Units.inchesToMeters(67.89) + fuelfield_width);
     }
 
     public static class Tower {
