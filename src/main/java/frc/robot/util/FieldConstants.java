@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
-public final class FieldConstants { // first time going off of an onshape cad of field
+public final class FieldConstants { // going off of an onshape cad of field
     public final static double field_length = Units.inchesToMeters(651.2);
     public final static double field_width = Units.inchesToMeters(317.7);
 
