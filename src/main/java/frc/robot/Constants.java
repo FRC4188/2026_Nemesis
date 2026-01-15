@@ -18,23 +18,27 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
 
   public static class Robot {
-    public static final double A_LENGTH = Units.inchesToMeters(30); //placeholder
-    public static final double A_WIDTH = Units.inchesToMeters(30); //placeholder
+    public static final double A_LENGTH = Units.inchesToMeters(30); // placeholder
+    public static final double A_WIDTH = Units.inchesToMeters(30); // placeholder
     public static final double A_CROSS = Math.hypot(A_WIDTH, A_LENGTH);
 
-    public static final double BUMPER = Units.inchesToMeters(3); //placeholder
+    public static final double BUMPER = Units.inchesToMeters(3); // placeholder
 
-    public static final double B_LENGTH = A_LENGTH + 2*BUMPER;
-    public static final double B_WIDTH = A_WIDTH + 2*BUMPER;
+    public static final double B_LENGTH = A_LENGTH + 2 * BUMPER;
+    public static final double B_WIDTH = A_WIDTH + 2 * BUMPER;
     public static final double B_CROSS = Math.hypot(B_LENGTH, B_WIDTH);
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
-
   }
 
   public static enum Mode {
+    /** Running on a real robot. */
     REAL,
+
+    /** Running a physics simulator. */
     SIM,
+
+    /** Replaying from a log file. */
     REPLAY
   }
 
@@ -49,6 +53,5 @@ public final class Constants {
     public static final int kCopilotPort = 1;
 
     public static final double DEADBAND = 0.1;
-
   }
 }

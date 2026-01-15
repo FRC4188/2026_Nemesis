@@ -28,7 +28,8 @@ public class PathGen {
   // default config
   public PathGen() {
     this.clearance = (float) Constants.Robot.B_CROSS;
-    a_star = new Grid((float) FieldConstants.field_length, (float) FieldConstants.field_width, 0.1f);
+    a_star =
+        new Grid((float) FieldConstants.field_length, (float) FieldConstants.field_width, 0.1f);
   }
 
   public void configure(double sample_size, double clearance, FieldObject... field_objects) {
@@ -163,8 +164,7 @@ public class PathGen {
     if (a_star.t2d_to_node(start) == backward_nodes.get(backward_nodes.size() - 1)) {
       pivots.remove(0);
     }
-    if (end.getDistance(a_star.node_to_t2d(backward_nodes.get(0)))
-        < 2 * Constants.Robot.A_CROSS) {
+    if (end.getDistance(a_star.node_to_t2d(backward_nodes.get(0))) < 2 * Constants.Robot.A_CROSS) {
       pivots.remove(pivots.size() - 1);
     }
 
