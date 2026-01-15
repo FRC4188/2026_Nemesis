@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -15,6 +17,13 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+  public static class ID {
+    //TODO: set pins later
+    public static final double shooter_wheel_top = 0;
+    public static final double shooter_wheel_bottom = 0;
+    //add other stuff later
+  }
 
   public static class Robot {
     public static final double A_LENGTH = Units.inchesToMeters(30); //placeholder
@@ -35,5 +44,9 @@ public final class Constants {
 
     public static final double DEADBAND = 0.1;
 
+  }
+
+  public static class Shooter {
+    public static final TalonFXConfiguration config = new TalonFXConfiguration();
   }
 }
