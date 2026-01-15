@@ -4,8 +4,18 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.config.PIDConstants;
+
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+
+import java.util.concurrent.PriorityBlockingQueue;
+
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.generated.TunerConstants;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -18,8 +28,8 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
 
   public static class Robot {
-    public static final double A_LENGTH = Units.inchesToMeters(30); // placeholder
-    public static final double A_WIDTH = Units.inchesToMeters(30); // placeholder
+    public static final double A_LENGTH = Units.inchesToMeters(27); // placeholder
+    public static final double A_WIDTH = Units.inchesToMeters(27); // placeholder
     public static final double A_CROSS = Math.hypot(A_WIDTH, A_LENGTH);
 
     public static final double BUMPER = Units.inchesToMeters(3); // placeholder
@@ -29,6 +39,31 @@ public final class Constants {
     public static final double B_CROSS = Math.hypot(B_LENGTH, B_WIDTH);
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
+    public static final PIDTuning tuningMode = PIDTuning.NONE;
+
+    public static final String rio = "rio";
+    public static final String canivore = "canivore";
+    public static final double loopPeriodSecs = 0.02;
+
+    public static final ProfiledPIDController DRIVE_PID = 
+      new ProfiledPIDController(
+        5.0, 0.0, 0.4, 
+        new TrapezoidProfile.Constraints(5.0, 8));
+
+    public static final double ANGLE_FF = 2.0;
+    public static final double ANGLE_TOL = 0.05;
+
+    public static final ProfiledPIDController ANGLE_PID =
+        (new ProfiledPIDController(
+            5.0,
+            0.0,
+            0.4,
+            new TrapezoidProfile.Constraints(3.0 * Math.PI, 40.0)));
+    
+    public static void updateAnglePID(double kP, double kI, double kD, double kF) {
+      ANGLE_PID.setPID(kP, kI, kD);
+    }
+
   }
 
   public static enum Mode {
@@ -45,7 +80,8 @@ public final class Constants {
   public static enum PIDTuning {
     NONE,
     DRIVE_MOD,
-    TURN_MOD
+    TURN_MOD,
+    ANGLE,
   }
 
   public static class Controller {

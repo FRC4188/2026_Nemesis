@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
+import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -35,6 +36,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final PIDTuning pidTuner;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -98,6 +100,26 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         break;
+    }
+
+    switch (Constants.Robot.tuningMode) {
+        case DRIVE_MOD:
+            pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
+        break;
+        case TURN_MOD:
+            pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
+        break;
+        case ANGLE:
+            pidTuner =
+            new PIDTuning(
+                "Angle Controller",
+                () -> drive.getPose().getRotation().getRadians(),
+                (set) -> {},
+                Constants.Robot::updateAnglePID);
+        break;
+        case NONE:
+        default:
+            pidTuner = new PIDTuning();
     }
 
     // Set up auto routines
