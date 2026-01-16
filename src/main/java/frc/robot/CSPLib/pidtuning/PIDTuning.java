@@ -24,9 +24,7 @@ public class PIDTuning {
 
   private String system = "";
 
-  public PIDTuning() {
-    
-  }
+  public PIDTuning() {}
 
   public PIDTuning(
       String systemName, DoubleSupplier current, DoubleConsumer set, PIDValueConsumer update) {

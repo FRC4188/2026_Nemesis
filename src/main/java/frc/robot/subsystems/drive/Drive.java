@@ -232,6 +232,24 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  public void runVelocityOffset(ChassisSpeeds speeds, Translation2d offset) {
+
+        Translation2d fieldRelativeRotation = new Translation2d(
+          speeds.omegaRadiansPerSecond * offset.getY(), 
+          speeds.omegaRadiansPerSecond * offset.getX()
+        );
+
+        runVelocity(
+          new ChassisSpeeds(
+          fieldRelativeRotation.getX() + speeds.vxMetersPerSecond,
+          fieldRelativeRotation.getY() + speeds.vyMetersPerSecond,
+          speeds.omegaRadiansPerSecond)
+
+        );
+        
+      }
+  
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -290,7 +308,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 

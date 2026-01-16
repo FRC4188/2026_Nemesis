@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
-import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -103,23 +103,23 @@ public class RobotContainer {
     }
 
     switch (Constants.Robot.tuningMode) {
-        case DRIVE_MOD:
-            pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
+      case DRIVE_MOD:
+        pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
         break;
-        case TURN_MOD:
-            pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
+      case TURN_MOD:
+        pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
         break;
-        case ANGLE:
-            pidTuner =
+      case ANGLE:
+        pidTuner =
             new PIDTuning(
                 "Angle Controller",
                 () -> drive.getPose().getRotation().getRadians(),
                 (set) -> {},
                 Constants.Robot::updateAnglePID);
         break;
-        case NONE:
-        default:
-            pidTuner = new PIDTuning();
+      case NONE:
+      default:
+        pidTuner = new PIDTuning();
     }
 
     // Set up auto routines

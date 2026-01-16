@@ -4,18 +4,10 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.config.PIDConstants;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-
-import java.util.concurrent.PriorityBlockingQueue;
-
-import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.generated.TunerConstants;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -45,25 +37,23 @@ public final class Constants {
     public static final String canivore = "canivore";
     public static final double loopPeriodSecs = 0.02;
 
-    public static final ProfiledPIDController DRIVE_PID = 
-      new ProfiledPIDController(
-        5.0, 0.0, 0.4, 
-        new TrapezoidProfile.Constraints(5.0, 8));
+    public static final double DRIVE_MAXVEL = 4.8;
+    public static final double DRIVE_MAXACC = 8.0;
+    public static final ProfiledPIDController DRIVE_PID =
+        new ProfiledPIDController(5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
     public static final double ANGLE_TOL = 0.05;
 
+    public static final double ANGLE_MAXVEL = 3.0*Math.PI;
+    public static final double ANGLE_MAXACC = 40.0;
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
-            5.0,
-            0.0,
-            0.4,
-            new TrapezoidProfile.Constraints(3.0 * Math.PI, 40.0)));
-    
+            5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
+
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
-
   }
 
   public static enum Mode {

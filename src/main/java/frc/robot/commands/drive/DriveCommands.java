@@ -5,20 +5,20 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.commands;
+package frc.robot.commands.drive;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlip;
-import frc.robot.Constants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -47,14 +47,13 @@ public class DriveCommands {
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
-                  xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                  ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omegaSupplier.getAsDouble() * drive.getMaxAngularSpeedRadPerSec());
+                  xSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
+                  omegaSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXACC);
 
           drive.runVelocity(
               ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds,
-                  AllianceFlip.apply(drive.getRotation())));
+                  speeds, AllianceFlip.apply(drive.getRotation())));
         },
         drive);
   }
@@ -83,13 +82,11 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity
-                          * Constants.Robot.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
 
               if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
                       < Constants.Robot.ANGLE_TOL
                   && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
-
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -100,8 +97,7 @@ public class DriveCommands {
 
               drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      AllianceFlip.apply(drive.getRotation())));
+                      speeds, AllianceFlip.apply(drive.getRotation())));
             },
             drive)
 

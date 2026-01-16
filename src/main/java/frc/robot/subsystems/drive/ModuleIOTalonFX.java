@@ -55,8 +55,8 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final CANcoder cancoder;
 
   // Configurations
-    private TalonFXConfiguration driveConfig;
-    private TalonFXConfiguration turnConfig;
+  private TalonFXConfiguration driveConfig;
+  private TalonFXConfiguration turnConfig;
 
   // Voltage control requests
   private final VoltageOut voltageRequest = new VoltageOut(0);
@@ -267,7 +267,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         });
   }
 
-    @Override
+  @Override
   public void setDrivePID(double kP, double kI, double kD, double kF) {
     driveConfig.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD);
     tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
