@@ -166,19 +166,24 @@ public class RobotContainer {
     autoChooser.addOption(
         "All Together Now",
         Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(
-                PathBuilder.driveWithBuiltPath(
-                    FieldConstants.Trench.left_trench_center,
-                    FieldConstants.FuelField.left_midline_corner,
-                    FieldConstants.Trench.right_trench_center))
-            .andThen(() -> PathBuilder.stopTrack())
-            .andThen(
-                PathBuilder.mergeToKnownPath(
-                    new PathPlannerPath(
-                        FieldConstants.Tower.left_approach,
-                        PathBuilder.getConstraints(),
-                        null,
-                        new GoalEndState(0.0, Rotation2d.k180deg)))));
+        .andThen(
+            PathBuilder.driveWithBuiltPath(
+                FieldConstants.Trench.left_trench_center,
+                FieldConstants.FuelField.left_midline_corner,
+                FieldConstants.Bump.right_bump_neutral_entrance
+            )
+        )
+        .andThen(
+            () -> PathBuilder.stopTrack()
+        )
+        .andThen(
+            PathBuilder.mergeToKnownPath(
+                new PathPlannerPath(FieldConstants.Tower.left_approach, 
+                PathBuilder.getConstraints(), null, 
+                new GoalEndState(0.0, Rotation2d.k180deg))
+            )
+        )
+        );
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -240,10 +245,6 @@ public class RobotContainer {
                 .ignoringDisable(true));
   }
 
-  public void simReset() {
-    drive.setPose(new Pose2d(3.52, 2, Rotation2d.kZero));
-  }
-
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -251,5 +252,9 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  public void simReset() {
+    drive.setPose(new Pose2d(FieldConstants.Hub.left_close_corner, Rotation2d.k180deg));
   }
 }
