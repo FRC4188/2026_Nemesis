@@ -10,7 +10,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -30,9 +29,6 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.util.FieldConstants;
-
-import java.lang.reflect.Field;
-
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -164,29 +160,25 @@ public class RobotContainer {
             .andThen(PathBuilder.driveWithBuiltPath(FieldConstants.Trench.left_trench_center, 0.0))
             .andThen(Commands.runOnce(() -> PathBuilder.stopTrack()))
             .andThen(
-                PathBuilder.driveWithBuiltPath(FieldConstants.FuelField.right_midline_corner, 0.0)));
+                PathBuilder.driveWithBuiltPath(
+                    FieldConstants.FuelField.right_midline_corner, 0.0)));
 
     autoChooser.addOption(
         "All Together Now",
         Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
-        .andThen(
-            PathBuilder.driveWithBuiltPath(
-                FieldConstants.Trench.left_trench_center,
-                FieldConstants.FuelField.left_midline_corner,
-                FieldConstants.Bump.right_bump_neutral_entrance
-            )
-        )
-        .andThen(
-            () -> PathBuilder.stopTrack()
-        )
-        .andThen(
-            PathBuilder.mergeToKnownPath(
-                new PathPlannerPath(FieldConstants.Tower.left_approach, 
-                PathBuilder.getConstraints(), null, 
-                new GoalEndState(0.0, Rotation2d.k180deg))
-            )
-        )
-        );
+            .andThen(
+                PathBuilder.driveWithBuiltPath(
+                    FieldConstants.Trench.left_trench_center,
+                    FieldConstants.FuelField.left_midline_corner,
+                    FieldConstants.Trench.right_trench_center))
+            .andThen(() -> PathBuilder.stopTrack())
+            .andThen(
+                PathBuilder.mergeToKnownPath(
+                    new PathPlannerPath(
+                        FieldConstants.Tower.left_approach,
+                        PathBuilder.getConstraints(),
+                        null,
+                        new GoalEndState(0.0, Rotation2d.k180deg)))));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -246,6 +238,10 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+  }
+
+  public void simReset() {
+    drive.setPose(new Pose2d(3.52, 2, Rotation2d.kZero));
   }
 
   /**
