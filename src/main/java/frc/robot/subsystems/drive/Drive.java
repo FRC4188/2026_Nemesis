@@ -9,17 +9,13 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -35,16 +31,15 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
-import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -64,7 +59,7 @@ public class Drive extends SubsystemBase {
   private static final double ROBOT_MASS_KG = 74.088;
   private static final double ROBOT_MOI = 6.883;
   private static final double WHEEL_COF = 1.2;
-  private static final RobotConfig PP_CONFIG =
+  public static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
           ROBOT_MOI,
@@ -98,6 +93,9 @@ public class Drive extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
+  public Supplier<Rotation2d> orientationAngle = () -> new Rotation2d();
+  public ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -117,25 +115,25 @@ public class Drive extends SubsystemBase {
     PhoenixOdometryThread.getInstance().start();
 
     // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
-        this::getPose,
-        this::setPose,
-        this::getChassisSpeeds,
-        this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-        PP_CONFIG,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
-          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
-        });
-    PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> {
-          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        });
+    // AutoBuilder.configure(
+    //     this::getPose,
+    //     this::setPose,
+    //     this::getChassisSpeeds,
+    //     speeds -> autoAtAngle(speeds),
+    //     new PPHolonomicDriveController(
+    //         new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+    //     PP_CONFIG,
+    //     () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+    //     this);
+    // Pathfinding.setPathfinder(new LocalADStarAK());
+    // PathPlannerLogging.setLogActivePathCallback(
+    //     (activePath) -> {
+    //       Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+    //     });
+    // PathPlannerLogging.setLogTargetPoseCallback(
+    //     (targetPose) -> {
+    //       Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+    //     });
 
     // Configure SysId
     sysId =
@@ -148,6 +146,48 @@ public class Drive extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
+
+  // public void autoAtAngle(ChassisSpeeds speeds) {
+  //   Supplier<Rotation2d> rotationSupplier = orientationAngle;
+  //   angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+  //   // Construct command
+  //   Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
+  //   Logger.recordOutput("Drive/Angle Current", getPose().getRotation().getRadians());
+
+  //   double omega =
+  //       angleController.calculate(getRotation().getRadians(),
+  // rotationSupplier.get().getRadians())
+  //           + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+
+  //   if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
+  //           < Constants.Robot.ANGLE_TOL
+  //       && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+  //   // Convert to field relative speeds & send command
+  //   ChassisSpeeds speeds_ =
+  //       new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
+  // (orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
+
+  //   runVelocityOffset(speeds_, new Translation2d(Constants.Robot.A_LENGTH / 2, 0));
+  // }
+
+  //   public boolean willRotationCollide(
+  //     Translation2d robotPos,
+  //     double robotRadius, double sampleStepRadians) {
+  //   for (double theta = 0; theta < 2 * Math.PI; theta += sampleStepRadians) {
+  //     Translation2d sample =
+  //         robotPos.plus(
+  //             new Translation2d(
+  //                 robotRadius * Math.cos(theta),
+  //                 robotRadius * Math.sin(theta)));
+
+  //     if (Pathfinding.isPointBlocked(sample)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   @Override
   public void periodic() {
@@ -234,21 +274,21 @@ public class Drive extends SubsystemBase {
 
   public void runVelocityOffset(ChassisSpeeds speeds, Translation2d offset) {
 
-        Translation2d fieldRelativeRotation = new Translation2d(
-          speeds.omegaRadiansPerSecond * offset.getY(), 
-          speeds.omegaRadiansPerSecond * offset.getX()
-        );
+    Translation2d fieldRelativeRotation =
+        new Translation2d(
+            speeds.omegaRadiansPerSecond * offset.getY(),
+            speeds.omegaRadiansPerSecond * offset.getX());
 
-        runVelocity(
-          new ChassisSpeeds(
-          fieldRelativeRotation.getX() + speeds.vxMetersPerSecond,
-          fieldRelativeRotation.getY() + speeds.vyMetersPerSecond,
-          speeds.omegaRadiansPerSecond)
+    runVelocity(
+        new ChassisSpeeds(
+            fieldRelativeRotation.getX() + speeds.vxMetersPerSecond,
+            fieldRelativeRotation.getY() + speeds.vyMetersPerSecond,
+            speeds.omegaRadiansPerSecond));
+  }
 
-        );
-        
-      }
-  
+  public void setRotationPoint(Supplier<Rotation2d> angle) {
+    orientationAngle = angle;
+  }
 
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {

@@ -1,8 +1,13 @@
 package frc.robot.util;
 
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
   public static final double field_length = Units.inchesToMeters(651.2);
@@ -96,6 +101,11 @@ public final class FieldConstants { // going off of an onshape cad of field
             Units.inchesToMeters(158.61) + hub_length / 2,
             Units.inchesToMeters(135.34) + hub_width / 2,
             Units.inchesToMeters(71.87));
+
+    public static final Translation2d hub_center_2d =
+        new Translation2d(
+            Units.inchesToMeters(158.61) + hub_length / 2,
+            Units.inchesToMeters(135.34) + hub_width / 2);
     public static final double small_opening_radius = Units.inchesToMeters(27.62 / 2);
     public static final double large_opening_radius = Units.inchesToMeters(48.19 / 2);
   }
@@ -134,6 +144,18 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(128.04));
     public static final Translation2d left_far_corner =
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(166.89));
+
+    public static final List<Waypoint> left_approach =
+        PathPlannerPath.waypointsFromPoses(
+            new Pose2d(1.589, 4.535, Rotation2d.k180deg), // placeholder
+            new Pose2d(1.589, 4.277, Rotation2d.k180deg) // placeholder
+            );
+
+    public static final List<Waypoint> right_approach =
+        PathPlannerPath.waypointsFromPoses(
+            new Pose2d(1.589, 3.094, Rotation2d.k180deg), // placeholder
+            new Pose2d(1.589, 3.223, Rotation2d.k180deg) // placeholder
+            );
   }
 
   public static class Depot {

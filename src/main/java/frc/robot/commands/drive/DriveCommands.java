@@ -105,6 +105,75 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
+  public static Command joystickDriveAtAngle(
+      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+
+    Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
+
+    ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
+              Logger.recordOutput(
+                  "Drive/Angle Current", drive.getPose().getRotation().getRadians());
+
+              double omega =
+                  angleController.calculate(
+                          drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+
+              if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+                      < Constants.Robot.ANGLE_TOL
+                  && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              drive.runVelocityOffset(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())),
+                  Constants.Robot.CENTER_OF_ROTATION);
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  public static void frcsAtAngle(Drive drive, ChassisSpeeds speeds) {
+    Supplier<Rotation2d> rotationSupplier = drive.orientationAngle;
+    drive.angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Construct command
+    Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
+    Logger.recordOutput("Drive/Angle Current", drive.getPose().getRotation().getRadians());
+
+    double omega =
+        drive.angleController.calculate(
+                drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+            + drive.angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+
+    if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+            < Constants.Robot.ANGLE_TOL
+        && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+    // Convert to field relative speeds & send command
+    ChassisSpeeds speeds_ =
+        new ChassisSpeeds(
+            speeds.vxMetersPerSecond,
+            speeds.vyMetersPerSecond,
+            (drive.orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
+
+    drive.runVelocityOffset(speeds_, Constants.Robot.CENTER_OF_ROTATION);
+  }
+
   /**
    * Measures the velocity feedforward constants for the drive motors.
    *

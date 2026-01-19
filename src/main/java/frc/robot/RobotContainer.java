@@ -8,6 +8,9 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -17,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
+import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -25,6 +29,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.FieldConstants;
+
+import java.lang.reflect.Field;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -123,7 +131,62 @@ public class RobotContainer {
     }
 
     // Set up auto routines
+    PathBuilder.instantiate(drive);
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    // autoChooser.addOption(
+    //     "Best Auto",
+    //     Commands.runOnce(
+    //             () ->
+    //                 drive.setRotationPoint(
+    //                     // () ->
+    //                     //     FieldConstants.Hub.hub_center_2d
+    //                     //         .minus(drive.getPose().getTranslation())
+    //                     //         .getAngle()))
+    //                     () -> new Rotation2d()))
+    //         .andThen(
+    //             AutoBuilder.pathfindToPose(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.left_trench_alliance_entrance, new
+    // Rotation2d(Math.PI / 2)),
+    //                 new PathConstraints(
+    //                     3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720)),
+    //                 0.0))
+    //         .beforeStarting(() -> drive.angleController.reset(drive.getRotation().getRadians()))
+    //         .until(() ->
+    // drive.getPose().getTranslation().getDistance(FieldConstants.Trench.left_trench_alliance_entrance) <= Units.inchesToMeters(5.0))
+    //         .finallyDo(() -> drive.stop())
+    //         );
+
+    autoChooser.addOption(
+        "PPP",
+        Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.driveWithBuiltPath(FieldConstants.Trench.left_trench_center, 0.0))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTrack()))
+            .andThen(
+                PathBuilder.driveWithBuiltPath(FieldConstants.FuelField.right_midline_corner, 0.0)));
+
+    autoChooser.addOption(
+        "All Together Now",
+        Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
+        .andThen(
+            PathBuilder.driveWithBuiltPath(
+                FieldConstants.Trench.left_trench_center,
+                FieldConstants.FuelField.left_midline_corner,
+                FieldConstants.Bump.right_bump_neutral_entrance
+            )
+        )
+        .andThen(
+            () -> PathBuilder.stopTrack()
+        )
+        .andThen(
+            PathBuilder.mergeToKnownPath(
+                new PathPlannerPath(FieldConstants.Tower.left_approach, 
+                PathBuilder.getConstraints(), null, 
+                new GoalEndState(0.0, Rotation2d.k180deg))
+            )
+        )
+        );
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -162,7 +225,13 @@ public class RobotContainer {
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
-                drive, () -> -pilot.getLeftY(), () -> -pilot.getLeftX(), () -> Rotation2d.kZero));
+                drive,
+                () -> -pilot.getLeftY(),
+                () -> -pilot.getLeftX(),
+                () ->
+                    FieldConstants.Hub.hub_center_2d
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()));
 
     // Switch to X pattern when X button is pressed
     pilot.x().onTrue(Commands.runOnce(drive::stopWithX, drive));

@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -40,12 +41,13 @@ public final class Constants {
     public static final double DRIVE_MAXVEL = 4.8;
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
-        new ProfiledPIDController(5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
+        new ProfiledPIDController(
+            5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
     public static final double ANGLE_TOL = 0.05;
 
-    public static final double ANGLE_MAXVEL = 3.0*Math.PI;
+    public static final double ANGLE_MAXVEL = 3.0 * Math.PI;
     public static final double ANGLE_MAXACC = 40.0;
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
@@ -54,6 +56,8 @@ public final class Constants {
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
+
+    public static Translation2d CENTER_OF_ROTATION = new Translation2d(-A_LENGTH / 2, 0);
   }
 
   public static enum Mode {
