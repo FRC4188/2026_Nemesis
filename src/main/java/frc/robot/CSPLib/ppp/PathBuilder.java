@@ -30,6 +30,9 @@ public final class PathBuilder {
 
   private PathBuilder() {}
 
+  // TODO: ok what is this pb, rename it because its not an instance
+
+  // Configuring the init state of AutoBuilder
   public static void instantiate(Drive drivetrain) {
     if (drive != null) return;
 
@@ -41,8 +44,7 @@ public final class PathBuilder {
         drive::getChassisSpeeds,
         speeds ->
             drive.runVelocityOffset(
-                speeds,
-                (currentlyTracking) ? Constants.Robot.CENTER_OF_ROTATION : new Translation2d(0, 0)),
+                speeds, (currentlyTracking) ? Constants.Shooter.location : new Translation2d(0, 0)),
         new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
         Drive.PP_CONFIG,
@@ -61,6 +63,7 @@ public final class PathBuilder {
         });
   }
 
+  // Tracks a translation2d on the field
   public static void trackTranslation(Supplier<Translation2d> wanted) {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
     currentlyTracking = true;
@@ -79,16 +82,17 @@ public final class PathBuilder {
           double omega =
               drive.angleController.calculate(
                       drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                  + drive.angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                  + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
           if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                  < Constants.Robot.ANGLE_TOL
+                  < Constants.Drive.ANGLE_TOL
               && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
           return omega;
         });
   }
 
+  // Tracks a set rotation, approaches it
   public static void trackRotation(Supplier<Rotation2d> wanted) {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
     currentlyTracking = true;
@@ -106,75 +110,80 @@ public final class PathBuilder {
           double omega =
               drive.angleController.calculate(
                       drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                  + drive.angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                  + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
           if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                  < Constants.Robot.ANGLE_TOL
+                  < Constants.Drive.ANGLE_TOL
               && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
           return omega;
         });
   }
 
+  // Stops any tracking happening
   public static void stopTrack() {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
     currentlyTracking = false;
   }
 
+  // get path constraints
   public static PathConstraints getConstraints() {
     return constraints;
   }
 
+  // set path constraints, if a change is necessary
   public static void setConstraints(PathConstraints constr) {
     constraints = constr;
   }
 
-  public static Command driveWithBuiltPath(Pose2d endPose) {
+  public static Command createPath(Pose2d endPose) {
     return AutoBuilder.pathfindToPose(endPose, constraints, 0.0).finallyDo(() -> drive.stop());
   }
 
-  public static Command driveWithBuiltPath(Pose2d... poses) {
+  public static Command createPath(Pose2d... poses) {
     return Commands.sequence(
             IntStream.range(0, poses.length)
                 .mapToObj(
                     i ->
                         i == poses.length - 1
-                            ? PathBuilder.driveWithBuiltPath(poses[i], 0)
-                            : PathBuilder.driveWithBuiltPath(poses[i], 3.0))
+                            ? PathBuilder.createPath(poses[i], 0)
+                            : PathBuilder.createPath(poses[i], 3.0))
                 .toArray(Command[]::new))
         .finallyDo(() -> drive.stop());
   }
 
-  public static Command driveWithBuiltPath(Translation2d... translations) {
+  public static Command createPath(Translation2d... translations) {
     return Commands.sequence(
-        IntStream.range(0, translations.length)
-            .mapToObj(
-                i ->
-                    i == translations.length - 1
-                        ? PathBuilder.driveWithBuiltPath(translations[i], 0)
-                        : PathBuilder.driveWithBuiltPath(translations[i], 3.0))
-            .toArray(Command[]::new));
+            IntStream.range(0, translations.length)
+                .mapToObj(
+                    i ->
+                        i == translations.length - 1
+                            ? PathBuilder.createPath(translations[i], 0)
+                            : PathBuilder.createPath(translations[i], 3.0))
+                .toArray(Command[]::new))
+        .finallyDo(() -> drive.stop());
+
   }
 
-  public static Command driveWithBuiltPath(Translation2d endTranslation) {
+  public static Command createPath(Translation2d endTranslation) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, 0.0)
         .beforeStarting(() -> drive.angleController.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());
   }
 
-  public static Command driveWithBuiltPath(Pose2d endPose, double endVel) {
+  public static Command createPath(Pose2d endPose, double endVel) {
     return AutoBuilder.pathfindToPose(endPose, constraints, endVel).finallyDo(() -> drive.stop());
   }
 
-  public static Command driveWithBuiltPath(Translation2d endTranslation, double endVel) {
+  public static Command createPath(Translation2d endTranslation, double endVel) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
         .beforeStarting(() -> drive.angleController.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());
   }
 
-  public static Command mergeToKnownPath(PathPlannerPath knownPath) {
+  public static Command mergeToPath(PathPlannerPath knownPath) {
     return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
         .beforeStarting(() -> drive.angleController.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());

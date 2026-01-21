@@ -46,9 +46,9 @@ public class DriveCommands {
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXACC);
+                  xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                  omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
 
           drive.runVelocity(
               ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -68,7 +68,7 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
-    ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -81,10 +81,10 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
               if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Robot.ANGLE_TOL
+                      < Constants.Drive.ANGLE_TOL
                   && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
               // Convert to field relative speeds & send command
@@ -109,7 +109,7 @@ public class DriveCommands {
 
     Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
 
-    ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -122,10 +122,10 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
               if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Robot.ANGLE_TOL
+                      < Constants.Drive.ANGLE_TOL
                   && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
               // Convert to field relative speeds & send command
@@ -138,7 +138,7 @@ public class DriveCommands {
               drive.runVelocityOffset(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds, AllianceFlip.apply(drive.getRotation())),
-                  Constants.Robot.CENTER_OF_ROTATION);
+                  Constants.Shooter.location);
             },
             drive)
 
@@ -157,10 +157,10 @@ public class DriveCommands {
     double omega =
         drive.angleController.calculate(
                 drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + drive.angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+            + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
     if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.Robot.ANGLE_TOL
+            < Constants.Drive.ANGLE_TOL
         && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
     // Convert to field relative speeds & send command
@@ -170,7 +170,7 @@ public class DriveCommands {
             speeds.vyMetersPerSecond,
             (drive.orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
 
-    drive.runVelocityOffset(speeds_, Constants.Robot.CENTER_OF_ROTATION);
+    drive.runVelocityOffset(speeds_, Constants.Shooter.location);
   }
 
   /**

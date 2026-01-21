@@ -94,7 +94,7 @@ public class Drive extends SubsystemBase {
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
   public Supplier<Rotation2d> orientationAngle = () -> new Rotation2d();
-  public ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+  public ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
 
   public Drive(
       GyroIO gyroIO,

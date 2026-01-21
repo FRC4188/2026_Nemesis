@@ -30,8 +30,8 @@ public class DriveToPose extends Command {
 
   public DriveToPose(
       Drive driveSubsystem, Supplier<Translation2d> t2dSupplier, Supplier<Rotation2d> headTarget) {
-    driveController = Constants.Robot.DRIVE_PID;
-    thetaController = Constants.Robot.ANGLE_PID;
+    driveController = Constants.Drive.DRIVE_PID;
+    thetaController = Constants.Drive.ANGLE_PID;
 
     this.t2dSupplier = t2dSupplier;
     this.rotSupplier = headTarget;
@@ -92,7 +92,7 @@ public class DriveToPose extends Command {
 
     // Calculate theta speed
     thetaVelocity =
-        thetaController.getSetpoint().velocity * Constants.Robot.ANGLE_FF
+        thetaController.getSetpoint().velocity * Constants.Drive.ANGLE_FF
             + thetaController.calculate(
                 currentPose.getRotation().getRadians(), rotSupplier.get().getRadians());
     thetaErrorAbs = Math.abs(currentPose.getRotation().minus(rotSupplier.get()).getRadians());

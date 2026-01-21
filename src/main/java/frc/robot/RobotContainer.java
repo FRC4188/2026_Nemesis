@@ -8,8 +8,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -119,7 +117,7 @@ public class RobotContainer {
                 "Angle Controller",
                 () -> drive.getPose().getRotation().getRadians(),
                 (set) -> {},
-                Constants.Robot::updateAnglePID);
+                Constants.Drive::updateAnglePID);
         break;
       case NONE:
       default:
@@ -157,33 +155,37 @@ public class RobotContainer {
     autoChooser.addOption(
         "PPP",
         Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(PathBuilder.driveWithBuiltPath(FieldConstants.Trench.left_trench_center, 0.0))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 0.0))
             .andThen(Commands.runOnce(() -> PathBuilder.stopTrack()))
             .andThen(
-                PathBuilder.driveWithBuiltPath(
+                PathBuilder.createPath(
                     FieldConstants.FuelField.right_midline_corner, 0.0)));
 
     autoChooser.addOption(
         "All Together Now",
         Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
-        .andThen(
-            PathBuilder.driveWithBuiltPath(
-                FieldConstants.Trench.left_trench_center,
-                FieldConstants.FuelField.left_midline_corner,
-                FieldConstants.Bump.right_bump_neutral_entrance
-            )
-        )
-        .andThen(
-            () -> PathBuilder.stopTrack()
-        )
-        .andThen(
-            PathBuilder.mergeToKnownPath(
-                new PathPlannerPath(FieldConstants.Tower.left_approach, 
-                PathBuilder.getConstraints(), null, 
-                new GoalEndState(0.0, Rotation2d.k180deg))
-            )
-        )
-        );
+            .andThen(
+                PathBuilder.createPath(
+                    FieldConstants.Trench.left_trench_alliance_preentrance))
+            .andThen(() -> PathBuilder.trackRotation(() -> Rotation2d.kZero))
+            .andThen(
+                () ->
+                    PathBuilder.createPath(
+                        FieldConstants.Trench.left_trench_alliance_entrance))
+            .andThen(
+                PathBuilder.driveWithBuiltPath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
+            .andThen(
+                PathBuilder.driveWithBuiltPath(FieldConstants.FuelField.right_midline_corner)));
+
+    // .andThen(
+    //     PathBuilder.mergeToKnownPath(
+    //         new PathPlannerPath(
+    //             FieldConstants.Tower.left_approach,
+    //             PathBuilder.getConstraints(),
+    //             null,
+    //             new GoalEndState(0.0, Rotation2d.k180deg)))));
 
     // Set up SysId routines
     autoChooser.addOption(
