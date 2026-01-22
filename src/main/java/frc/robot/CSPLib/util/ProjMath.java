@@ -1,6 +1,7 @@
 package frc.robot.CSPLib.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 
@@ -20,33 +21,24 @@ public class ProjMath {
             - 2 * Math.pow(velocity, 2) * goal.getY() * grav
             + Math.pow(grav, 2) * Math.pow(goal.getX(), 2);
 
-    // out of range
-    if (boundary < 0) return null;
+    if (boundary < 0) return Rotation2d.kCW_90deg;
 
     return Rotation2d.fromRadians(
         Math.atan((Math.pow(velocity, 2) + Math.sqrt(boundary)) / (grav * goal.getX())));
   }
 
   // Return rotation associated with higher shooting angle for shooting on the move
-  public static Rotation2d movingShotAzi(
-      double shootvel, Translation3d goal, Translation2d robotvel) {
+  public static Rotation3d movingShot(double shootvel, Translation3d goal, Translation2d robotvel) {
     double t = timeQuartic(shootvel, goal, robotvel);
-    if (t == Double.NaN) return null;
 
-    return Rotation2d.fromRadians(
-        Math.atan2(goal.getY() - robotvel.getY() * t, goal.getX() - robotvel.getX() * t));
-  }
+    if (t < 0) return new Rotation3d(0, -Math.PI / 2, 0);
 
-  // Return higher shooting angle for shooting on the move
-  public static Rotation2d movingShotInc(
-      double shootvel, Translation3d goal, Translation2d robotvel) {
-    double t = timeQuartic(shootvel, goal, robotvel);
-    if (t == Double.NaN) return null;
-
-    return Rotation2d.fromRadians(
+    return new Rotation3d(
+        0,
         Math.acos(
             robotvel.minus(new Translation2d(goal.getX() * t, goal.getY() * t)).getNorm()
-                / (t * shootvel)));
+                / (t * shootvel)),
+        Math.atan2(goal.getY() - robotvel.getY() * t, goal.getX() - robotvel.getX() * t));
   }
 
   // i love math
@@ -85,7 +77,8 @@ public class ProjMath {
     double W = Math.sqrt(a + 2 * Y);
 
     double boundary = -(3 * a + 2 * Y + 2 * b / W);
-    if (boundary < 0) return Double.NaN;
+
+    if (boundary < 0) return -1;
 
     return (W + Math.sqrt(boundary)) / 2.0;
   }

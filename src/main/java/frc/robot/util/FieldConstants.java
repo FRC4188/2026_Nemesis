@@ -12,6 +12,7 @@ import java.util.List;
 public final class FieldConstants { // going off of an onshape cad of field
   public static final double field_length = Units.inchesToMeters(651.2);
   public static final double field_width = Units.inchesToMeters(317.7);
+  public static final double alliance_zone_x = Units.inchesToMeters(158.6);
 
   public static class Trench {
 

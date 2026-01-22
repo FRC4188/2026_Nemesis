@@ -107,6 +107,7 @@ public class DriveCommands {
   public static Command joystickDriveAtAngle(
       Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
 
+    // placeholder
     Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
 
     ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
@@ -146,32 +147,35 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
-  public static void frcsAtAngle(Drive drive, ChassisSpeeds speeds) {
-    Supplier<Rotation2d> rotationSupplier = drive.orientationAngle;
-    drive.angleController.enableContinuousInput(-Math.PI, Math.PI);
+  // make these variables outside of drive
 
-    // Construct command
-    Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-    Logger.recordOutput("Drive/Angle Current", drive.getPose().getRotation().getRadians());
+  // public static void frcsAtAngle(Drive drive, ChassisSpeeds speeds) {
+  //   Supplier<Rotation2d> rotationSupplier = drive.orientationAngle;
+  //   drive.angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-    double omega =
-        drive.angleController.calculate(
-                drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+  //   // Construct command
+  //   Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
+  //   Logger.recordOutput("Drive/Angle Current", drive.getPose().getRotation().getRadians());
 
-    if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.Drive.ANGLE_TOL
-        && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+  //   double omega =
+  //       drive.angleController.calculate(
+  //               drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+  //           + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
-    // Convert to field relative speeds & send command
-    ChassisSpeeds speeds_ =
-        new ChassisSpeeds(
-            speeds.vxMetersPerSecond,
-            speeds.vyMetersPerSecond,
-            (drive.orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
+  //   if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+  //           < Constants.Drive.ANGLE_TOL
+  //       && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
-    drive.runVelocityOffset(speeds_, Constants.Shooter.location);
-  }
+  //   // Convert to field relative speeds & send command
+  //   ChassisSpeeds speeds_ =
+  //       new ChassisSpeeds(
+  //           speeds.vxMetersPerSecond,
+  //           speeds.vyMetersPerSecond,
+  //           (drive.orientationAngle.get().getRadians() > 0) ? omega :
+  // speeds.omegaRadiansPerSecond);
+
+  //   drive.runVelocityOffset(speeds_, Constants.Shooter.location);
+  // }
 
   /**
    * Measures the velocity feedforward constants for the drive motors.

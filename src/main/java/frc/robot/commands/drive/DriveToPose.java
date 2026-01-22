@@ -19,24 +19,19 @@ public class DriveToPose extends Command {
   private final ProfiledPIDController thetaController;
 
   private Drive driveSubsystem;
-  private Supplier<Translation2d> t2dSupplier;
-  private Supplier<Rotation2d> rotSupplier;
-
+  private Supplier<Pose2d> poseSupplier;
   private Translation2d lastSetpointTranslation;
   private double driveErrorAbs;
   private double thetaErrorAbs;
   private double thetaVelocity = 0;
   private double ffMinRadius = 0.2, ffMaxRadius = 0.8;
 
-  public DriveToPose(
-      Drive driveSubsystem, Supplier<Translation2d> t2dSupplier, Supplier<Rotation2d> headTarget) {
+  public DriveToPose(Drive driveSubsystem, Supplier<Pose2d> poseSupplier) {
     driveController = Constants.Drive.DRIVE_PID;
     thetaController = Constants.Drive.ANGLE_PID;
 
-    this.t2dSupplier = t2dSupplier;
-    this.rotSupplier = headTarget;
+    this.poseSupplier = poseSupplier;
     this.driveSubsystem = driveSubsystem;
-
     addRequirements(driveSubsystem);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -45,15 +40,16 @@ public class DriveToPose extends Command {
   public void initialize() {
     Pose2d currentPose = driveSubsystem.getPose();
     driveController.reset(
-        currentPose.getTranslation().getDistance(t2dSupplier.get()),
+        currentPose.getTranslation().getDistance(poseSupplier.get().getTranslation()),
         Math.min(
             0.0,
             -new Translation2d(
                     driveSubsystem.getChassisSpeeds().vyMetersPerSecond,
                     driveSubsystem.getChassisSpeeds().vxMetersPerSecond)
                 .rotateBy(
-                    t2dSupplier
+                    poseSupplier
                         .get()
+                        .getTranslation()
                         .minus(driveSubsystem.getPose().getTranslation())
                         .getAngle()
                         .unaryMinus())
@@ -67,23 +63,28 @@ public class DriveToPose extends Command {
   @Override
   public void execute() {
     Pose2d currentPose = driveSubsystem.getPose();
-    Translation2d targetPose = t2dSupplier.get();
+    Pose2d targetPose = poseSupplier.get();
 
     Logger.recordOutput("Drive/DriveToPose/currentPose", currentPose);
     Logger.recordOutput("Drive/DriveToPose/targetPose", targetPose);
 
-    double currentDistance = currentPose.getTranslation().getDistance(t2dSupplier.get());
+    double currentDistance =
+        currentPose.getTranslation().getDistance(poseSupplier.get().getTranslation());
     double ffScaler =
         MathUtil.clamp((currentDistance - ffMinRadius) / (ffMaxRadius - ffMinRadius), 0.0, 1.0);
     driveErrorAbs = currentDistance;
     driveController.reset(
-        lastSetpointTranslation.getDistance(targetPose), driveController.getSetpoint().velocity);
+        lastSetpointTranslation.getDistance(targetPose.getTranslation()),
+        driveController.getSetpoint().velocity);
     double driveVelocityScalar =
         driveController.getSetpoint().velocity * ffScaler
             + driveController.calculate(driveErrorAbs, 0.0);
     if (currentDistance < driveController.getPositionTolerance()) driveVelocityScalar = 0.0;
+
     lastSetpointTranslation =
-        new Pose2d(targetPose, currentPose.getTranslation().minus(targetPose).getAngle())
+        new Pose2d(
+                targetPose.getTranslation(),
+                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
             .transformBy(
                 new Transform2d(
                     new Translation2d(driveController.getSetpoint().position, 0.0),
@@ -92,15 +93,18 @@ public class DriveToPose extends Command {
 
     // Calculate theta speed
     thetaVelocity =
-        thetaController.getSetpoint().velocity * Constants.Drive.ANGLE_FF
+        thetaController.getSetpoint().velocity * ffScaler
             + thetaController.calculate(
-                currentPose.getRotation().getRadians(), rotSupplier.get().getRadians());
-    thetaErrorAbs = Math.abs(currentPose.getRotation().minus(rotSupplier.get()).getRadians());
+                currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
+    thetaErrorAbs =
+        Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
     if (thetaErrorAbs < thetaController.getPositionTolerance()) thetaVelocity = 0.0;
 
     // Command speeds
     var driveVelocity =
-        new Pose2d(new Translation2d(), currentPose.getTranslation().minus(targetPose).getAngle())
+        new Pose2d(
+                new Translation2d(),
+                currentPose.getTranslation().minus(targetPose.getTranslation()).getAngle())
             .transformBy(
                 new Transform2d(new Translation2d(driveVelocityScalar, 0.0), new Rotation2d()))
             .getTranslation();
@@ -117,8 +121,7 @@ public class DriveToPose extends Command {
 
   @Override
   public boolean isFinished() {
-    return t2dSupplier.get().equals(null)
-        || rotSupplier.get().equals(null)
+    return poseSupplier.get().equals(null)
         || (driveController.atGoal() && thetaController.atGoal());
   }
 }

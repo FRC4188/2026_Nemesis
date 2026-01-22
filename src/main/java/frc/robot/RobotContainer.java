@@ -7,11 +7,9 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -26,15 +24,41 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and button mappings) should be declared here.
+ * TODO: PPP to do list for Priyanshu and Ansh
+ * 
+ * Change Log
+ * - Added changable AutoBuilder configurations based on shooting mode
+ * - Renamed "instantniate" to "configure" in PathBuilder
+ * - Temporary hueristic of shooting mode located bottom of Robot Conatiner
+ * - Removed orientation angle from Drive Class (put it somewhere else)
+ * 
+ * 1. Add Waypoints and Events in PathBuilder
+ * - Chaining paths is slow and clunky to combine with external commands
+ * - Better if we use waypoints and events like in PP (those classes exist in the library)
+ * - Try not to rely on AD star besides Hueristic
+ * 
+ * 2. Clean up Drive
+ * - Try to add the least amount of methods possible to the subsystem
+ * - Any command related stuff should be outside: ie your rotation huerisitc
+ * 
+ * 3. Hueristic
+ * - Add in PathBuilder or other class (not drive)
+ * - Add Boolean supplier to detect if robot is blocked (this will run in the "until" part of auto)
+ * - Add calcation method to detect where obstacle is and place it
+ * - Then use AD star command to chain to the next Waypoint from Path Builder and continue as normal
+ * 
+ * 4. Other
+ * - Add potential starting poses for simulation into FieldConstants
+ * - Remove giant comment blocks
+ * - Fix licensing so its proper
+ * 
  */
+
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
@@ -61,24 +85,6 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-
-        // The ModuleIOTalonFXS implementation provides an example implementation for
-        // TalonFXS controller connected to a CANdi with a PWM encoder. The
-        // implementations
-        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
-        // swerve
-        // template) can be freely intermixed to support alternative hardware
-        // arrangements.
-        // Please see the AdvantageKit template documentation for more information:
-        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
-        //
-        // drive =
-        // new Drive(
-        // new GyroIOPigeon2(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
         break;
 
       case SIM:
@@ -125,8 +131,8 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    PathBuilder.instantiate(drive);
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    PathBuilder.configure(drive);
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
     // autoChooser.addOption(
     //     "Best Auto",
@@ -154,30 +160,32 @@ public class RobotContainer {
 
     autoChooser.addOption(
         "PPP",
-        Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 0.0))
-            .andThen(Commands.runOnce(() -> PathBuilder.stopTrack()))
-            .andThen(
-                PathBuilder.createPath(
-                    FieldConstants.FuelField.right_midline_corner, 0.0)));
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 5.0))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner, 0.0)));
+
+    autoChooser.addOption(
+        "TestChain",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)).andThen(
+        PathBuilder.createPath(
+            FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
 
     autoChooser.addOption(
         "All Together Now",
-        Commands.runOnce(() -> PathBuilder.trackTranslation(() -> FieldConstants.Hub.hub_center_2d))
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                () -> PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
             .andThen(
                 PathBuilder.createPath(
-                    FieldConstants.Trench.left_trench_alliance_preentrance))
-            .andThen(() -> PathBuilder.trackRotation(() -> Rotation2d.kZero))
-            .andThen(
-                () ->
-                    PathBuilder.createPath(
-                        FieldConstants.Trench.left_trench_alliance_entrance))
-            .andThen(
-                PathBuilder.driveWithBuiltPath(
                     new Pose2d(
                         FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
-            .andThen(
-                PathBuilder.driveWithBuiltPath(FieldConstants.FuelField.right_midline_corner)));
+            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
 
     // .andThen(
     //     PathBuilder.mergeToKnownPath(
@@ -207,12 +215,6 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
@@ -247,16 +249,22 @@ public class RobotContainer {
                 .ignoringDisable(true));
   }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
 
   public void simReset() {
-    drive.setPose(new Pose2d(FieldConstants.Hub.left_close_corner, Rotation2d.k180deg));
+    drive.setPose(new Pose2d(new Translation2d(1, 1), Rotation2d.fromDegrees(60)));
+  }
+
+  public void periodic() {
+    if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
+
+    // testing placeholder
+    if (AllianceFlip.flipX(drive.getPose().getX()) < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+      Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    } else {
+      Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    }
   }
 }

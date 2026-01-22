@@ -4,11 +4,17 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.generated.TunerConstants;
 
 public final class Constants {
 
@@ -50,11 +56,16 @@ public final class Constants {
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
     public static final PIDTuning tuningMode = PIDTuning.NONE;
-    public static final RobotMode robotMode = RobotMode.NONE;
+    public static RobotMode robotMode = RobotMode.NONE;
 
     public static final String rio = "rio";
     public static final String canivore = "canivore";
     public static final double loopPeriodSecs = 0.02;
+
+    // PathPlanner config constants
+    private static final double ROBOT_MASS_KG = 74.088; // placeholder
+    private static final double ROBOT_MOI = 6.883; // placeholer
+    private static final double WHEEL_COF = 1.2; // how do you even calculate this
   }
 
   public static class Controller {
@@ -83,6 +94,20 @@ public final class Constants {
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
+
+    public static final RobotConfig PP_CONFIG =
+        new RobotConfig(
+            Robot.ROBOT_MASS_KG,
+            Robot.ROBOT_MOI,
+            new ModuleConfig(
+                TunerConstants.FrontLeft.WheelRadius,
+                TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+                Robot.WHEEL_COF,
+                DCMotor.getKrakenX60Foc(1)
+                    .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
+                TunerConstants.FrontLeft.SlipCurrent,
+                1),
+            frc.robot.subsystems.drive.Drive.getModuleTranslations());
   }
 
   public static class Intake {
