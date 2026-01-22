@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.util.Units;
 
@@ -18,10 +19,16 @@ import edu.wpi.first.math.util.Units;
  */
 public final class Constants {
 
-  public static class ID {
+  public static class Id {
+    //pins are 1-12 for Drivetrain
+    
     //TODO: set pins later
-    public static final double shooter_wheel_top = 0;
-    public static final double shooter_wheel_bottom = 0;
+    public static final int shooter_wheel_top = 0;
+    public static final int shooter_wheel_bottom = 0;
+    public static final int Intake = 0;
+    public static final int Wrist = 0;
+    public static final int Climber1 = 0;
+    public static final int Climber2 = 0;
     //add other stuff later
   }
 
@@ -36,6 +43,7 @@ public final class Constants {
     public static final double B_WIDTH = A_WIDTH + 2*BUMPER;
     public static final double B_CROSS = Math.hypot(B_LENGTH, B_WIDTH);
 
+    public static final String rio = "rio";
   }
 
   public static class Controller {
@@ -48,5 +56,17 @@ public final class Constants {
 
   public static class Shooter {
     public static final TalonFXConfiguration config = new TalonFXConfiguration();
+  }
+
+  public static class Intake {
+    public static final TalonFXConfiguration Config = new TalonFXConfiguration(
+      
+    );
+  }
+  public static class Wrist {
+
+  }
+  public static class Climber {
+
   }
 }
