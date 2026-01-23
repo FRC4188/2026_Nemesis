@@ -29,17 +29,18 @@ import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * TODO: PPP to do list for Priyanshu and Ansh
- * 
- * Change Log
+ *  * Change Log
  * - Added changable AutoBuilder configurations based on shooting mode
  * - Renamed "instantniate" to "configure" in PathBuilder
  * - Temporary hueristic of shooting mode located bottom of Robot Conatiner
  * - Removed orientation angle from Drive Class (put it somewhere else)
  * 
+ * TODO: PPP to do list for Priyanshu and Ansh
+ * 
  * 1. Add Waypoints and Events in PathBuilder
  * - Chaining paths is slow and clunky to combine with external commands
  * - Better if we use waypoints and events like in PP (those classes exist in the library)
+ * - Have common waypoints in constants or something (Trench travel, Fuel Gathering)
  * - Try not to rely on AD star besides Hueristic
  * 
  * 2. Clean up Drive

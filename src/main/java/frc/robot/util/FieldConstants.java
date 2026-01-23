@@ -7,6 +7,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
@@ -180,5 +182,9 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(213.84));
     public static final Translation2d left_far_corner =
         new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(255.84));
+  }
+
+  public static class Path {
+    public static final List<Pose2d> through_left_trench = new ArrayList<>();
   }
 }

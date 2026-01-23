@@ -101,50 +101,6 @@ public class Drive extends SubsystemBase {
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
-  // TODO: Move this outside
-
-  // public void autoAtAngle(ChassisSpeeds speeds) {
-  //   Supplier<Rotation2d> rotationSupplier = orientationAngle;
-  //   angleController.enableContinuousInput(-Math.PI, Math.PI);
-
-  //   // Construct command
-  //   Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-  //   Logger.recordOutput("Drive/Angle Current", getPose().getRotation().getRadians());
-
-  //   double omega =
-  //       angleController.calculate(getRotation().getRadians(),
-  // rotationSupplier.get().getRadians())
-  //           + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
-
-  //   if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
-  //           < Constants.Robot.ANGLE_TOL
-  //       && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
-
-  //   // Convert to field relative speeds & send command
-  //   ChassisSpeeds speeds_ =
-  //       new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
-  // (orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
-
-  //   runVelocityOffset(speeds_, new Translation2d(Constants.Robot.A_LENGTH / 2, 0));
-  // }
-
-  //   public boolean willRotationCollide(
-  //     Translation2d robotPos,
-  //     double robotRadius, double sampleStepRadians) {
-  //   for (double theta = 0; theta < 2 * Math.PI; theta += sampleStepRadians) {
-  //     Translation2d sample =
-  //         robotPos.plus(
-  //             new Translation2d(
-  //                 robotRadius * Math.cos(theta),
-  //                 robotRadius * Math.sin(theta)));
-
-  //     if (Pathfinding.isPointBlocked(sample)) {
-  //       return true;
-  //     }
-  //   }
-  //   return false;
-  // }
-
   @Override
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
