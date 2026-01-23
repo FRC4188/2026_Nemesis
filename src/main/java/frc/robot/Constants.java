@@ -4,6 +4,10 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -40,12 +44,13 @@ public final class Constants {
     public static final double DRIVE_MAXVEL = 4.8;
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
-        new ProfiledPIDController(5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
+        new ProfiledPIDController(
+            5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
     public static final double ANGLE_TOL = 0.05;
 
-    public static final double ANGLE_MAXVEL = 3.0*Math.PI;
+    public static final double ANGLE_MAXVEL = 3.0 * Math.PI;
     public static final double ANGLE_MAXACC = 40.0;
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
@@ -54,6 +59,13 @@ public final class Constants {
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
+  }
+
+  public static class Id {
+    // all of these are placeholders until robot is configured
+    public static final int kWrist = 15;
+    public static final int kIntake = 18;
+    public static final int kClimber = 16;
   }
 
   public static enum Mode {
@@ -79,5 +91,32 @@ public final class Constants {
     public static final int kCopilotPort = 1;
 
     public static final double DEADBAND = 0.1;
+  }
+
+  public static class IntakeConstants {
+    // all of these are placeholders
+
+    private static final CurrentLimitsConfigs kCurrentLimitsConfigs =
+        new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(100)
+            .withSupplyCurrentLimit(80)
+            .withStatorCurrentLimitEnable(true);
+
+    public static final TalonFXConfiguration kMotorConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(kCurrentLimitsConfigs)
+            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake));
+  }
+
+  public static class WristConstants {
+    // again, more placeholders
+    public static final double kTolerance = 0.2;
+    public static final double kGearRatio = 25.0; // will change
+    public static final int kCurrentLimit = 60;
+  }
+
+  public static class ClimberConstants {
+    // all placeholders
+    public static final double kTolerance = 0.2;
   }
 }
