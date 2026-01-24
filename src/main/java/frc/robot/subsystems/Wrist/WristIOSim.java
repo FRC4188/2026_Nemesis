@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Superstructure.Wrist;
+package frc.robot.subsystems.Wrist;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;

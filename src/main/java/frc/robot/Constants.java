@@ -66,6 +66,7 @@ public final class Constants {
     public static final int kWrist = 15;
     public static final int kIntake = 18;
     public static final int kClimber = 16;
+    public static final int kHopper = 1; // idk bruh
   }
 
   public static enum Mode {
@@ -118,6 +119,6 @@ public final class Constants {
   public static class ClimberConstants {
     // all placeholders
     public static final double kTolerance = 0.2;
+    public static final boolean isFOC = false;
   }
 }
-

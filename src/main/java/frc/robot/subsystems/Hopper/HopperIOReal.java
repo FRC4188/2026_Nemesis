@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Superstructure.Intake;
+package frc.robot.subsystems.Hopper;
 
 import static edu.wpi.first.units.Units.Hertz;
 
@@ -10,16 +10,22 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 
-public class IntakeIOReal implements IntakeIO {
+public class HopperIOReal implements HopperIO {
   private final TalonFX motor;
 
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Temperature> tempC;
 
-  public IntakeIOReal() {
-    motor = new TalonFX(Constants.Id.kIntake, Constants.Robot.rio);
+  public HopperIOReal() {
+    motor = new TalonFX(Constants.Id.kHopper, Constants.Robot.rio);
+
     motor.setNeutralMode(NeutralModeValue.Brake);
-    motor.getConfigurator().apply(IntakeConstants.kMotorConfig);
+    motor
+        .getConfigurator()
+        .apply(
+            IntakeConstants
+                .kMotorConfig); // for now this is set to the same config as all of the other
+    // classes
     appliedVolts = motor.getMotorVoltage();
     tempC = motor.getDeviceTemp();
 
@@ -35,12 +41,7 @@ public class IntakeIOReal implements IntakeIO {
   }
 
   @Override
-  public void stop() {
-    motor.setVoltage(0);
-  }
-
-  @Override
-  public void updateInputs(IntakeIOInputs inputs) {
+  public void updateInputs(HopperIOInputs inputs) {
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
   }

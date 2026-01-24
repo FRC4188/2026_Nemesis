@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Superstructure.Climber;
+package frc.robot.subsystems.Climber;
 
 import org.littletonrobotics.junction.AutoLog;
 
