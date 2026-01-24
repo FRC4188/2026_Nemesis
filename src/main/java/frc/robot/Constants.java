@@ -114,7 +114,7 @@ public final class Constants {
             .withCurrentLimits(kCurrentLimitsConfigs)
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake));
 
-    public static final double kGearRatio = 5.0;
+    public static final double kGearRatio = 4.0;
   }
 
   public static class WristConstants {
@@ -133,6 +133,7 @@ public final class Constants {
   public static class HoodConstants {
     // plecholders
     public static final double kGearRatio = 1.0; // do we even have a gear ratio??
+    public static final double kTolerance = 0.01; // placeholder, to be changed later
   }
 
   public static class ShooterConstants {

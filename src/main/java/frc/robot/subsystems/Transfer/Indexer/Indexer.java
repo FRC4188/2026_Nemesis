@@ -1,14 +1,11 @@
 package frc.robot.subsystems.Transfer.Indexer;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Indexer extends SubsystemBase {
+public class Indexer {
   private final IndexerIO io;
   private final IndexerIOInputsAutoLogged inputs;
   private final Timer timer;
@@ -19,28 +16,13 @@ public class Indexer extends SubsystemBase {
     timer = new Timer();
   }
 
-  public Command spin(DoubleSupplier volts) {
-    return Commands.run(
-        () -> {
-          io.runVolts(volts.getAsDouble());
-        },
-        this);
+  public void runVolts(double volts) {
+    volts = MathUtil.clamp(volts, -12, 12);
+    io.runVolts(volts);
   }
 
-  public Command spinReverse(DoubleSupplier volts) {
-    return Commands.run(
-        () -> {
-          io.runVolts(-volts.getAsDouble());
-        },
-        this);
-  }
-
-  public Command stop() {
-    return Commands.runOnce(
-        () -> {
-          io.runVolts(0);
-        },
-        this);
+  public void stop() {
+    io.runVolts(0);
   }
 
   @AutoLogOutput(key = "Indexer/Is Stalled?")
@@ -48,7 +30,6 @@ public class Indexer extends SubsystemBase {
     return io.isStalled();
   }
 
-  @Override
   public void periodic() {
     io.UpdateInputs(inputs);
     Logger.processInputs("Indexer", inputs);

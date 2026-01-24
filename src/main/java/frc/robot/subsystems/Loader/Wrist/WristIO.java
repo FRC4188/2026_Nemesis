@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Loader.Wrist;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface WristIO {
@@ -18,4 +19,8 @@ public interface WristIO {
   default double getAngle() {
     return 0;
   }
+
+  default void setPosition(Rotation2d rotation) {}
+
+  default void updatePID(double kp, double ki, double kd, double kg) {}
 }

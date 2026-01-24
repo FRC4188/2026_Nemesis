@@ -46,4 +46,10 @@ public class HoodIOSim implements HoodIO {
   public double getAngle() {
     return hoodSim.getAngularPositionRad();
   }
+
+  // @Override
+  // public void runVolt(){
+  //   applied_volts = hoodController.calculate(HOOD_KD);
+  //   hoodSim.setInputVoltage(applied_volts);
+  // }
 }

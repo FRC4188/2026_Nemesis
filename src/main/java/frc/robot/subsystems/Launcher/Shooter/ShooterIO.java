@@ -19,4 +19,6 @@ public interface ShooterIO {
   public default void runVoltsRight(double volts) {}
 
   public default void stop() {}
+
+  public default void updatePID(double kp, double ki, double kd, double kg) {}
 }

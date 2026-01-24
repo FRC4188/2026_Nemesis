@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Launcher.Hood;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface HoodIO {
@@ -21,7 +22,7 @@ public interface HoodIO {
     return 0;
   }
 
-  //   public default double getSetpoint() {
-  //     return 0;
-  //   }
+  public default void setPosition(Rotation2d radians) {}
+
+  public default void updatePID(double kp, double ki, double kd, double kg) {}
 }

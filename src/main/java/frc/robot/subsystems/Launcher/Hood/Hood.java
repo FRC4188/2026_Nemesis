@@ -1,15 +1,14 @@
 package frc.robot.subsystems.Launcher.Hood;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Hood extends SubsystemBase {
+public class Hood {
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs;
 
@@ -22,20 +21,20 @@ public class Hood extends SubsystemBase {
     hoodDisconnectedAlert = new Alert("Hood disconnected", AlertType.kError);
   }
 
-  public Command runVolts(DoubleSupplier volts) {
-    return Commands.run(
-        () -> {
-          io.runVolts(volts.getAsDouble());
-        },
-        this);
+  public void runVolts(double volts) {
+    volts = MathUtil.clamp(volts, -12, 12);
+
+    io.runVolts(volts);
   }
 
-  public Command stop() {
-    return Commands.run(
-        () -> {
-          io.runVolts(0);
-        },
-        this);
+  public void setPosition(Rotation2d angle) {
+    angle = angle.fromRadians(MathUtil.clamp(angle.getRadians(), 0, Math.PI / 2));
+    Logger.recordOutput("Hood/setPoint", angle);
+    io.setPosition(angle);
+  }
+
+  public boolean atGoal(double target) {
+    return Math.abs(getAngleRad() - target) < Constants.HoodConstants.kTolerance;
   }
 
   // put a conversion into this if needed
@@ -44,12 +43,10 @@ public class Hood extends SubsystemBase {
     return inputs.angleRads;
   }
 
-  //   @AutoLogOutput(key = "Hood/At Angle")
-  //   public boolean atAngle() {
-  //     return (Math.abs(getAngleRad() - io.getSetpoint())) <= Constants.HoodConstants.kTolerance;
-  //   }
+  public void updatePID(double kp, double ki, double kd, double kg) {
+    io.updatePID(kp, ki, kd, kg);
+  }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
