@@ -91,7 +91,7 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
-                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+                 new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
 
         break;
 
@@ -346,11 +346,11 @@ public class RobotContainer {
     if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
 
     // testing placeholder
-    if (AllianceFlip.flipX(drive.getPose().getX())
-        < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
-      Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
-    } else {
-      Constants.Robot.robotMode = Constants.RobotMode.NONE;
-    }
+    // if (AllianceFlip.flipX(drive.getPose().getX())
+    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    // } else {
+    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    // }
   }
 }
