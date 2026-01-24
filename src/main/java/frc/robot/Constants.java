@@ -67,6 +67,8 @@ public final class Constants {
     public static final int kIntake = 18;
     public static final int kClimber = 16;
     public static final int kHopper = 1; // idk bruh
+    public static final int kHood = 2; // CHANGE LATEWR PLEAE
+    public static final int kHoodCANCoder = 3; // CHANGE LATER PLEASE
   }
 
   public static enum Mode {
@@ -120,5 +122,13 @@ public final class Constants {
     // all placeholders
     public static final double kTolerance = 0.2;
     public static final boolean isFOC = false;
+  }
+
+  public static class HoodConstants {
+    // placeholders
+    public static final double kTolerance = 0.2;
+
+    // do we even have a gear ratio for hood?
+    public static final double kGearRatio = 1.0;
   }
 }

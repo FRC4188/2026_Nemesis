@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 
+// TODO: add PID if necessary
 public class WristIOReal implements WristIO {
   private final TalonFX motor;
 
