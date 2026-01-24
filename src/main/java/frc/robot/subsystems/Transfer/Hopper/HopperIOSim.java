@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Hopper;
+package frc.robot.subsystems.Transfer.Hopper;
 
 public class HopperIOSim implements HopperIO {
   // for some reason this did not make a DCMotorSim - Check into why later

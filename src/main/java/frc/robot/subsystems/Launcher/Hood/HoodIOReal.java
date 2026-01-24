@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Hood;
+package frc.robot.subsystems.Launcher.Hood;
 
 import static edu.wpi.first.units.Units.Hertz;
 

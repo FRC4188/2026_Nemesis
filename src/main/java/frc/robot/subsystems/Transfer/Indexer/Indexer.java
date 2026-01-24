@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Indexer;
+package frc.robot.subsystems.Transfer.Indexer;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;

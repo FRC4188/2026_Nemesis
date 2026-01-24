@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Intake;
+package frc.robot.subsystems.Transfer.Hopper;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -6,16 +6,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
-public class Intake extends SubsystemBase {
-  private final IntakeIO io;
-  private final IntakeIOInputsAutoLogged inputs;
+public class Hopper extends SubsystemBase {
+  private final HopperIO io;
+  private final HopperIOInputsAutoLogged inputs;
 
-  public Intake(IntakeIO io) {
+  public Hopper(HopperIO io) {
     this.io = io;
-    inputs = new IntakeIOInputsAutoLogged();
+    inputs = new HopperIOInputsAutoLogged();
   }
 
-  public Command ingest(DoubleSupplier volts) {
+  public Command load(DoubleSupplier volts) {
     return Commands.run(
         () -> {
           io.runVolts(volts.getAsDouble());
@@ -23,7 +23,7 @@ public class Intake extends SubsystemBase {
         this);
   }
 
-  public Command eject(DoubleSupplier volts) {
+  public Command unload(DoubleSupplier volts) {
     return Commands.run(
         () -> {
           io.runVolts(-volts.getAsDouble());
@@ -32,15 +32,16 @@ public class Intake extends SubsystemBase {
   }
 
   public Command stop() {
-    return Commands.runOnce(
+    return Commands.run(
         () -> {
           io.runVolts(0);
         },
         this);
   }
 
+  @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Intake", inputs);
+    Logger.processInputs("Hopper", inputs);
   }
 }

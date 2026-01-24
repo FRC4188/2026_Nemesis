@@ -63,13 +63,16 @@ public final class Constants {
 
   public static class Id {
     // all of these are placeholders until robot is configured
-    public static final int kWrist = 15;
-    public static final int kIntake = 18;
-    public static final int kClimber = 16;
-    public static final int kHopper = 17; // idk bruh
-    public static final int kIndexer = 19;
+    public static final int kWrist = 13;
+    public static final int kIntake = 14;
+    public static final int kIntakeCANCoder = 15;
+    public static final int kHopper = 16; // idk bruh
+    public static final int kIndexer = 17;
+    public static final int kRightShooter = 18;
+    public static final int kLeftShooter = 19;
     public static final int kHood = 20;
     public static final int kHoodCANCoder = 21;
+    public static final int kClimber = 22;
   }
 
   public static enum Mode {
@@ -128,12 +131,12 @@ public final class Constants {
   }
 
   public static class HoodConstants {
-    //plecholders
-    public static final double kGearRatio = 1.0; //do we even have a gear ratio??
+    // plecholders
+    public static final double kGearRatio = 1.0; // do we even have a gear ratio??
   }
 
   public static class ShooterConstants {
-    //plecholders
-    public static final double kGearRatio = 1.0; //should be good
+    // plecholders
+    public static final double kGearRatio = 1.0; // should be good
   }
 }

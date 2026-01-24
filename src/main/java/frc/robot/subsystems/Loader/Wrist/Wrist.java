@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Wrist;
+package frc.robot.subsystems.Loader.Wrist;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;

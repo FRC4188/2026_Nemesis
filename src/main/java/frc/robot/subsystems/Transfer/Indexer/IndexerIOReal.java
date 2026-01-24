@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Indexer;
+package frc.robot.subsystems.Transfer.Indexer;
 
 import static edu.wpi.first.units.Units.Hertz;
 
