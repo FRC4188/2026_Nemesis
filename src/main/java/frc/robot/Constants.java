@@ -110,6 +110,8 @@ public final class Constants {
         new TalonFXConfiguration()
             .withCurrentLimits(kCurrentLimitsConfigs)
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake));
+
+    public static final double kGearRatio = 5.0;
   }
 
   public static class WristConstants {
@@ -123,5 +125,15 @@ public final class Constants {
     // all placeholders
     public static final double kTolerance = 0.2;
     public static final boolean isFOC = false;
+  }
+
+  public static class HoodConstants {
+    //plecholders
+    public static final double kGearRatio = 1.0; //do we even have a gear ratio??
+  }
+
+  public static class ShooterConstants {
+    //plecholders
+    public static final double kGearRatio = 1.0; //should be good
   }
 }
