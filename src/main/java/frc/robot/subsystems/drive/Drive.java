@@ -9,16 +9,14 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -27,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,13 +34,18 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Drive extends SubsystemBase {
+public class Drive extends SubsystemBase implements VisionConsumer {
+
+  // failsafe for now
+  @AutoLogOutput(key = "Vision/Accept?")
+  public boolean vision_accept = true;
+
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
@@ -54,24 +56,6 @@ public class Drive extends SubsystemBase {
           Math.max(
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
-
-  // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 74.088;
-  private static final double ROBOT_MOI = 6.883;
-  private static final double WHEEL_COF = 1.2;
-  public static final RobotConfig PP_CONFIG =
-      new RobotConfig(
-          ROBOT_MASS_KG,
-          ROBOT_MOI,
-          new ModuleConfig(
-              TunerConstants.FrontLeft.WheelRadius,
-              TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-              WHEEL_COF,
-              DCMotor.getKrakenX60Foc(1)
-                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-              TunerConstants.FrontLeft.SlipCurrent,
-              1),
-          getModuleTranslations());
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -93,9 +77,6 @@ public class Drive extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
-  public Supplier<Rotation2d> orientationAngle = () -> new Rotation2d();
-  public ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
-
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -114,27 +95,6 @@ public class Drive extends SubsystemBase {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    // Configure AutoBuilder for PathPlanner
-    // AutoBuilder.configure(
-    //     this::getPose,
-    //     this::setPose,
-    //     this::getChassisSpeeds,
-    //     speeds -> autoAtAngle(speeds),
-    //     new PPHolonomicDriveController(
-    //         new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-    //     PP_CONFIG,
-    //     () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-    //     this);
-    // Pathfinding.setPathfinder(new LocalADStarAK());
-    // PathPlannerLogging.setLogActivePathCallback(
-    //     (activePath) -> {
-    //       Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
-    //     });
-    // PathPlannerLogging.setLogTargetPoseCallback(
-    //     (targetPose) -> {
-    //       Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-    //     });
-
     // Configure SysId
     sysId =
         new SysIdRoutine(
@@ -146,48 +106,6 @@ public class Drive extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
-
-  // public void autoAtAngle(ChassisSpeeds speeds) {
-  //   Supplier<Rotation2d> rotationSupplier = orientationAngle;
-  //   angleController.enableContinuousInput(-Math.PI, Math.PI);
-
-  //   // Construct command
-  //   Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-  //   Logger.recordOutput("Drive/Angle Current", getPose().getRotation().getRadians());
-
-  //   double omega =
-  //       angleController.calculate(getRotation().getRadians(),
-  // rotationSupplier.get().getRadians())
-  //           + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
-
-  //   if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
-  //           < Constants.Robot.ANGLE_TOL
-  //       && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
-
-  //   // Convert to field relative speeds & send command
-  //   ChassisSpeeds speeds_ =
-  //       new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
-  // (orientationAngle.get().getRadians() > 0) ? omega : speeds.omegaRadiansPerSecond);
-
-  //   runVelocityOffset(speeds_, new Translation2d(Constants.Robot.A_LENGTH / 2, 0));
-  // }
-
-  //   public boolean willRotationCollide(
-  //     Translation2d robotPos,
-  //     double robotRadius, double sampleStepRadians) {
-  //   for (double theta = 0; theta < 2 * Math.PI; theta += sampleStepRadians) {
-  //     Translation2d sample =
-  //         robotPos.plus(
-  //             new Translation2d(
-  //                 robotRadius * Math.cos(theta),
-  //                 robotRadius * Math.sin(theta)));
-
-  //     if (Pathfinding.isPointBlocked(sample)) {
-  //       return true;
-  //     }
-  //   }
-  //   return false;
-  // }
 
   @Override
   public void periodic() {
@@ -272,22 +190,18 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  /**
+   * Runs the drive at the desired velocity centered around a point on the robot
+   *
+   * @param speeds Speeds in meters/sec
+   * @param offset Centered translation relative to the robot
+   */
   public void runVelocityOffset(ChassisSpeeds speeds, Translation2d offset) {
-
-    Translation2d fieldRelativeRotation =
-        new Translation2d(
-            speeds.omegaRadiansPerSecond * offset.getY(),
-            speeds.omegaRadiansPerSecond * offset.getX());
-
     runVelocity(
         new ChassisSpeeds(
-            fieldRelativeRotation.getX() + speeds.vxMetersPerSecond,
-            fieldRelativeRotation.getY() + speeds.vyMetersPerSecond,
+            speeds.omegaRadiansPerSecond * offset.getY() + speeds.vxMetersPerSecond,
+            -speeds.omegaRadiansPerSecond * offset.getX() + speeds.vyMetersPerSecond,
             speeds.omegaRadiansPerSecond));
-  }
-
-  public void setRotationPoint(Supplier<Rotation2d> angle) {
-    orientationAngle = angle;
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -352,6 +266,16 @@ public class Drive extends SubsystemBase {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
+  /** Returns the measured chassis speeds of the position on the robot. */
+  public ChassisSpeeds getChassisSpeedsOffset(Translation2d offset) {
+    return new ChassisSpeeds(
+        getChassisSpeeds().vxMetersPerSecond
+            - getChassisSpeeds().omegaRadiansPerSecond * offset.getY(),
+        getChassisSpeeds().vyMetersPerSecond
+            + getChassisSpeeds().omegaRadiansPerSecond * offset.getX(),
+        getChassisSpeeds().omegaRadiansPerSecond);
+  }
+
   /** Returns the position of each module in radians. */
   public double[] getWheelRadiusCharacterizationPositions() {
     double[] values = new double[4];
@@ -390,6 +314,12 @@ public class Drive extends SubsystemBase {
     return poseEstimator.getEstimatedPosition();
   }
 
+  /** Returns the current odometry pose of a point on the robot */
+  public Pose2d getPoseOffset(Translation2d offset) {
+    return getPose()
+        .transformBy(new Transform2d(offset.rotateBy(rawGyroRotation), Rotation2d.kZero));
+  }
+
   /** Returns the current odometry rotation. */
   public Rotation2d getRotation() {
     return getPose().getRotation();
@@ -400,12 +330,29 @@ public class Drive extends SubsystemBase {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
   }
 
+  /** Says nah or yah to vision */
+  public void acceptVision(boolean accept) {
+    vision_accept = accept;
+  }
+
   /** Adds a new timestamped vision measurement. */
   public void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
     poseEstimator.addVisionMeasurement(
+        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+  }
+
+  // /** Adds a new timestamped vision measurement. */
+  @Override
+  public void accept(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+
+    if (vision_accept)
+      poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 

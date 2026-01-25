@@ -7,14 +7,17 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
   public static final double field_length = Units.inchesToMeters(651.22);
   public static final double field_width = Units.inchesToMeters(317.69);
-
   public static final Translation2d field_center = 
     new Translation2d(field_length/2, field_width/2);
+    
+public static final double alliance_zone_x = Units.inchesToMeters(158.6);
+
 //   public static final Translation2d alliance_area_center =
 //     new Translation2d()
 
@@ -42,6 +45,18 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d left_trench_neutral_entrance =
         new Translation2d(
             Units.inchesToMeters(204.18), Units.inchesToMeters(267.34) + trench_width / 2);
+
+    public static final Translation2d right_trench_alliance_preentrance =
+        new Translation2d(Units.inchesToMeters(156.61) - 0.5, trench_width / 2);
+    public static final Translation2d left_trench_alliance_preentrance =
+        new Translation2d(
+            Units.inchesToMeters(156.61) - 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
+
+    public static final Translation2d right_trench_neutral_preentrance =
+        new Translation2d(Units.inchesToMeters(204.18) + 0.5, trench_width / 2);
+    public static final Translation2d left_trench_neutral_preentrance =
+        new Translation2d(
+            Units.inchesToMeters(204.18) + 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
   }
 
   public static class Bump {
