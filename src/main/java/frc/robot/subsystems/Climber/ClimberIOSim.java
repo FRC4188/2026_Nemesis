@@ -5,9 +5,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import frc.robot.subsystems.Climber.ClimberIO.ClimberIOInputs;
 
-public class ClimberIOSim {
+public class ClimberIOSim implements ClimberIO {
   private final DCMotorSim sim;
   private double applied_volts = 0;
 
