@@ -1,15 +1,24 @@
 package frc.robot.subsystems.Launcher.Shooter;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Shooter {
+public class Shooter extends SubsystemBase {
   private final ShooterIO io;
   private final ShooterIOInputsAutoLogged inputs;
+
+  private final Alert leftDisconnectedAlert;
+  private final Alert rightDisconnectedAlert;
 
   public Shooter(ShooterIO io) {
     this.io = io;
     inputs = new ShooterIOInputsAutoLogged();
+
+    leftDisconnectedAlert = new Alert("Left shooter motor disconnected.", AlertType.kError);
+    rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
   }
 
   // THIS WILL CHANGE LATER, THIS IS JUST RUNNING VOLTS
@@ -32,12 +41,16 @@ public class Shooter {
     io.runVoltsLeft(0);
   }
 
+  public void updatePID(double kp, double ki, double kd, double kg) {
+    io.updatePID(kp, ki, kd, kg);
+  }
+
+  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
-  }
 
-  public void updatePID(double kp, double ki, double kd, double kg) {
-    io.updatePID(kp, ki, kd, kg);
+    leftDisconnectedAlert.set(!inputs.left_connected);
+    rightDisconnectedAlert.set(!inputs.right_connected);
   }
 }

@@ -2,17 +2,18 @@ package frc.robot.subsystems.Loader.Intake;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Intake {
+public class Intake extends SubsystemBase {
   private final IntakeIO io;
   private final IntakeIOInputsAutoLogged inputs;
-  private final Alert falconDisconnectedAlert;
+  private final Alert intakeDisconnectedAlert;
 
   public Intake(IntakeIO io) {
     this.io = io;
     inputs = new IntakeIOInputsAutoLogged();
-    falconDisconnectedAlert = new Alert("Disconnected Kraken Motor", AlertType.kError);
+    intakeDisconnectedAlert = new Alert("Intake motor disconnected.", AlertType.kError);
   }
 
   public void setVelocity(double rpm) {
@@ -27,10 +28,11 @@ public class Intake {
     io.runVolts(0);
   }
 
+  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
 
-    falconDisconnectedAlert.set(inputs.connected);
+    intakeDisconnectedAlert.set(!inputs.connected);
   }
 }
