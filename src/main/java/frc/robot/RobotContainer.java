@@ -91,7 +91,7 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
-                 new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
 
         break;
 
