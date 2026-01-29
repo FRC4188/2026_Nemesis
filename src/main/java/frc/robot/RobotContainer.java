@@ -19,6 +19,31 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Climber.Climber;
+import frc.robot.subsystems.Climber.ClimberIO;
+import frc.robot.subsystems.Climber.ClimberIOReal;
+import frc.robot.subsystems.Climber.ClimberIOSim;
+import frc.robot.subsystems.Launcher.Launcher;
+import frc.robot.subsystems.Launcher.Hood.HoodIO;
+import frc.robot.subsystems.Launcher.Hood.HoodIOReal;
+import frc.robot.subsystems.Launcher.Hood.HoodIOSim;
+import frc.robot.subsystems.Launcher.Shooter.ShooterIO;
+import frc.robot.subsystems.Launcher.Shooter.ShooterIOReal;
+import frc.robot.subsystems.Launcher.Shooter.ShooterIOSim;
+import frc.robot.subsystems.Loader.Loader;
+import frc.robot.subsystems.Loader.Intake.IntakeIO;
+import frc.robot.subsystems.Loader.Intake.IntakeIOReal;
+import frc.robot.subsystems.Loader.Intake.IntakeIOSim;
+import frc.robot.subsystems.Loader.Wrist.WristIO;
+import frc.robot.subsystems.Loader.Wrist.WristIOReal;
+import frc.robot.subsystems.Loader.Wrist.WristIOSim;
+import frc.robot.subsystems.Transfer.Transfer;
+import frc.robot.subsystems.Transfer.Hopper.HopperIO;
+import frc.robot.subsystems.Transfer.Hopper.HopperIOReal;
+import frc.robot.subsystems.Transfer.Hopper.HopperIOSim;
+import frc.robot.subsystems.Transfer.Indexer.IndexerIO;
+import frc.robot.subsystems.Transfer.Indexer.IndexerIOReal;
+import frc.robot.subsystems.Transfer.Indexer.IndexerIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -36,6 +61,10 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final Launcher launcher;
+  private final Loader loader;
+  private final Transfer transfer;
+  private final Climber climber;
   private final PIDTuning pidTuner;
 
   // Controller
@@ -59,6 +88,11 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
+        
+        launcher = new Launcher(new ShooterIOReal(), new HoodIOReal());
+        loader = new Loader(new IntakeIOReal(), new WristIOReal());
+        transfer = new Transfer(new HopperIOReal(), new IndexerIOReal());
+        climber = new Climber(new ClimberIOReal());
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -88,6 +122,11 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
+
+        launcher = new Launcher(new ShooterIOSim(), new HoodIOSim());
+        loader = new Loader(new IntakeIOSim(), new WristIOSim());
+        transfer = new Transfer(new HopperIOSim(), new IndexerIOSim());
+        climber = new Climber(new ClimberIOSim());
         break;
 
       default:
@@ -99,6 +138,10 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        launcher = new Launcher(new ShooterIO(){}, new HoodIO(){});
+        loader = new Loader(new IntakeIO(){}, new WristIO(){});
+        transfer = new Transfer(new HopperIO(){}, new IndexerIO(){});
+        climber = new Climber(new ClimberIO(){});
         break;
     }
 

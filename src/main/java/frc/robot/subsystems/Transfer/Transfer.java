@@ -33,7 +33,7 @@ public class Transfer extends SubsystemBase {
     indexer.stop();
   }
 
-  public void stopAggitation() {
+  public void stopAgitation() {
     hopper.stop();
   }
 }

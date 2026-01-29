@@ -4,26 +4,21 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Wrist {
+public class Wrist extends SubsystemBase {
   private WristIO io;
-  private final WristIOInputsAutoLogged inputs = new WristIOInputsAutoLogged();
+  private final WristIOInputsAutoLogged inputs;
   private double relative_zero = 0;
   private final Alert wristDisconnectedAlert;
 
   public Wrist(WristIO io) {
     this.io = io;
-    wristDisconnectedAlert = new Alert("Disconnected Wrist", AlertType.kError);
-  }
-
-  public void periodic() {
-    io.updateInputs(inputs);
-    Logger.processInputs("Wrist", inputs);
-
-    wristDisconnectedAlert.set(!inputs.connected);
+    inputs = new WristIOInputsAutoLogged();
+    wristDisconnectedAlert = new Alert("Wrist motor disconnected.", AlertType.kError);
   }
 
   public void runVolts(double volts) {
@@ -57,5 +52,13 @@ public class Wrist {
 
   public boolean atGoal(double target) {
     return Math.abs(getAngle() - target) < Constants.WristConstants.kTolerance;
+  }
+
+  @Override
+  public void periodic() {
+    io.updateInputs(inputs);
+    Logger.processInputs("Wrist", inputs);
+
+    wristDisconnectedAlert.set(!inputs.connected);
   }
 }

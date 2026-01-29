@@ -4,11 +4,12 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Hood {
+public class Hood extends SubsystemBase {
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs;
 
@@ -18,7 +19,7 @@ public class Hood {
     this.io = io;
     inputs = new HoodIOInputsAutoLogged();
 
-    hoodDisconnectedAlert = new Alert("Hood disconnected", AlertType.kError);
+    hoodDisconnectedAlert = new Alert("Hood motor disconnected.", AlertType.kError);
   }
 
   public void runVolts(double volts) {
@@ -47,6 +48,7 @@ public class Hood {
     io.updatePID(kp, ki, kd, kg);
   }
 
+  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);

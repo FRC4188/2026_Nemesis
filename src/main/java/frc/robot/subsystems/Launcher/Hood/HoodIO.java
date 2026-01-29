@@ -6,7 +6,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface HoodIO {
   @AutoLog
   public static class HoodIOInputs {
-    public boolean connected = false;
+    public boolean connected = true;
 
     public double angleRads = 0.0;
 
