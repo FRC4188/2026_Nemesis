@@ -1,7 +1,6 @@
 package frc.robot.CSPLib.ppp;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.GoalEndState;
@@ -25,12 +24,13 @@ import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * A CSP-made class utilizing PathPlanner AutoBuilder, allowing us to create paths, follow paths, and get drive properties based on the robot mode.
+ * A CSP-made class utilizing PathPlanner AutoBuilder, allowing us to create paths, follow paths,
+ * and get drive properties based on the robot mode.
  */
 public final class PathBuilder {
   private static Drive drive;
 
-  //Add Multiplier if too fast
+  // Add Multiplier if too fast
   private static PathConstraints constraints =
       new PathConstraints(
           Constants.Drive.DRIVE_MAXVEL,
@@ -39,8 +39,9 @@ public final class PathBuilder {
           Constants.Drive.ANGLE_MAXACC);
 
   /**
-   * A method to configure the PathBuilder class, setting it up with the Drivetrain instance. 
+   * A method to configure the PathBuilder class, setting it up with the Drivetrain instance.
    * Enables PathFinding and AutoBuilder.
+   *
    * @param drivetrain
    */
   public static void configure(Drive drivetrain) {
@@ -61,7 +62,6 @@ public final class PathBuilder {
                 Constants.Drive.ANGLE_PID.getP(),
                 Constants.Drive.ANGLE_PID.getI(),
                 Constants.Drive.ANGLE_PID.getD())),
-                
         Constants.Drive.PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
@@ -79,7 +79,9 @@ public final class PathBuilder {
   }
 
   /**
-   * Sets the velocity from ChassisSpeeds, determines which velocity method to run depending on the robot mode.
+   * Sets the velocity from ChassisSpeeds, determines which velocity method to run depending on the
+   * robot mode.
+   *
    * @param speeds ChassisSpeeds
    */
   public static void runVelocity(ChassisSpeeds speeds) {
@@ -93,10 +95,8 @@ public final class PathBuilder {
   }
 
   /**
-   * 
    * @return The robot chassis speeds, determined by the current robot mode, offsetted.
    */
-
   public static ChassisSpeeds getChassisSpeeds() {
     switch (Constants.Robot.robotMode) {
       case SHOOT:
@@ -107,7 +107,6 @@ public final class PathBuilder {
   }
 
   /**
-   * 
    * @return The robot position, determinedby the current robot mode, offsetted.
    */
   public static Pose2d getPose() {
@@ -121,6 +120,7 @@ public final class PathBuilder {
 
   /**
    * A method that takes in a Transltion2d that the robot will orient towards.
+   *
    * @param wanted A Translation2d Supplier
    */
   public static void targetTranslation(Supplier<Translation2d> wanted) {
@@ -129,6 +129,7 @@ public final class PathBuilder {
 
   /**
    * A method takes in a Rotation2d that the robot will orient towards
+   *
    * @param wanted A Rotation2d Supplier
    */
   public static void targetRotation(Supplier<Rotation2d> wanted) {
@@ -158,14 +159,13 @@ public final class PathBuilder {
   }
 
   /*
-   * Stops any current rotation tracking 
+   * Stops any current rotation tracking
    */
   public static void stopTarget() {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
   }
 
   /**
-   * 
    * @return get current PathConstraints for AutoBuilder
    */
   public static PathConstraints getConstraints() {
@@ -173,7 +173,6 @@ public final class PathBuilder {
   }
 
   /**
-   * 
    * @param newConstraints the new PathConstraints for AutoBuilder
    */
   public static void setConstraints(PathConstraints newConstraints) {
@@ -182,22 +181,22 @@ public final class PathBuilder {
 
   /**
    * Follows a path off of several Pose2d waypoints
+   *
    * @param poses Pose2d
    * @return Command
    */
   public static Command followPath(Pose2d... poses) {
     return AutoBuilder.followPath(
-      new PathPlannerPath(
-        PathPlannerPath.waypointsFromPoses(poses),
-        PathBuilder.getConstraints(),
-        null,
-        new GoalEndState(0, null)
-      )
-    );
+        new PathPlannerPath(
+            PathPlannerPath.waypointsFromPoses(poses),
+            PathBuilder.getConstraints(),
+            null,
+            new GoalEndState(0, null)));
   }
 
   /**
    * Creates a path off of a goal Pose2d using Pathfinding
+   *
    * @param endPose Pose2d
    * @return Command
    */
@@ -207,6 +206,7 @@ public final class PathBuilder {
 
   /**
    * Creates a path off of several Pose2d using Pathfinding
+   *
    * @param poses several Pose2d
    * @return Command
    */
@@ -224,6 +224,7 @@ public final class PathBuilder {
 
   /**
    * Creates a path off of several Translation2d using Pathfinding
+   *
    * @param translations several Translation2d
    * @return Command
    */
@@ -241,6 +242,7 @@ public final class PathBuilder {
 
   /**
    * Creates a path off of a goal Translation2d using Pathfinding
+   *
    * @param endTranslation Translation2d
    * @return Command
    */
@@ -253,6 +255,7 @@ public final class PathBuilder {
 
   /**
    * Creates a path off of a goal Pose2d and an end velocity using Pathfinding
+   *
    * @param endPose Pose2d
    * @param endVel double
    * @return Command
@@ -263,6 +266,7 @@ public final class PathBuilder {
 
   /**
    * Creates a path off of a goal Translation2d and an end velocity using Pathfinding
+   *
    * @param endTranslation Translation2d
    * @param endVel double
    * @return Command
@@ -270,12 +274,14 @@ public final class PathBuilder {
   public static Command createPath(Translation2d endTranslation, double endVel) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-        .finallyDo(() -> drive.stop());
+        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()));
+    // .finallyDo(() -> drive.stop());
   }
+  // TODO: uncomment this above line if you want priyanshu
 
   /**
    * Merges into a path finding using Pathfinding
+   *
    * @param knownPath PathPlannerPath
    * @return Command
    */

@@ -29,37 +29,28 @@ import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- *  * Change Log
- * - Added changable AutoBuilder configurations based on shooting mode
- * - Renamed "instantniate" to "configure" in PathBuilder
- * - Temporary hueristic of shooting mode located bottom of Robot Conatiner
- * - Removed orientation angle from Drive Class (put it somewhere else)
- * 
- * TODO: PPP to do list for Priyanshu and Ansh
- * 
- * 1. Add Waypoints and Events in PathBuilder
- * - Chaining paths is slow and clunky to combine with external commands
- * - Better if we use waypoints and events like in PP (those classes exist in the library)
- * - Have common waypoints in constants or something (Trench travel, Fuel Gathering)
- * - Try not to rely on AD star besides Hueristic
- * 
- * 2. Clean up Drive
- * - Try to add the least amount of methods possible to the subsystem
- * - Any command related stuff should be outside: ie your rotation huerisitc
- * 
- * 3. Hueristic
- * - Add in PathBuilder or other class (not drive)
- * - Add Boolean supplier to detect if robot is blocked (this will run in the "until" part of auto)
- * - Add calcation method to detect where obstacle is and place it
- * - Then use AD star command to chain to the next Waypoint from Path Builder and continue as normal
- * 
- * 4. Other
- * - Add potential starting poses for simulation into FieldConstants
- * - Remove giant comment blocks
- * - Fix licensing so its proper
- * 
+ * * Change Log - Added changable AutoBuilder configurations based on shooting mode - Renamed
+ * "instantniate" to "configure" in PathBuilder - Temporary hueristic of shooting mode located
+ * bottom of Robot Conatiner - Removed orientation angle from Drive Class (put it somewhere else)
+ *
+ * <p>TODO: PPP to do list for Priyanshu and Ansh
+ *
+ * <p>1. Add Waypoints and Events in PathBuilder - Chaining paths is slow and clunky to combine with
+ * external commands - Better if we use waypoints and events like in PP (those classes exist in the
+ * library) - Have common waypoints in constants or something (Trench travel, Fuel Gathering) - Try
+ * not to rely on AD star besides Hueristic
+ *
+ * <p>2. Clean up Drive - Try to add the least amount of methods possible to the subsystem - Any
+ * command related stuff should be outside: ie your rotation huerisitc
+ *
+ * <p>3. Hueristic - Add in PathBuilder or other class (not drive) - Add Boolean supplier to detect
+ * if robot is blocked (this will run in the "until" part of auto) - Add calcation method to detect
+ * where obstacle is and place it - Then use AD star command to chain to the next Waypoint from Path
+ * Builder and continue as normal
+ *
+ * <p>4. Other - Add potential starting poses for simulation into FieldConstants - Remove giant
+ * comment blocks - Fix licensing so its proper
  */
-
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
@@ -170,9 +161,10 @@ public class RobotContainer {
     autoChooser.addOption(
         "TestChain",
         Commands.runOnce(
-                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)).andThen(
-        PathBuilder.createPath(
-            FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.createPath(
+                    FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
 
     autoChooser.addOption(
         "All Together Now",
@@ -195,6 +187,32 @@ public class RobotContainer {
     //             PathBuilder.getConstraints(),
     //             null,
     //             new GoalEndState(0.0, Rotation2d.k180deg)))));
+
+    autoChooser.addOption(
+        "TO THE RIGHT, TO THE LEFT",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
+            .andThen(
+                PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance, 5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(
+                PathBuilder.createPath(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg), 5))
+            .andThen(
+                PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.right_close_corner_approach, Rotation2d.kCCW_90deg), 5))
+            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCCW_90deg), 5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(
+                PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
+            .andThen(
+                PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance, 5))
+            .andThen(
+                Commands.runOnce(
+                    () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
+            .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
+            .andThen(Commands.waitSeconds(5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -255,14 +273,15 @@ public class RobotContainer {
   }
 
   public void simReset() {
-    drive.setPose(new Pose2d(new Translation2d(1, 1), Rotation2d.fromDegrees(60)));
+    drive.setPose(new Pose2d(new Translation2d(3.54, 2), Rotation2d.kZero));
   }
 
   public void periodic() {
     if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
 
     // testing placeholder
-    if (AllianceFlip.flipX(drive.getPose().getX()) < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+    if (AllianceFlip.flipX(drive.getPose().getX())
+        < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
       Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
     } else {
       Constants.Robot.robotMode = Constants.RobotMode.NONE;

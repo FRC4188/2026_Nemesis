@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-
+import frc.robot.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,6 +148,14 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(
             Units.inchesToMeters(289.66) + fuelfield_length / 2,
             Units.inchesToMeters(67.89) + fuelfield_width);
+    public static final Translation2d left_close_corner_approach =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
+            Units.inchesToMeters(67.89) + fuelfield_width + Constants.Robot.B_CROSS / 2.5);
+    public static final Translation2d right_close_corner_approach =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
+            Units.inchesToMeters(67.89) - Constants.Robot.B_CROSS / 2.5);
   }
 
   public static class Tower {
