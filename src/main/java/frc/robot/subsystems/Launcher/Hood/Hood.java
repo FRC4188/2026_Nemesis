@@ -4,12 +4,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Hood extends SubsystemBase {
+public class Hood {
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs;
 
@@ -48,7 +47,6 @@ public class Hood extends SubsystemBase {
     io.updatePID(kp, ki, kd, kg);
   }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);

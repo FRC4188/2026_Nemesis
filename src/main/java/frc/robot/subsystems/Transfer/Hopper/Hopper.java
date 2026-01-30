@@ -3,10 +3,9 @@ package frc.robot.subsystems.Transfer.Hopper;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Hopper extends SubsystemBase {
+public class Hopper {
   private final HopperIO io;
   private final HopperIOInputsAutoLogged inputs;
   private final Alert hopperDisconnectedAlert;
@@ -26,7 +25,6 @@ public class Hopper extends SubsystemBase {
     io.runVolts(0);
   }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hopper", inputs);

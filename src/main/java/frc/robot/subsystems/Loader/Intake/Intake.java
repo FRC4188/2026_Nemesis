@@ -2,10 +2,9 @@ package frc.robot.subsystems.Loader.Intake;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Intake extends SubsystemBase {
+public class Intake {
   private final IntakeIO io;
   private final IntakeIOInputsAutoLogged inputs;
   private final Alert intakeDisconnectedAlert;
@@ -28,7 +27,6 @@ public class Intake extends SubsystemBase {
     io.runVolts(0);
   }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);

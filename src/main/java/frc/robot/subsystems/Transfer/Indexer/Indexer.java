@@ -4,11 +4,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Indexer extends SubsystemBase {
+public class Indexer {
   private final IndexerIO io;
   private final IndexerIOInputsAutoLogged inputs;
   private final Timer timer; // might need this to time throughput???
@@ -35,7 +34,6 @@ public class Indexer extends SubsystemBase {
     return io.isStalled();
   }
 
-  @Override
   public void periodic() {
     io.UpdateInputs(inputs);
     Logger.processInputs("Indexer", inputs);

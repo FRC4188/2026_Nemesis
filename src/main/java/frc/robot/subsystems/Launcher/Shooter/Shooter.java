@@ -3,10 +3,9 @@ package frc.robot.subsystems.Launcher.Shooter;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public class Shooter extends SubsystemBase {
+public class Shooter {
   private final ShooterIO io;
   private final ShooterIOInputsAutoLogged inputs;
 
@@ -45,7 +44,6 @@ public class Shooter extends SubsystemBase {
     io.updatePID(kp, ki, kd, kg);
   }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);

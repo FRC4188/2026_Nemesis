@@ -4,12 +4,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Wrist extends SubsystemBase {
+public class Wrist {
   private WristIO io;
   private final WristIOInputsAutoLogged inputs;
   private double relative_zero = 0;
@@ -54,7 +53,6 @@ public class Wrist extends SubsystemBase {
     return Math.abs(getAngle() - target) < Constants.WristConstants.kTolerance;
   }
 
-  @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Wrist", inputs);
