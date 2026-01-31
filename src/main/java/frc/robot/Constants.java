@@ -8,6 +8,8 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -122,6 +124,19 @@ public final class Constants {
     public static final double kTolerance = 0.2;
     public static final double kGearRatio = 25.0; // will change
     public static final int kCurrentLimit = 60;
+
+    //for PID
+    public static final double kP = 0.17;
+    public static final double kD = 0.0;
+    public static final double kS = 0.0;
+    public static final double kG = 0.6; 
+    public static final double kV = 0.0;
+    public static final double simkD = 0.0;
+    public static final double kPIDMinInput = 0; // Radians
+    public static final double kPIDMaxInput = 2 * Math.PI;
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+
   }
 
   public static class ClimberConstants {
@@ -134,6 +149,18 @@ public final class Constants {
     // plecholders
     public static final double kGearRatio = 1.0; // do we even have a gear ratio??
     public static final double kTolerance = 0.01; // placeholder, to be changed later
+
+    //all of these pid values are wrong, waiting to be tuned
+    public static final double kP = 0.17;
+    public static final double kD = 0.0;
+    public static final double kS = 0.0;
+    public static final double kG = 0.6; 
+    public static final double kV = 0.0;
+    public static final double simkD = 0.0;
+    public static final double kPIDMinInput = 0; // Radians
+    public static final double kPIDMaxInput = 2 * Math.PI;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+
   }
 
   public static class ShooterConstants {
