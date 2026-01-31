@@ -28,6 +28,8 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -45,6 +47,8 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   // failsafe for now
   @AutoLogOutput(key = "Vision/Accept?")
   public boolean vision_accept = true;
+
+  private Field2d field;
 
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
@@ -94,6 +98,10 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
+
+    Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
+    Constants.Drive.CORRECTION_PID.setTolerance(1.0);
+    field = new Field2d();
 
     // Configure SysId
     sysId =
@@ -164,6 +172,9 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.Robot.currentMode != Mode.SIM);
+
+    field.setRobotPose(getPose());
+    SmartDashboard.putData("Field", field);
   }
 
   /**
@@ -172,6 +183,16 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    if (Constants.Robot.currentMode != Mode.SIM) {
+      if (speeds.omegaRadiansPerSecond != 0.0) {
+        Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
+      } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
+        double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
+        speeds.omegaRadiansPerSecond =
+            Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
+      }
+    }
+
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
@@ -213,7 +234,10 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
   /** Stops the drive. */
   public void stop() {
-    runVelocity(new ChassisSpeeds());
+    // runVelocity(new ChassisSpeeds());
+    for (Module module : modules) {
+      module.stop();
+    }
   }
 
   /**
@@ -335,15 +359,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     vision_accept = accept;
   }
 
-  /** Adds a new timestamped vision measurement. */
-  public void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-  }
-
   // /** Adds a new timestamped vision measurement. */
   @Override
   public void accept(
@@ -351,9 +366,13 @@ public class Drive extends SubsystemBase implements VisionConsumer {
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
 
-    if (vision_accept)
+    if (vision_accept) {
       poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+          visionRobotPoseMeters,
+          // new Pose2d(visionRobotPoseMeters.getTranslation(), getRotation()),
+          timestampSeconds,
+          visionMeasurementStdDevs);
+    }
   }
 
   /** Returns the maximum linear speed in meters per sec. */

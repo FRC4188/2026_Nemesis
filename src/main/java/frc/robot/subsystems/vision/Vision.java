@@ -1,22 +1,11 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisConstants.*;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,8 +16,10 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -37,11 +28,17 @@ public class Vision extends SubsystemBase {
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
   private final DigitalInput vrm;
+  private final Debouncer mainDebouncer;
+
+  @AutoLogOutput(key = "Vision/Using Main Camera")
+  public static boolean usingMainCamera;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
     this.io = io;
     vrm = new DigitalInput(2);
+    mainDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+
     // Initialize inputs
     this.inputs = new VisionIOInputsAutoLogged[io.length];
     for (int i = 0; i < inputs.length; i++) {
@@ -79,8 +76,18 @@ public class Vision extends SubsystemBase {
     List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
     List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
+    // If main camera sees any tags, we ignore secondary cameras
+    usingMainCamera =
+        mainDebouncer.calculate(
+            Arrays.stream(inputs[0].poseObservations).anyMatch(obs -> obs.tagCount() > 0));
+
     // Loop over cameras
     for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
+      // Skip secondary cameras if main camera has tags
+      if (cameraIndex != 0 && usingMainCamera) {
+        continue;
+      }
+
       // Update disconnected alert
       disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].frontConnected);
 
@@ -93,22 +100,16 @@ public class Vision extends SubsystemBase {
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
-        if (tagPose.isPresent()) {
-          tagPoses.add(tagPose.get());
-        }
+        if (tagPose.isPresent()) tagPoses.add(tagPose.get());
       }
 
       // Loop over pose observations
       for (var observation : inputs[cameraIndex].poseObservations) {
         // Check whether to reject pose
         boolean rejectPose =
-            observation.tagCount() == 0 // Must have at least one tag
-                || (observation.tagCount() == 1
-                    && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
-                || Math.abs(observation.pose().getZ())
-                    > maxZError // Must have realistic Z coordinate
-
-                // Must be within the field boundaries
+            observation.tagCount() == 0
+                || (observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity)
+                || Math.abs(observation.pose().getZ()) > maxZError
                 || observation.pose().getX() < 0.0
                 || observation.pose().getX() > aprilTagLayout.getFieldLength()
                 || observation.pose().getY() < 0.0
@@ -123,15 +124,14 @@ public class Vision extends SubsystemBase {
         }
 
         // Skip if rejected
-        if (rejectPose) {
-          continue;
-        }
+        if (rejectPose) continue;
 
         // Calculate standard deviations
         double stdDevFactor =
             Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
         double linearStdDev = linearStdDevBaseline * stdDevFactor;
         double angularStdDev = angularStdDevBaseline * stdDevFactor;
+
         if (observation.type() == PoseObservationType.MEGATAG_2) {
           linearStdDev *= linearStdDevMegatag2Factor;
           angularStdDev *= angularStdDevMegatag2Factor;
@@ -148,7 +148,7 @@ public class Vision extends SubsystemBase {
             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
       }
 
-      // Log camera datadata
+      // Log camera data
       Logger.recordOutput("Vision/VRM Is Good", vrm.get());
       Logger.recordOutput(
           "Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
@@ -162,6 +162,7 @@ public class Vision extends SubsystemBase {
       Logger.recordOutput(
           "Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
           robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+
       allTagPoses.addAll(tagPoses);
       allRobotPoses.addAll(robotPoses);
       allRobotPosesAccepted.addAll(robotPosesAccepted);
@@ -183,7 +184,7 @@ public class Vision extends SubsystemBase {
 
   @FunctionalInterface
   public static interface VisionConsumer {
-    public void accept(
+    void accept(
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);

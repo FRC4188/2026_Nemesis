@@ -9,7 +9,10 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,6 +22,7 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.CSPLib.ppp.PathBuilder;
+import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveToPose;
 import frc.robot.generated.TunerConstants;
@@ -34,6 +38,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -89,9 +94,9 @@ public class RobotContainer {
 
         vis =
             new Vision(
-                drive::addVisionMeasurement,
+                drive::accept,
                 new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
-                 new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
 
         break;
 
@@ -105,7 +110,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
 
-        vis = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        vis = new Vision(drive::accept, new VisionIO() {});
 
         break;
 
@@ -119,7 +124,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
 
-        vis = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        vis = new Vision(drive::accept, new VisionIO() {});
 
         break;
     }
@@ -145,32 +150,26 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    PathBuilder.configure(drive);
+    PathBuilder.configure(drive); // Add all subsystems as parameters later
     autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
     // autoChooser.addOption(
-    //     "Best Auto",
-    //     Commands.runOnce(
-    //             () ->
-    //                 drive.setRotationPoint(
-    //                     // () ->
-    //                     //     FieldConstants.Hub.hub_center_2d
-    //                     //         .minus(drive.getPose().getTranslation())
-    //                     //         .getAngle()))
-    //                     () -> new Rotation2d()))
-    //         .andThen(
-    //             AutoBuilder.pathfindToPose(
-    //                 new Pose2d(
-    //                     FieldConstants.Trench.left_trench_alliance_entrance, new
-    // Rotation2d(Math.PI / 2)),
-    //                 new PathConstraints(
-    //                     3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720)),
-    //                 0.0))
-    //         .beforeStarting(() -> drive.angleController.reset(drive.getRotation().getRadians()))
-    //         .until(() ->
-    // drive.getPose().getTranslation().getDistance(FieldConstants.Trench.left_trench_alliance_entrance) <= Units.inchesToMeters(5.0))
-    //         .finallyDo(() -> drive.stop())
-    //         );
+    //     "Test PathBuilder",
+    //     PathBuilder.generalAuton(
+    //         new Pose2d(FieldConstants.Trench.right_trench_alliance_preentrance, new
+    // Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_alliance_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_neutral_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.right_close_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.right_midline_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.left_midline_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_neutral_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_alliance_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_alliance_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Tower.left_far_corner, new Rotation2d())));
 
     autoChooser.addOption(
         "PPP",
@@ -198,18 +197,59 @@ public class RobotContainer {
                 () -> PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
             .andThen(
                 PathBuilder.createPath(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0)))
+                    .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.right_trench_neutral_entrance))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                () -> PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_entrance))
+            .andThen(
+                PathBuilder.createPath(
                     new Pose2d(
-                        FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
-            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
+                        FieldConstants.Trench.left_trench_alliance_preentrance,
+                        new Rotation2d(0)))));
 
-    // .andThen(
-    //     PathBuilder.mergeToKnownPath(
-    //         new PathPlannerPath(
-    //             FieldConstants.Tower.left_approach,
-    //             PathBuilder.getConstraints(),
-    //             null,
-    //             new GoalEndState(0.0, Rotation2d.k180deg)))));
+    autoChooser.addOption(
+        "im breaking robot",
+        PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance)
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_entrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.FuelField.left_close_corner, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_entrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_entrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Hub.hub_align_center, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.align_center, Rotation2d.kZero))));
 
+    autoChooser.addOption(
+        "climb",
+        PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance)
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(1.589, 4.535, Rotation2d.kZero),
+                    new Pose2d(1.589, 4.277, Rotation2d.kZero))));
+
+    autoChooser.addOption(
+        "yooo",
+        PathBuilder.createPath(
+            FieldConstants.FuelField.right_midline_corner, FieldConstants.Hub.hub_align_center));
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
@@ -263,7 +303,28 @@ public class RobotContainer {
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
                             * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () -> drive.getPose().getTranslation().getAngle())
+                    () -> {
+                      Rotation3d result =
+                          ProjMath.movingShot(
+                              7,
+                              new Translation3d(
+                                  FieldConstants.Hub.hub_center_2d.getX()
+                                      - drive.getPose().getTranslation().getX(),
+                                  FieldConstants.Hub.hub_center_2d.getY()
+                                      - drive.getPose().getTranslation().getY(),
+                                  Units.inchesToMeters(72 - 20)),
+                              new Translation2d(
+                                      drive.getChassisSpeeds().vxMetersPerSecond,
+                                      drive.getChassisSpeeds().vyMetersPerSecond)
+                                  .rotateBy(drive.getRotation()));
+                      if (result.getY() == -Math.PI / 2) {
+                        return FieldConstants.Hub.hub_center_2d
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle();
+                      } else {
+                        return Rotation2d.fromRadians(result.getZ());
+                      }
+                    })
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
@@ -344,6 +405,8 @@ public class RobotContainer {
 
   public void periodic() {
     if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
+
+    Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 
     // testing placeholder
     // if (AllianceFlip.flipX(drive.getPose().getX())

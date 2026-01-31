@@ -112,6 +112,7 @@ public class DriveCommands {
 
     ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(0.1);
 
     // Construct command
     return Commands.run(
@@ -146,36 +147,6 @@ public class DriveCommands {
         // Reset PID controller when command starts
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
-
-  // make these variables outside of drive
-
-  // public static void frcsAtAngle(Drive drive, ChassisSpeeds speeds) {
-  //   Supplier<Rotation2d> rotationSupplier = drive.orientationAngle;
-  //   drive.angleController.enableContinuousInput(-Math.PI, Math.PI);
-
-  //   // Construct command
-  //   Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-  //   Logger.recordOutput("Drive/Angle Current", drive.getPose().getRotation().getRadians());
-
-  //   double omega =
-  //       drive.angleController.calculate(
-  //               drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-  //           + drive.angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
-
-  //   if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-  //           < Constants.Drive.ANGLE_TOL
-  //       && drive.angleController.getSetpoint().velocity == 0.0) omega = 0.0;
-
-  //   // Convert to field relative speeds & send command
-  //   ChassisSpeeds speeds_ =
-  //       new ChassisSpeeds(
-  //           speeds.vxMetersPerSecond,
-  //           speeds.vyMetersPerSecond,
-  //           (drive.orientationAngle.get().getRadians() > 0) ? omega :
-  // speeds.omegaRadiansPerSecond);
-
-  //   drive.runVelocityOffset(speeds_, Constants.Shooter.location);
-  // }
 
   /**
    * Measures the velocity feedforward constants for the drive motors.

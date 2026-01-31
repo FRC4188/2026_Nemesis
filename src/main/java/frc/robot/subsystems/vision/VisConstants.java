@@ -5,6 +5,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 
 public class VisConstants {
   public static AprilTagFieldLayout aprilTagLayout =
@@ -15,15 +16,36 @@ public class VisConstants {
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
+  //   public static Transform3d robotToCamera0 =
+  //       new Transform3d(0.14, 0.343 - Units.inchesToMeters(16), 0.356, new Rotation3d(0.0, 0,
+  // 0));
+
+  //   public static Transform3d robotToCamera2 =
+  //       new Transform3d(
+  //           0.14 - 2 * Units.inchesToMeters(0.42),
+  //           0.343 - Units.inchesToMeters(18) - 2 * Units.inchesToMeters(1.125),
+  //           0.356 + Units.inchesToMeters(0.5),
+  //           new Rotation3d(0.0, 0.0, Math.PI));
+
   public static Transform3d robotToCamera0 =
-      new Transform3d(0.14, 0.343 - Units.inchesToMeters(16), 0.356, new Rotation3d(0.0, 0, 0));
+      new Transform3d(
+          Units.inchesToMeters(
+              6.46890 + 0.125 - 1.5 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),
+          Units.inchesToMeters(
+              3.00864 - 7 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getY()),
+          Units.inchesToMeters(
+              2.125 + 11 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getZ()),
+          new Rotation3d(0.0, 0, 0));
 
   public static Transform3d robotToCamera2 =
       new Transform3d(
-          0.14 - 2 * Units.inchesToMeters(0.42),
-          0.343 - Units.inchesToMeters(18) - 2 * Units.inchesToMeters(1.125),
-          0.356 + Units.inchesToMeters(0.5),
-          new Rotation3d(0.0, 0.0, Math.PI));
+          Units.inchesToMeters(
+              6.46890 + 0.125 - 1.5 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),
+          Units.inchesToMeters(
+              3.00864 - 7 - 2 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getY()),
+          Units.inchesToMeters(
+              2.125 + 11 + 0.5 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getZ()),
+          new Rotation3d(0.0, 0, Math.PI));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
@@ -46,8 +68,6 @@ public class VisConstants {
   public static double angularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
 
-  public static int algaeDetect = 0; // placeholder
-  public static int aprilTagDetect = 1; // placeholder
-  public static double left_region = -10.0; // left region of cam (left side reef)
-  public static double right_region = 10.0; // right region of cam (right side reef)
+  public static int fuelDetect = 0; // placeholder
+  public static int tagDetect = 1; // placeholder
 }

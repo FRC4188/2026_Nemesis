@@ -6,6 +6,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,9 +17,15 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
+import frc.robot.Constants.RobotMode;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.FieldConstants;
 import frc.robot.util.LocalADStarAK;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
@@ -33,10 +40,10 @@ public final class PathBuilder {
   // Add Multiplier if too fast
   private static PathConstraints constraints =
       new PathConstraints(
-          Constants.Drive.DRIVE_MAXVEL,
-          Constants.Drive.DRIVE_MAXACC,
-          Constants.Drive.ANGLE_MAXVEL,
-          Constants.Drive.ANGLE_MAXACC);
+          Constants.Drive.DRIVE_MAXVEL * 0.5,
+          Constants.Drive.DRIVE_MAXACC * 0.5,
+          Constants.Drive.ANGLE_MAXVEL * 0.5,
+          Constants.Drive.ANGLE_MAXACC * 0.5);
 
   /**
    * A method to configure the PathBuilder class, setting it up with the Drivetrain instance.
@@ -44,7 +51,7 @@ public final class PathBuilder {
    *
    * @param drivetrain
    */
-  public static void configure(Drive drivetrain) {
+  public static void configure(Drive drivetrain) { // Add parameters for ALL subsystems
     if (drive != null) return;
     drive = drivetrain;
 
@@ -191,8 +198,193 @@ public final class PathBuilder {
             PathPlannerPath.waypointsFromPoses(poses),
             PathBuilder.getConstraints(),
             null,
-            new GoalEndState(0, null)));
+            new GoalEndState(0, Rotation2d.kZero)));
   }
+
+  public static Command followPath(List<Waypoint> waypoints) {
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            waypoints, PathBuilder.getConstraints(), null, new GoalEndState(0, Rotation2d.kZero)));
+  }
+
+  public static Command interpolatePath(Pose2d... poses) {
+    if (poses.length < 2) {
+      return Commands.none();
+    }
+
+    List<Waypoint> waypoints = new ArrayList<>();
+    Translation2d prevTangent = null;
+
+    for (int i = 0; i < poses.length; i++) {
+      Translation2d anchor = poses[i].getTranslation();
+      Translation2d nextAnchor = (i == poses.length - 1) ? null : poses[i + 1].getTranslation();
+      Translation2d geomectricTangent =
+          (nextAnchor != null) ? nextAnchor.minus(anchor) : prevTangent;
+
+      // basically just uses the past and the future to find an spline translation
+      if (geomectricTangent == null || geomectricTangent.getNorm() < 0.000001)
+        geomectricTangent =
+            new Translation2d(1.0, poses[i].getRotation()); // RAHH TRANSLATION2D HAS POLAR
+      else geomectricTangent = geomectricTangent.div(geomectricTangent.getNorm());
+
+      // combine incoming and outgoing tangents, making it one smooth path,
+      // if there's a past, use the past, if not, use geo
+      Translation2d tangent =
+          (prevTangent == null)
+              ? geomectricTangent
+              : prevTangent
+                  .plus(geomectricTangent)
+                  .div(2.0)
+                  .div(prevTangent.plus(geomectricTangent).getNorm());
+
+      double distance =
+          (nextAnchor != null)
+              ? anchor.getDistance(nextAnchor) * 0.5
+              : anchor.getDistance(poses[i - 1].getTranslation()) * 0.5;
+
+      // Finds the translation2d for the controls
+      Translation2d prevControl =
+          (prevTangent == null) ? null : anchor.minus(prevTangent.times(distance));
+      Translation2d nextControl =
+          (nextAnchor == null) ? null : anchor.plus(tangent.times(distance));
+      waypoints.add(new Waypoint(prevControl, anchor, nextControl));
+      prevTangent = tangent;
+    }
+
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            waypoints,
+            PathBuilder.getConstraints(),
+            null,
+            new GoalEndState(
+                0.0,
+                poses[poses.length - 1]
+                    .getRotation()))); // use real values instead of arbitrary values
+  }
+
+  // My own auto triggers :) very simple Commands but maintains a uniform structure through the
+  // syntax
+
+  public static Command triggerWhenClose(
+      Translation2d location, double distance, Command runnable) {
+    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) <= distance)
+        .andThen(runnable);
+  }
+
+  public static Command triggerWhenFar(Translation2d location, double distance, Command runnable) {
+    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) > distance)
+        .andThen(runnable);
+  }
+
+  public static Command triggerWhenTrue(BooleanSupplier condition, Command runnable) {
+    return Commands.waitUntil(condition).andThen(runnable);
+  }
+
+  public static Command triggerWithDelay(double seconds, Command runnable) {
+    return Commands.waitSeconds(seconds).andThen(runnable);
+  }
+
+  private static Command shootTemp = Commands.print("Just a ShootCommand placeholder");
+  private static Command intakeTemp = Commands.print("Just a IntakeCommand placeholder");
+  private static Command climbTemp = Commands.print("Just a ClimbCommand placeholder");
+  private static Command idleTemp = Commands.print("Just a IdleCommand placeholder");
+
+  public static Command generalAuton(Pose2d... poses) {
+    return Commands.parallel(
+        PathBuilder.followPath(poses), // Path Command
+        Commands.repeatingSequence(
+                Commands.waitUntil(
+                        () ->
+                            getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.left_trench_alliance_entrance)
+                                    > Constants.Robot.PATH_ERROR
+                                && getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.right_trench_alliance_entrance)
+                                    > Constants.Robot.PATH_ERROR)
+                    .andThen(
+                        Commands.runOnce(() -> Constants.Robot.robotMode = RobotMode.SHOOT)
+                            .andThen(
+                                shootTemp
+                                    .alongWith(
+                                        Commands.runOnce(
+                                            () ->
+                                                PathBuilder.targetRotation(
+                                                    () ->
+                                                        new Rotation2d(
+                                                            ProjMath.movingShot(
+                                                                    20, // placeholder
+                                                                    FieldConstants.Hub.hub_center,
+                                                                    new Translation2d(
+                                                                        PathBuilder
+                                                                            .getChassisSpeeds()
+                                                                            .vxMetersPerSecond,
+                                                                        PathBuilder
+                                                                            .getChassisSpeeds()
+                                                                            .vyMetersPerSecond))
+                                                                .getZ()))))
+                                    .until(
+                                        () ->
+                                            getPose()
+                                                        .getTranslation()
+                                                        .getDistance(
+                                                            FieldConstants.Trench
+                                                                .left_trench_alliance_entrance)
+                                                    <= Constants.Robot.PATH_ERROR
+                                                || getPose()
+                                                        .getTranslation()
+                                                        .getDistance(
+                                                            FieldConstants.Trench
+                                                                .right_trench_alliance_entrance)
+                                                    <= Constants.Robot.PATH_ERROR)
+                                    .andThen(
+                                        Commands.parallel(
+                                            Commands.print("Just a IdleCommand placeholder"),
+                                            Commands.runOnce(() -> PathBuilder.stopTarget()))))),
+                Commands.waitUntil(
+                        () ->
+                            getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.left_trench_neutral_entrance)
+                                    > Constants.Robot.PATH_ERROR
+                                && getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.right_trench_neutral_entrance)
+                                    > Constants.Robot.PATH_ERROR)
+                    .andThen(
+                        Commands.runOnce(() -> Constants.Robot.robotMode = RobotMode.INTAKE)
+                            .andThen(
+                                intakeTemp
+                                    .until(
+                                        () ->
+                                            getPose()
+                                                        .getTranslation()
+                                                        .getDistance(
+                                                            FieldConstants.Trench
+                                                                .left_trench_neutral_entrance)
+                                                    <= Constants.Robot.PATH_ERROR
+                                                || getPose()
+                                                        .getTranslation()
+                                                        .getDistance(
+                                                            FieldConstants.Trench
+                                                                .right_trench_neutral_entrance)
+                                                    <= Constants.Robot.PATH_ERROR)
+                                    .andThen(idleTemp))))
+            .andThen(climbTemp));
+  }
+
+  /*
+   *  How the PathBuilder Auton Structure should look like
+   *  PathBuilder.generalAuton(Pose2d... poses));
+   *
+   *
+   *
+   */
 
   /**
    * Creates a path off of a goal Pose2d using Pathfinding

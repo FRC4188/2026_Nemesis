@@ -8,8 +8,10 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -54,8 +56,10 @@ public final class Constants {
     public static final double B_WIDTH = A_WIDTH + 2 * BUMPER;
     public static final double B_CROSS = Math.hypot(B_LENGTH, B_WIDTH);
 
+    public static final double PATH_ERROR = B_CROSS * 2.5;
+
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
-    public static final PIDTuning tuningMode = PIDTuning.NONE;
+    public static final PIDTuning tuningMode = PIDTuning.DRIVE_MOD;
     public static RobotMode robotMode = RobotMode.NONE;
 
     public static final String rio = "rio";
@@ -63,9 +67,21 @@ public final class Constants {
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
-    private static final double ROBOT_MASS_KG = 74.088; // placeholder
-    private static final double ROBOT_MOI = 6.883; // placeholer
+    private static final double ROBOT_MASS_KG = 34.261; // placeholder
+    private static final double ROBOT_MOI = ROBOT_MASS_KG * B_CROSS * B_CROSS; // placeholer
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
+
+    public static final Translation3d RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
+        new Translation3d(
+            Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
+            Units.inchesToMeters(2.0740 / 2),
+            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
+
+    public static final Translation3d LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
+        new Translation3d(
+            -Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
+            -Units.inchesToMeters(2.0740 / 2),
+            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
   }
 
   public static class Controller {
@@ -83,7 +99,7 @@ public final class Constants {
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
-    public static final double ANGLE_TOL = 0.05;
+    public static final double ANGLE_TOL = 0.2;
 
     public static final double ANGLE_MAXVEL = 3.0 * Math.PI;
     public static final double ANGLE_MAXACC = 40.0;
@@ -94,6 +110,8 @@ public final class Constants {
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
+
+    public static final PIDController CORRECTION_PID = new PIDController(0.1, 0.0, 0.006);
 
     public static final RobotConfig PP_CONFIG =
         new RobotConfig(
