@@ -12,9 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
-  public static final double field_length = Units.inchesToMeters(651.2);
-  public static final double field_width = Units.inchesToMeters(317.7);
+  public static final double field_length = Units.inchesToMeters(651.22);
+  public static final double field_width = Units.inchesToMeters(317.69);
+  public static final Translation2d field_center =
+      new Translation2d(field_length / 2, field_width / 2);
+
   public static final double alliance_zone_x = Units.inchesToMeters(158.6);
+
+  //   public static final Translation2d alliance_area_center =
+  //     new Translation2d()
 
   public static class Trench {
 
@@ -131,6 +137,7 @@ public final class FieldConstants { // going off of an onshape cad of field
   }
 
   public static class FuelField {
+    // uses the fuel ball centers NOT edges
     public static final double fuelfield_width = Units.inchesToMeters(176);
     public static final double fuelfield_length = Units.inchesToMeters(66);
 
@@ -153,6 +160,14 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(
             Units.inchesToMeters(289.66) + fuelfield_length / 2,
             Units.inchesToMeters(67.89) + fuelfield_width);
+    public static final Translation2d left_close_corner_approach =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
+            Units.inchesToMeters(67.89) + fuelfield_width + Constants.Robot.B_CROSS / 2.5);
+    public static final Translation2d right_close_corner_approach =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
+            Units.inchesToMeters(67.89) - Constants.Robot.B_CROSS / 2.5);
   }
 
   public static class Tower {
@@ -181,9 +196,21 @@ public final class FieldConstants { // going off of an onshape cad of field
             new Pose2d(1.589, 3.094, Rotation2d.k180deg), // placeholder
             new Pose2d(1.589, 3.223, Rotation2d.k180deg) // placeholder
             );
+
+    public static final List<Waypoint> middle_approach =
+        PathPlannerPath.waypointsFromPoses(
+            new Pose2d(1.75, 3.75, Rotation2d.k180deg), // plecholder
+            new Pose2d(1.589, 3.75, Rotation2d.k180deg) // plaqueholder
+            );
   }
 
   public static class Depot {
+    public static final double inside_length = Units.inchesToMeters(24);
+    public static final double outside_length = Units.inchesToMeters(27);
+
+    public static final double inside_width = Units.inchesToMeters(36);
+    public static final double outside_width = Units.inchesToMeters(42);
+
     public static final Translation2d right_close_corner =
         new Translation2d(0, Units.inchesToMeters(213.84));
     public static final Translation2d left_close_corner =
@@ -192,9 +219,11 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(213.84));
     public static final Translation2d left_far_corner =
         new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(255.84));
-  }
-
-  public static class Path {
-    public static final List<Pose2d> through_left_trench = new ArrayList<>();
+    public static final Translation2d close_middle_edge =
+        new Translation2d(0, Units.inchesToMeters(234.84));
+    public static final Translation2d center =
+        new Translation2d(Units.inchesToMeters(13.5), Units.inchesToMeters(234.84));
+    public static final Translation2d far_middle_edge =
+        new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(234.84));
   }
 }

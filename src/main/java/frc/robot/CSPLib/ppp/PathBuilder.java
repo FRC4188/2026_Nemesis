@@ -466,9 +466,10 @@ public final class PathBuilder {
   public static Command createPath(Translation2d endTranslation, double endVel) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-        .finallyDo(() -> drive.stop());
+        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()));
+    // .finallyDo(() -> drive.stop());
   }
+  // TODO: uncomment this above line if you want priyanshu
 
   /**
    * Merges into a path finding using Pathfinding

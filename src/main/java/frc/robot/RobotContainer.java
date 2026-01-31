@@ -63,6 +63,27 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  *
  * <p>4. Other - Add potential starting poses for simulation into FieldConstants - Remove giant
  * comment blocks - Fix licensing so its proper
+ * * Change Log - Added changable AutoBuilder configurations based on shooting mode - Renamed
+ * "instantniate" to "configure" in PathBuilder - Temporary hueristic of shooting mode located
+ * bottom of Robot Conatiner - Removed orientation angle from Drive Class (put it somewhere else)
+ *
+ * <p>TODO: PPP to do list for Priyanshu and Ansh
+ *
+ * <p>1. Add Waypoints and Events in PathBuilder - Chaining paths is slow and clunky to combine with
+ * external commands - Better if we use waypoints and events like in PP (those classes exist in the
+ * library) - Have common waypoints in constants or something (Trench travel, Fuel Gathering) - Try
+ * not to rely on AD star besides Hueristic
+ *
+ * <p>2. Clean up Drive - Try to add the least amount of methods possible to the subsystem - Any
+ * command related stuff should be outside: ie your rotation huerisitc
+ *
+ * <p>3. Hueristic - Add in PathBuilder or other class (not drive) - Add Boolean supplier to detect
+ * if robot is blocked (this will run in the "until" part of auto) - Add calcation method to detect
+ * where obstacle is and place it - Then use AD star command to chain to the next Waypoint from Path
+ * Builder and continue as normal
+ *
+ * <p>4. Other - Add potential starting poses for simulation into FieldConstants - Remove giant
+ * comment blocks - Fix licensing so its proper
  */
 public class RobotContainer {
   // Subsystems
@@ -197,59 +218,44 @@ public class RobotContainer {
                 () -> PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
             .andThen(
                 PathBuilder.createPath(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0)))
-                    .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)))
-            .andThen(PathBuilder.createPath(FieldConstants.Trench.right_trench_neutral_entrance))
-            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
-            .andThen(
-                () -> PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_entrance))
-            .andThen(
-                PathBuilder.createPath(
                     new Pose2d(
-                        FieldConstants.Trench.left_trench_alliance_preentrance,
-                        new Rotation2d(0)))));
+                        FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
+            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
+
+    // .andThen(
+    //     PathBuilder.mergeToKnownPath(
+    //         new PathPlannerPath(
+    //             FieldConstants.Tower.left_approach,
+    //             PathBuilder.getConstraints(),
+    //             null,
+    //             new GoalEndState(0.0, Rotation2d.k180deg)))));
 
     autoChooser.addOption(
-        "im breaking robot",
-        PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance)
+        "TO THE RIGHT, TO THE LEFT",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
             .andThen(
-                PathBuilder.interpolatePath(
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_neutral_entrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.FuelField.left_close_corner, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_neutral_entrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_entrance, Rotation2d.kZero),
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.Hub.hub_align_center, Rotation2d.kZero),
-                    new Pose2d(FieldConstants.Tower.align_center, Rotation2d.kZero))));
-
-    autoChooser.addOption(
-        "climb",
-        PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance)
+                PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance, 5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
             .andThen(
-                PathBuilder.interpolatePath(
-                    new Pose2d(1.589, 4.535, Rotation2d.kZero),
-                    new Pose2d(1.589, 4.277, Rotation2d.kZero))));
+                PathBuilder.createPath(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg), 5))
+            .andThen(
+                PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.right_close_corner_approach, Rotation2d.kCCW_90deg), 5))
+            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCCW_90deg), 5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(
+                PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
+            .andThen(
+                PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance, 5))
+            .andThen(
+                Commands.runOnce(
+                    () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
+            .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
+            .andThen(Commands.waitSeconds(5))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
-    autoChooser.addOption(
-        "yooo",
-        PathBuilder.createPath(
-            FieldConstants.FuelField.right_midline_corner, FieldConstants.Hub.hub_align_center));
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
@@ -400,7 +406,7 @@ public class RobotContainer {
   }
 
   public void simReset() {
-    drive.setPose(new Pose2d(new Translation2d(1, 1), Rotation2d.fromDegrees(60)));
+    drive.setPose(new Pose2d(new Translation2d(3.54, 2), Rotation2d.kZero));
   }
 
   public void periodic() {
@@ -409,11 +415,11 @@ public class RobotContainer {
     Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 
     // testing placeholder
-    // if (AllianceFlip.flipX(drive.getPose().getX())
-    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
-    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
-    // } else {
-    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
-    // }
+    if (AllianceFlip.flipX(drive.getPose().getX())
+        < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+      Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    } else {
+      Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    }
   }
 }
