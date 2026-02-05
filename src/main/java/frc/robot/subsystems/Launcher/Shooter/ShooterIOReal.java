@@ -10,10 +10,8 @@ import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
@@ -84,26 +82,26 @@ public class ShooterIOReal implements ShooterIO {
     motorRight.setVoltage(0);
   }
 
-  public void updatePIDR(double kP, double kI, double kD, double kV, double kA) {
+  public void updatePIDR(double kP, double kI, double kD, double kV) {
     configsR.Slot0 =
         new Slot0Configs()
             .withKP(kP)
             .withKI(kI)
             .withKD(kD)
-            .withKV(kV)
-            .withKA(kA); // IDK abt this gravity type (does it even need one?)
+            .withKV(kV);
+             // IDK abt this gravity type (does it even need one?)
 
     PhoenixUtil.tryUntilOk(5, () -> motorRight.getConfigurator().apply(configsR, 0.25));
   }
 
-  public void updatePIDL(double kP, double kI, double kD, double kV, double kA) {
+  public void updatePIDL(double kP, double kI, double kD, double kV) {
     configsL.Slot0 =
         new Slot0Configs()
             .withKP(kP)
             .withKI(kI)
             .withKD(kD)
-            .withKV(kV)
-            .withKA(kA); // IDK abt this gravity type (does it even need one?)
+            .withKV(kV);
+             // IDK abt this gravity type (does it even need one?)
 
     PhoenixUtil.tryUntilOk(5, () -> motorLeft.getConfigurator().apply(configsL, 0.25));
   }
@@ -124,30 +122,28 @@ public class ShooterIOReal implements ShooterIO {
         });
   }
 
-  public double getVelocityLeft(){
+  public double getVelocityLeft() {
     return motorLeft.getVelocity().getValueAsDouble();
   }
-  public double getVelocityRight(){
+
+  public double getVelocityRight() {
     return motorRight.getVelocity().getValueAsDouble();
   }
 
-
-  //These set Velocities are probably wrong, I am just trying to figure it out fr
-  public void setVelocityRight(double velocity){
+  // These set Velocities are probably wrong, I am just trying to figure it out fr
+  public void setVelocityRight(double velocity) {
     motorRight.setControl(
-      switch(Constants.ShooterConstants.motorClosedLoopOutput){
-        case Voltage -> voltageRequest.withOutput(velocity);
-        case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
-      }
-    );
+        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(velocity);
+          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
+        });
   }
 
-  public void setVelocityLeft(double velocity){
+  public void setVelocityLeft(double velocity) {
     motorLeft.setControl(
-      switch(Constants.ShooterConstants.motorClosedLoopOutput){
-        case Voltage -> voltageRequest.withOutput(velocity);
-        case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
-      }
-    );
+        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(velocity);
+          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
+        });
   }
 }
