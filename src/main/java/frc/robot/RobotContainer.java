@@ -62,10 +62,10 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * Builder and continue as normal
  *
  * <p>4. Other - Add potential starting poses for simulation into FieldConstants - Remove giant
- * comment blocks - Fix licensing so its proper
- * * Change Log - Added changable AutoBuilder configurations based on shooting mode - Renamed
- * "instantniate" to "configure" in PathBuilder - Temporary hueristic of shooting mode located
- * bottom of Robot Conatiner - Removed orientation angle from Drive Class (put it somewhere else)
+ * comment blocks - Fix licensing so its proper * Change Log - Added changable AutoBuilder
+ * configurations based on shooting mode - Renamed "instantniate" to "configure" in PathBuilder -
+ * Temporary hueristic of shooting mode located bottom of Robot Conatiner - Removed orientation
+ * angle from Drive Class (put it somewhere else)
  *
  * <p>TODO: PPP to do list for Priyanshu and Ansh
  *
@@ -239,10 +239,22 @@ public class RobotContainer {
                 PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance, 5))
             .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
             .andThen(
-                PathBuilder.createPath(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg), 5))
+                PathBuilder.createPath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance,
+                        Rotation2d.kCCW_90deg),
+                    5))
             .andThen(
-                PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.right_close_corner_approach, Rotation2d.kCCW_90deg), 5))
-            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCCW_90deg), 5))
+                PathBuilder.createPath(
+                    new Pose2d(
+                        FieldConstants.FuelField.right_close_corner_approach,
+                        Rotation2d.kCCW_90deg),
+                    5))
+            .andThen(
+                PathBuilder.createPath(
+                    new Pose2d(
+                        FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCCW_90deg),
+                    5))
             .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
             .andThen(
                 PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
@@ -254,7 +266,9 @@ public class RobotContainer {
             .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
             .andThen(Commands.waitSeconds(5))
             .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-            .andThen(PathBuilder.createPath(new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
+            .andThen(
+                PathBuilder.createPath(
+                    new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
     // Set up SysId routines
     autoChooser.addOption(

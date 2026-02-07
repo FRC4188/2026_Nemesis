@@ -8,7 +8,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
-import java.util.ArrayList;
 import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
