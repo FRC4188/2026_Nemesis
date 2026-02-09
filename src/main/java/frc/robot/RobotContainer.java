@@ -63,6 +63,8 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -423,6 +425,8 @@ public class RobotContainer {
 
   public void periodic() {
     if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
+
+    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.Drive.ANGLE_PID.atGoal());
 
     // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 

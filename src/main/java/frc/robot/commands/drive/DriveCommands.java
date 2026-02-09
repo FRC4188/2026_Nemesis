@@ -56,7 +56,7 @@ public class DriveCommands {
               ChassisSpeeds.fromFieldRelativeSpeeds(
                   speeds, AllianceFlip.apply(drive.getRotation())));
         },
-        drive);
+        drive).beforeStarting(() -> Constants.Drive.CORRECTION_PID.setSetpoint(drive.getRotation().getDegrees()));
   }
 
   /**
@@ -71,7 +71,6 @@ public class DriveCommands {
       Supplier<Rotation2d> rotationSupplier) {
 
     ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
     return Commands.run(
@@ -87,12 +86,8 @@ public class DriveCommands {
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
                       + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
-              boolean withinTolerance = Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Drive.ANGLE_TOL
-                  && angleController.getSetpoint().velocity == 0.0;
 
-              Logger.recordOutput("Drive/At Setpoint?",withinTolerance);
-              if (withinTolerance) omega = 0.0;
+              if (angleController.atGoal() && angleController.getVelocityTolerance() == 0.0) omega = 0.0;
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =

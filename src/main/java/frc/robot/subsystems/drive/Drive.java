@@ -25,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -44,11 +45,11 @@ import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase implements VisionConsumer {
 
-  // failsafe for now
+  // failsafe
   @AutoLogOutput(key = "Vision/Accept?")
   public boolean vision_accept = true;
 
-  private Field2d field;
+  private final Field2d field;
 
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
@@ -99,8 +100,13 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
+    //TODO: 1. Find out if using this, 2. prevent flicks
     Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
-    Constants.Drive.CORRECTION_PID.setTolerance(1.0);
+    Constants.Drive.CORRECTION_PID.setTolerance(Units.radiansToDegrees(Constants.Drive.ANGLE_TOL));
+
+    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.Drive.ANGLE_PID.setTolerance(Constants.Drive.ANGLE_TOL);
+
     field = new Field2d();
 
     // Configure SysId
@@ -234,7 +240,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
   /** Stops the drive. */
   public void stop() {
-    // runVelocity(new ChassisSpeeds());
+    runVelocity(new ChassisSpeeds());
     for (Module module : modules) {
       module.stop();
     }
