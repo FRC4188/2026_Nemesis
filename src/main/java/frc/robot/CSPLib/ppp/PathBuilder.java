@@ -94,7 +94,7 @@ public final class PathBuilder {
   public static void runVelocity(ChassisSpeeds speeds) {
     switch (Constants.Robot.robotMode) {
       case SHOOT:
-        drive.runVelocityOffset(speeds, Constants.Shooter.location);
+        drive.runVelocityOffset(speeds, Constants.ShooterConstants.location);
         break;
       default:
         drive.runVelocity(speeds);
@@ -107,7 +107,7 @@ public final class PathBuilder {
   public static ChassisSpeeds getChassisSpeeds() {
     switch (Constants.Robot.robotMode) {
       case SHOOT:
-        return drive.getChassisSpeedsOffset(Constants.Shooter.location);
+        return drive.getChassisSpeedsOffset(Constants.ShooterConstants.location);
       default:
         return drive.getChassisSpeeds();
     }
@@ -119,7 +119,7 @@ public final class PathBuilder {
   public static Pose2d getPose() {
     switch (Constants.Robot.robotMode) {
       case SHOOT:
-        return drive.getPoseOffset(Constants.Shooter.location);
+        return drive.getPoseOffset(Constants.ShooterConstants.location);
       default:
         return drive.getPose();
     }

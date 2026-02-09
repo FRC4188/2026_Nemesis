@@ -24,6 +24,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
@@ -74,18 +76,23 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
-              Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-              Logger.recordOutput(
-                  "Drive/Angle Current", drive.getPose().getRotation().getRadians());
+              if (Constants.Robot.tuningMode == Constants.PIDTuning.ANGLE) {
+                Logger.recordOutput("Drive/Target Angle", rotationSupplier.get().getRadians());
+                Logger.recordOutput(
+                  "Drive/Current Angle", drive.getPose().getRotation().getRadians());
+              }
 
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
                       + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
-              if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+              boolean withinTolerance = Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
                       < Constants.Drive.ANGLE_TOL
-                  && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+                  && angleController.getSetpoint().velocity == 0.0;
+
+              Logger.recordOutput("Drive/At Setpoint?",withinTolerance);
+              if (withinTolerance) omega = 0.0;
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -140,7 +147,7 @@ public class DriveCommands {
               drive.runVelocityOffset(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds, AllianceFlip.apply(drive.getRotation())),
-                  Constants.Shooter.location);
+                  Constants.ShooterConstants.location);
             },
             drive)
 

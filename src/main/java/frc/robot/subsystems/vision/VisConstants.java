@@ -11,21 +11,9 @@ public class VisConstants {
   public static AprilTagFieldLayout aprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
+//TODO: to be implemented
   public static String frontPho = "front";
   public static String backPho = "back";
-
-  // Robot to camera transforms
-  // (Not used by Limelight, configure in web UI instead)
-  //   public static Transform3d robotToCamera0 =
-  //       new Transform3d(0.14, 0.343 - Units.inchesToMeters(16), 0.356, new Rotation3d(0.0, 0,
-  // 0));
-
-  //   public static Transform3d robotToCamera2 =
-  //       new Transform3d(
-  //           0.14 - 2 * Units.inchesToMeters(0.42),
-  //           0.343 - Units.inchesToMeters(18) - 2 * Units.inchesToMeters(1.125),
-  //           0.356 + Units.inchesToMeters(0.5),
-  //           new Rotation3d(0.0, 0.0, Math.PI));
 
   public static Transform3d robotToCamera0 =
       new Transform3d(

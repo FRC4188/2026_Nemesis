@@ -32,7 +32,6 @@ public class Wrist {
                 Constants.WristConstants.Min_A,
                 Constants.WristConstants.Max_A));
 
-    Logger.recordOutput("Wrist/setPoint", angle);
     io.setPosition(angle);
   }
 
@@ -59,6 +58,7 @@ public class Wrist {
     io.updatePID(kp, ki, kd, kg);
   }
 
+  @AutoLogOutput(key = "Wrist/At Setpoint?")
   public boolean atGoal() {
     return Math.abs(io.getAngle() - io.getSetpoint()) < Constants.WristConstants.kTolerance;
   }

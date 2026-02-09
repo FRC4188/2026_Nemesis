@@ -9,8 +9,10 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -61,7 +63,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -99,23 +100,17 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
-        // The ModuleIOTalonFXS implementation provides an example implementation for
-        // TalonFXS controller connected to a CANdi with a PWM encoder. The
-        // implementations
-        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
-        // swerve
-        // template) can be freely intermixed to support alternative hardware
-        // arrangements.
-        // Please see the AdvantageKit template documentation for more information:
-        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
-        //
-        // drive =
-        // new Drive(
-        // new GyroIOPigeon2(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
+        vis =
+            new Vision(
+                drive::accept,
+                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
+                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+
+        launcher = new Launcher(new ShooterIOReal(), new HoodIOReal());
+        loader = new Loader(new IntakeIOReal(), new WristIOReal());
+        transfer = new Transfer(new HopperIOReal(), new IndexerIOReal());
+        climber = new Climber(new ClimberIOReal());
+
         break;
 
       case SIM:
@@ -129,7 +124,6 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackRight));
 
         vis = new Vision(drive::accept, new VisionIO() {});
-
 
         launcher = new Launcher(new ShooterIOSim(), new HoodIOSim());
         loader = new Loader(new IntakeIOSim(), new WristIOSim());
@@ -365,9 +359,9 @@ public class RobotContainer {
                           ProjMath.movingShot(
                               7,
                               new Translation3d(
-                                  FieldConstants.Hub.hub_center_2d.getX()
+                                  AllianceFlip.flipX(FieldConstants.Hub.hub_center_2d.getX())
                                       - drive.getPose().getTranslation().getX(),
-                                  FieldConstants.Hub.hub_center_2d.getY()
+                                  AllianceFlip.flipY(FieldConstants.Hub.hub_center_2d.getY())
                                       - drive.getPose().getTranslation().getY(),
                                   Units.inchesToMeters(72 - 20)),
                               new Translation2d(
@@ -375,7 +369,7 @@ public class RobotContainer {
                                       drive.getChassisSpeeds().vyMetersPerSecond)
                                   .rotateBy(drive.getRotation()));
                       if (result.getY() == -Math.PI / 2) {
-                        return FieldConstants.Hub.hub_center_2d
+                        return AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                             .minus(drive.getPose().getTranslation())
                             .getAngle();
                       } else {
@@ -411,45 +405,12 @@ public class RobotContainer {
             new DriveToPose(
                     drive,
                     () ->
-                        AllianceFlip.flipDS(
+                        AllianceFlip.apply(
                             new Pose2d(
                                 FieldConstants.Trench.left_trench_alliance_preentrance,
                                 Rotation2d.kZero)))
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));
-
-    // // Default command, normal field-relative drive
-    // drive.setDefaultCommand(
-    //     DriveCommands.joystickDrive(
-    //         drive, () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(), () -> -pilot.getLeftX(),
-    // () -> -pilot.getRightX()));
-
-    // // Lock to 0° when A button is held
-    // pilot
-    //     .a()
-    //     .whileTrue(
-    //         DriveCommands.joystickDriveAtAngle(
-    //             drive,
-    //             () -> -pilot.getLeftY(),
-    //             () -> -pilot.getLeftX(),
-    //             () ->
-    //                 FieldConstants.Hub.hub_center_2d
-    //                     .minus(drive.getPose().getTranslation())
-    //                     .getAngle()));
-
-    // // Switch to X pattern when X button is pressed
-    // pilot.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // // Reset gyro to 0° when B button is pressed
-    // pilot
-    //     .b()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     drive.setPose(
-    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-    //                 drive)
-    //             .ignoringDisable(true));
   }
 
   public Command getAutonomousCommand() {
@@ -463,14 +424,14 @@ public class RobotContainer {
   public void periodic() {
     if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
 
-    Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
+    // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 
     // testing placeholder
-    if (AllianceFlip.flipX(drive.getPose().getX())
-        < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
-      Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
-    } else {
-      Constants.Robot.robotMode = Constants.RobotMode.NONE;
-    }
+    // if (AllianceFlip.flipX(drive.getPose().getX())
+    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    // } else {
+    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    // }
   }
 }

@@ -25,25 +25,27 @@ public class Hood {
 
   public void runVolts(double volts) {
     volts = MathUtil.clamp(volts, -12, 12);
-
     io.setOpenLoop(volts);
   }
 
+  
   public void setPosition(Rotation2d angle) {
     angle =
         Rotation2d.fromRadians(
             MathUtil.clamp(
                 angle.getRadians(), Constants.HoodConstants.Min_A, Constants.HoodConstants.Max_A));
-    io.setPosition(angle);
+
+    io.setPosition(Rotation2d.kCCW_Pi_2.minus(angle));
   }
 
+  @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
     return Math.abs(getAngleRad() - io.getSetpoint()) < Constants.HoodConstants.kTolerance;
   }
 
-  @AutoLogOutput(key = "Hood/Angle Radians")
+  @AutoLogOutput(key = "Hood/Angle Radians Horizontal")
   public double getAngleRad() {
-    return inputs.posRads;
+    return Math.PI/2.0 - inputs.posRads;
   }
 
   public void updatePID(double kp, double ki, double kd, double kg) {

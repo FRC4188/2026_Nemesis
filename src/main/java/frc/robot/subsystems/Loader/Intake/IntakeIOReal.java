@@ -62,7 +62,7 @@ public class IntakeIOReal implements IntakeIO {
   @Override
   public void setOpenLoop(double output) {
     motor.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
+        switch (Constants.IntakeConstants.motorClosedLoopOutput) {
           case Voltage -> voltageRequest.withOutput(output);
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
         });

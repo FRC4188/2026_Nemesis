@@ -3,6 +3,8 @@ package frc.robot.subsystems.Launcher.Shooter;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.Constants;
+
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter {
@@ -20,6 +22,7 @@ public class Shooter {
     rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
   }
 
+  @AutoLogOutput(key = "Shooter/At Setpoint?")
   public boolean atGoal() {
     return Math.abs(getVelocity() - io.getSetpoint()) < Constants.ShooterConstants.kTolerance;
   }
@@ -32,6 +35,7 @@ public class Shooter {
     io.setVelocity(0.0);
   }
 
+  @AutoLogOutput(key = "Shooter/Velocity RPM")
   public double getVelocity() {
     return (inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0;
   }

@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 
 public class AllianceFlip {
@@ -22,9 +23,17 @@ public class AllianceFlip {
     }
   }
 
-  public static Pose2d flipDS(Pose2d pos) {
+  public static Pose2d apply(Pose2d pos) {
     if (canFlip()) {
       return new Pose2d(flipX(pos.getX()), flipY(pos.getY()), apply(pos.getRotation()));
+    } else {
+      return pos;
+    }
+  }
+
+  public static Translation2d apply(Translation2d pos) {
+    if (canFlip()) {
+      return new Translation2d(flipX(pos.getX()), flipY(pos.getY()));
     } else {
       return pos;
     }
