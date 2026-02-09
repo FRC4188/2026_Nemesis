@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Climber;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -20,17 +21,21 @@ public class Climber extends SubsystemBase {
     climberDisconnectedAlert = new Alert("Climber motor disconnected.", AlertType.kError);
   }
 
-  public void runVolts(double volts) {
-    io.runVolts(volts);
+  public void run(double output) {
+    io.setOpenLoop(output);
   }
 
-  @AutoLogOutput(key = "Climber/angle Radians")
-  public double getAngle() {
-    return io.getAngle();
+  @AutoLogOutput(key = "Climber/Height Meters")
+  public double getHeight() {
+    return inputs.posRots * Constants.ClimberConstants.kConverter;
   }
 
-  public boolean atGoal(double target) {
-    return Math.abs(getAngle() - target) < Constants.ClimberConstants.kTolerance;
+  public void setHeight(double height) {
+    io.setPosition(Rotation2d.fromRotations(height / Constants.ClimberConstants.kConverter));
+  }
+
+  public boolean atGoal() {
+    return Math.abs(inputs.posRots - io.getSetpoint()) < Constants.ClimberConstants.kTolerance;
   }
 
   @Override

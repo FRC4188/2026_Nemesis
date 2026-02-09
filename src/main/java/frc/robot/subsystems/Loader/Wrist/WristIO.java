@@ -7,9 +7,12 @@ public interface WristIO {
   @AutoLog
   public static class WristIOInputs {
     public boolean connected = true;
+    // public boolean encoderConnected = true;
+
     public double appliedVolts = 0.0;
     public double tempC = 0.0;
     public double posRads = 0.0;
+    // public double canPos = 0.0;
   }
 
   default void updateInputs(WristIOInputs inputs) {}
@@ -21,6 +24,14 @@ public interface WristIO {
   }
 
   default void setPosition(Rotation2d rotation) {}
+
+  default double getSetpoint() {
+    return 0;
+  }
+
+  default boolean isStalled() {
+    return false;
+  }
 
   default void updatePID(double kp, double ki, double kd, double kg) {}
 }

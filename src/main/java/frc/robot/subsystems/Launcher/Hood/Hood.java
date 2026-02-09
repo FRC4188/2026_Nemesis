@@ -13,34 +13,37 @@ public class Hood {
   private final HoodIOInputsAutoLogged inputs;
 
   private final Alert hoodDisconnectedAlert;
+  private final Alert canDisconnectedAlert;
 
   public Hood(HoodIO io) {
     this.io = io;
     inputs = new HoodIOInputsAutoLogged();
 
     hoodDisconnectedAlert = new Alert("Hood motor disconnected.", AlertType.kError);
+    canDisconnectedAlert = new Alert("Hood CANcoder disconnected.", AlertType.kError);
   }
 
   public void runVolts(double volts) {
     volts = MathUtil.clamp(volts, -12, 12);
 
-    io.runVolts(volts);
+    io.setOpenLoop(volts);
   }
 
   public void setPosition(Rotation2d angle) {
-    angle = angle.fromRadians(MathUtil.clamp(angle.getRadians(), 0, Math.PI / 2));
-    Logger.recordOutput("Hood/setPoint", angle);
+    angle =
+        Rotation2d.fromRadians(
+            MathUtil.clamp(
+                angle.getRadians(), Constants.HoodConstants.Min_A, Constants.HoodConstants.Max_A));
     io.setPosition(angle);
   }
 
-  public boolean atGoal(double target) {
-    return Math.abs(getAngleRad() - target) < Constants.HoodConstants.kTolerance;
+  public boolean atGoal() {
+    return Math.abs(getAngleRad() - io.getSetpoint()) < Constants.HoodConstants.kTolerance;
   }
 
-  // put a conversion into this if needed
   @AutoLogOutput(key = "Hood/Angle Radians")
   public double getAngleRad() {
-    return inputs.angleRads;
+    return inputs.posRads;
   }
 
   public void updatePID(double kp, double ki, double kd, double kg) {
@@ -51,6 +54,7 @@ public class Hood {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
 
-    hoodDisconnectedAlert.set(!inputs.connected);
+    hoodDisconnectedAlert.set(!inputs.motorConnected);
+    canDisconnectedAlert.set(!inputs.coderConnected);
   }
 }

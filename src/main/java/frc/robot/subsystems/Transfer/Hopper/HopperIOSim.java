@@ -1,20 +1,17 @@
 package frc.robot.subsystems.Transfer.Hopper;
 
 public class HopperIOSim implements HopperIO {
-  // for some reason this did not make a DCMotorSim - Check into why later
-  private double applied_volts = 0;
+  private double appliedVolts;
 
-  public HopperIOSim() {
-    applied_volts = 0;
-  }
+  public HopperIOSim() {}
 
   @Override
-  public void runVolts(double volts) {
-    applied_volts = volts;
+  public void setOpenLoop(double output) {
+    appliedVolts = output;
   }
 
   @Override
   public void updateInputs(HopperIOInputs inputs) {
-    inputs.appliedVolts = applied_volts;
+    inputs.appliedVolts = appliedVolts;
   }
 }

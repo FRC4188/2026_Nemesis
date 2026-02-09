@@ -9,9 +9,8 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Wrist {
-  private WristIO io;
+  private final WristIO io;
   private final WristIOInputsAutoLogged inputs;
-  private double relative_zero = 0;
   private final Alert wristDisconnectedAlert;
 
   public Wrist(WristIO io) {
@@ -26,19 +25,30 @@ public class Wrist {
   }
 
   public void setPosition(Rotation2d angle) {
-    angle = angle.fromRadians(MathUtil.clamp(angle.getRadians(), 0, Math.PI / 2));
+    angle =
+        Rotation2d.fromRadians(
+            MathUtil.clamp(
+                angle.getRadians(),
+                Constants.WristConstants.Min_A,
+                Constants.WristConstants.Max_A));
 
     Logger.recordOutput("Wrist/setPoint", angle);
     io.setPosition(angle);
   }
 
-  @AutoLogOutput(key = "Wrist/Angle Radians")
-  public double getAngle() {
-    return io.getAngle() - relative_zero;
+  public void reloadPosition() {
+    if (!io.isStalled() || Math.abs(inputs.appliedVolts) < 1.0) return;
+
+    io.setPosition(
+        Rotation2d.fromRadians(
+            inputs.appliedVolts > 0.0
+                ? Constants.WristConstants.Max_A
+                : Constants.WristConstants.Max_A));
   }
 
-  public void zero() {
-    relative_zero = io.getAngle();
+  @AutoLogOutput(key = "Wrist/Angle Radians")
+  public double getAngle() {
+    return io.getAngle();
   }
 
   public void stop() {
@@ -49,11 +59,14 @@ public class Wrist {
     io.updatePID(kp, ki, kd, kg);
   }
 
-  public boolean atGoal(double target) {
-    return Math.abs(getAngle() - target) < Constants.WristConstants.kTolerance;
+  public boolean atGoal() {
+    return Math.abs(io.getAngle() - io.getSetpoint()) < Constants.WristConstants.kTolerance;
   }
 
   public void periodic() {
+    // TODO: Needs Testing
+    // reloadPosition();
+
     io.updateInputs(inputs);
     Logger.processInputs("Wrist", inputs);
 

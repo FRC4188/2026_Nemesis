@@ -2,7 +2,6 @@ package frc.robot.subsystems.Launcher;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.subsystems.Launcher.Hood.Hood;
 import frc.robot.subsystems.Launcher.Hood.HoodIO;
 import frc.robot.subsystems.Launcher.Shooter.Shooter;
@@ -17,33 +16,28 @@ public class Launcher extends SubsystemBase {
     hood = new Hood(hoodIO);
   }
 
-  public void runShooterLeft(double volts) {
-    shooter.runVoltsLeft(volts);
-  }
-
-  public void runShooterRight(double volts) {
-    shooter.runVoltsRight(volts);
+  public void runShooter(double RPM) {
+    shooter.setVelocity(RPM);
   }
 
   public void setHood(Rotation2d radians) {
     hood.setPosition(radians);
   }
 
-  public boolean atHoodGoal(Rotation2d radians, double tolerance) {
-    return Math.abs((hood.getAngleRad() - radians.getRadians())) < tolerance;
-  }
-
-  public boolean atHoodGoal(Rotation2d radians) {
-    return Math.abs(hood.getAngleRad() - radians.getRadians())
-        < Constants.WristConstants.kTolerance;
-  }
-
   public void updateHoodPID(double kp, double ki, double kd, double kg) {
     hood.updatePID(kp, ki, kd, kg);
   }
 
-  public void updateShooterPID(double kp, double ki, double kd, double kg) {
-    shooter.updatePID(kp, ki, kd, kg);
+  public void updateShooterPID(double kp, double ki, double kd, double kv) {
+    shooter.updatePID(kp, ki, kd, kv);
+  }
+
+  public boolean hoodAtTarget() {
+    return hood.atGoal();
+  }
+
+  public boolean shooterAtTarget() {
+    return shooter.atGoal();
   }
 
   @Override

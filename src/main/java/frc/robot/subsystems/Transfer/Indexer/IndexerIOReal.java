@@ -1,56 +1,78 @@
 package frc.robot.subsystems.Transfer.Indexer;
 
-import static edu.wpi.first.units.Units.Hertz;
-
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
-import frc.robot.Constants.IntakeConstants;
 
 public class IndexerIOReal implements IndexerIO {
   private final TalonFX motor;
+  private final TalonFXConfiguration config;
 
   private final StatusSignal<Voltage> appliedVolts;
+  private final StatusSignal<Current> currentAmps;
   private final StatusSignal<Temperature> tempC;
-  private final DigitalInput
-      breaker; // this might be useless, because it would take a very specific situation to stall
-  // indexer. Might get rid of this eventually
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
+
+  private final Debouncer debouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public IndexerIOReal() {
     motor = new TalonFX(Constants.Id.kIndexer, Constants.Robot.rio);
+    config =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withStatorCurrentLimit(Constants.IndexerConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.IndexerConstants.kSupplyCurrent)
+                    .withStatorCurrentLimitEnable(true))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.IndexerConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withNeutralMode(Constants.IndexerConstants.kNuetralMode)
+                    .withInverted(Constants.IndexerConstants.kInvertedValue));
 
-    breaker = new DigitalInput(0);
+    motor.getConfigurator().apply(config);
 
-    motor.setNeutralMode(NeutralModeValue.Brake);
-    motor.getConfigurator().apply(IntakeConstants.kMotorConfig); // change the motor config later
     appliedVolts = motor.getMotorVoltage();
+    currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
+
+    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC);
+
     motor.optimizeBusUtilization();
-
-    // arbitrary hertz values
-    appliedVolts.setUpdateFrequency(Hertz.of(50));
-    tempC.setUpdateFrequency(Hertz.of(0.5));
   }
 
   @Override
-  public void runVolts(double volts) {
-    motor.setVoltage(volts);
+  public void setOpenLoop(double output) {
+    motor.setControl(
+        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
   }
 
   @Override
-  public boolean isStalled() {
-    return !breaker
-        .get(); // true when the breaker is not broken (again might not be needed, but taken from
-    // Argo intake)
-  }
-
-  @Override
-  public void UpdateInputs(IndexerIOInputs inputs) {
-    inputs.applied_volts = appliedVolts.getValueAsDouble();
+  public void updateInputs(IndexerIOInputs inputs) {
+    inputs.connected =
+        debouncer.calculate(BaseStatusSignal.refreshAll(appliedVolts, currentAmps, tempC).isOK());
+    inputs.appliedVolts = appliedVolts.getValueAsDouble();
+    inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
   }
 }

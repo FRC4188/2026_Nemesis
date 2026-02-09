@@ -1,149 +1,180 @@
 package frc.robot.subsystems.Launcher.Shooter;
 
-import static edu.wpi.first.units.Units.Hertz;
-
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.util.PhoenixUtil;
 
 public class ShooterIOReal implements ShooterIO {
   private final TalonFX motorLeft;
   private final TalonFX motorRight;
 
-  private final StatusSignal<Voltage> applied_volts_left;
-  private final StatusSignal<Voltage> applied_volts_right;
-  private final StatusSignal<Temperature> tempCL;
-  private final StatusSignal<Temperature> tempCR;
+  private final TalonFXConfiguration motorConfigs;
 
-  // add the required variables for Torque/velocity PID
+  private final StatusSignal<Voltage> leftAppliedVolts;
+  private final StatusSignal<Voltage> rightAppliedVolts;
+  private final StatusSignal<Current> leftCurrentAmps;
+  private final StatusSignal<Current> rightCurrentAmps;
+  private final StatusSignal<AngularVelocity> leftVelocity;
+  private final StatusSignal<AngularVelocity> rightVelocity;
+  private final StatusSignal<Temperature> leftTempC;
+  private final StatusSignal<Temperature> rightTempC;
+
+  private final Debouncer leftDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  private final Debouncer rightDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final VelocityVoltage velocityVoltageRequest =
       new VelocityVoltage(0.0).withEnableFOC(true);
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0);
+
+  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0);
-
-  TalonFXConfiguration configsR = new TalonFXConfiguration();
-  TalonFXConfiguration configsL = new TalonFXConfiguration();
 
   public ShooterIOReal() {
     motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
     motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    motorLeft.setNeutralMode(NeutralModeValue.Brake);
-    motorRight.setNeutralMode(NeutralModeValue.Brake);
+    motorConfigs =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent)
+                    .withStatorCurrentLimitEnable(true))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withMotorOutput(
+                new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
+            .withSlot0(Constants.ShooterConstants.shooterGains)
+            .withFeedback(
+                new FeedbackConfigs()
+                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    applied_volts_left = motorLeft.getMotorVoltage();
-    applied_volts_right = motorRight.getMotorVoltage();
-    tempCL = motorLeft.getDeviceTemp();
-    tempCR = motorRight.getDeviceTemp();
+    motorLeft
+        .getConfigurator()
+        .apply(
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
+    motorRight
+        .getConfigurator()
+        .apply(
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
 
-    applied_volts_left.setUpdateFrequency(Hertz.of(50));
-    applied_volts_right.setUpdateFrequency(Hertz.of(50));
-    tempCL.setUpdateFrequency(Hertz.of(0.5));
-    tempCR.setUpdateFrequency(Hertz.of(0.5));
+    leftAppliedVolts = motorLeft.getMotorVoltage();
+    rightAppliedVolts = motorRight.getMotorVoltage();
+    leftCurrentAmps = motorLeft.getStatorCurrent();
+    rightCurrentAmps = motorRight.getStatorCurrent();
+    leftTempC = motorLeft.getDeviceTemp();
+    rightTempC = motorRight.getDeviceTemp();
+    leftVelocity = motorLeft.getVelocity();
+    rightVelocity = motorRight.getVelocity();
+
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        5.0,
+        leftAppliedVolts,
+        rightAppliedVolts,
+        leftCurrentAmps,
+        rightCurrentAmps,
+        leftTempC,
+        rightTempC);
+    BaseStatusSignal.setUpdateFrequencyForAll(50.0, leftVelocity, rightVelocity);
 
     motorLeft.optimizeBusUtilization();
     motorRight.optimizeBusUtilization();
-
-    motorRight.getConfigurator().apply(configsR);
-    motorLeft.getConfigurator().apply(configsL);
   }
 
+  @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    inputs.applied_volts_left = applied_volts_left.getValueAsDouble();
-    inputs.applied_volts_right = applied_volts_right.getValueAsDouble();
-    inputs.tempCL = tempCL.getValueAsDouble();
-    inputs.tempCR = tempCR.getValueAsDouble();
+    inputs.leftConnected =
+        leftDebouncer.calculate(
+            BaseStatusSignal.refreshAll(leftAppliedVolts, leftCurrentAmps, leftVelocity, leftTempC)
+                .isOK());
+    inputs.rightConnected =
+        rightDebouncer.calculate(
+            BaseStatusSignal.refreshAll(
+                    rightAppliedVolts, rightCurrentAmps, rightVelocity, rightTempC)
+                .isOK());
+
+    inputs.leftAppliedVolts = leftAppliedVolts.getValueAsDouble();
+    inputs.rightAppliedVolts = rightAppliedVolts.getValueAsDouble();
+    inputs.leftCurrentAmps = leftCurrentAmps.getValueAsDouble();
+    inputs.rightCurrentAmps = rightCurrentAmps.getValueAsDouble();
+    inputs.leftTempC = leftTempC.getValueAsDouble();
+    inputs.rightTempC = rightTempC.getValueAsDouble();
+    inputs.leftVelocityRPM = leftVelocity.getValueAsDouble() * 60.0;
+    inputs.rightVelocityRPM = rightVelocity.getValueAsDouble() * 60.0;
   }
 
-  // need to add pid at some point!!!!!!!!! (use torque/velocity based Pid)
-  // Will also need to implement Feed Forward as well (ughhh)
-  public void runVoltsLeft(double volts) {
-    motorLeft.setVoltage(volts);
+  @Override
+  public void setOpenLoop(double output) {
+    motorLeft.setControl(
+        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
+
+    motorRight.setControl(
+        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
   }
 
-  public void runVoltsRight(double volts) {
-    motorRight.setVoltage(volts);
+  @Override
+  public void updatePID(double kP, double kI, double kD, double kV) {
+    motorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
+
+    motorLeft
+        .getConfigurator()
+        .apply(
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
+    motorRight
+        .getConfigurator()
+        .apply(
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
   }
 
-  public void stop() {
-    motorLeft.setVoltage(0);
-    motorRight.setVoltage(0);
-  }
+  @Override
+  public void setVelocity(double rpm) {
+    if (rpm == 0.0) {
+      motorLeft.setVoltage(0.0);
+      motorRight.setVoltage(0.0);
+      return;
+    }
 
-  public void updatePIDR(double kP, double kI, double kD, double kV) {
-    configsR.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKV(kV);
-             // IDK abt this gravity type (does it even need one?)
-
-    PhoenixUtil.tryUntilOk(5, () -> motorRight.getConfigurator().apply(configsR, 0.25));
-  }
-
-  public void updatePIDL(double kP, double kI, double kD, double kV) {
-    configsL.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKV(kV);
-             // IDK abt this gravity type (does it even need one?)
-
-    PhoenixUtil.tryUntilOk(5, () -> motorLeft.getConfigurator().apply(configsL, 0.25));
-  }
-
-  public void setOpenLoopRight(double outputR) {
     motorRight.setControl(
         switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(outputR);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(outputR);
+          case Voltage -> voltageRequest.withOutput(rpm / 60.0);
+          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(rpm / 60.0);
         });
-  }
 
-  public void setOpenLoopLeft(double outputL) {
     motorLeft.setControl(
         switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(outputL);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(outputL);
+          case Voltage -> velocityVoltageRequest.withVelocity(rpm / 60.0);
+          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(rpm / 60.0);
         });
   }
 
-  public double getVelocityLeft() {
-    return motorLeft.getVelocity().getValueAsDouble();
-  }
-
-  public double getVelocityRight() {
-    return motorRight.getVelocity().getValueAsDouble();
-  }
-
-  // These set Velocities are probably wrong, I am just trying to figure it out fr
-  public void setVelocityRight(double velocity) {
-    motorRight.setControl(
-        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(velocity);
-          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
-        });
-  }
-
-  public void setVelocityLeft(double velocity) {
-    motorLeft.setControl(
-        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(velocity);
-          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(velocity);
-        });
+  @Override
+  public double getSetpoint() {
+    return motorLeft.getClosedLoopReference().getValueAsDouble();
   }
 }

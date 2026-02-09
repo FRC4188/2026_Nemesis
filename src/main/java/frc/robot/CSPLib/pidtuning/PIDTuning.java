@@ -36,7 +36,7 @@ public class PIDTuning {
     loggedkP = new LoggedNetworkNumber("Tuning " + system + "/kP", kP);
     loggedkI = new LoggedNetworkNumber("Tuning " + system + "/kI", kI);
     loggedkD = new LoggedNetworkNumber("Tuning " + system + "/kD", kD);
-    loggedkF = new LoggedNetworkNumber("Tuning " + system + "/kF", kF);
+    loggedkF = new LoggedNetworkNumber("Tuning " + system + "/(Velocity: kV, Position: kG)", kF);
     loggedkTarget = new LoggedNetworkNumber("Tuning " + system + "/Target Value", kTarget);
   }
 

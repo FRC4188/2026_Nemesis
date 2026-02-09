@@ -1,12 +1,10 @@
 package frc.robot.subsystems.Launcher.Hood;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import frc.robot.Constants.Robot;
 
 public class HoodIOSim implements HoodIO {
   private double applied_volts = 0;
@@ -26,30 +24,30 @@ public class HoodIOSim implements HoodIO {
                 HOOD_GEARBOX, 0.004, Constants.HoodConstants.kGearRatio),
             HOOD_GEARBOX);
   }
-
-  @Override
-  public void updateInputs(HoodIOInputs inputs) {
-    inputs.connected = true;
-    inputs.appliedVolts = applied_volts;
-    inputs.tempC = 0;
-    inputs.angleRads = getAngle();
-    hoodSim.update(Robot.loopPeriodSecs);
-  }
-
-  @Override
-  public void runVolts(double volts) {
-    applied_volts = MathUtil.clamp(volts, -12, 12);
-    hoodSim.setInputVoltage(applied_volts);
-  }
-
-  @Override
-  public double getAngle() {
-    return hoodSim.getAngularPositionRad();
-  }
+  // TODO:
+  // @Override
+  // public void updateInputs(HoodIOInputs inputs) {
+  //   inputs.connected = true;
+  //   inputs.appliedVolts = applied_volts;
+  //   inputs.tempC = 0;
+  //   inputs.angleRads = getAngle();
+  //   hoodSim.update(Robot.loopPeriodSecs);
+  // }
 
   // @Override
-  // public void runVolt(){
-  //   applied_volts = hoodController.calculate(HOOD_KD);
+  // public void runVolts(double volts) {
+  //   applied_volts = MathUtil.clamp(volts, -12, 12);
   //   hoodSim.setInputVoltage(applied_volts);
   // }
+
+  // @Override
+  // public double getAngle() {
+  //   return hoodSim.getAngularPositionRad();
+  // }
+
+  // // @Override
+  // // public void runVolt(){
+  // //   applied_volts = hoodController.calculate(HOOD_KD);
+  // //   hoodSim.setInputVoltage(applied_volts);
+  // // }
 }

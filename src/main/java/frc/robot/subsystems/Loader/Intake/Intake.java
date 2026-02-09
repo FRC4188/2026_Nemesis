@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Loader.Intake;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
@@ -15,16 +16,22 @@ public class Intake {
     intakeDisconnectedAlert = new Alert("Intake motor disconnected.", AlertType.kError);
   }
 
-  public void setVelocity(double rpm) {
-    io.setVelocity(rpm / 60);
+  public void intakeVolts(double volts) {
+    volts = MathUtil.clamp(-12, volts, 12);
+    io.setOpenLoop(volts);
   }
 
-  public void runVolts(double volts) {
-    io.runVolts(volts);
+  public void ejectVolts(double volts) {
+    volts = MathUtil.clamp(-12, volts, 12);
+    io.setOpenLoop(-volts);
   }
 
   public void stop() {
-    io.runVolts(0);
+    io.setOpenLoop(0);
+  }
+
+  public boolean isStalled() {
+    return io.isStalled();
   }
 
   public void periodic() {

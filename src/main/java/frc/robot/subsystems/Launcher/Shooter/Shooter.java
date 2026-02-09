@@ -1,8 +1,8 @@
 package frc.robot.subsystems.Launcher.Shooter;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter {
@@ -20,35 +20,31 @@ public class Shooter {
     rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
   }
 
-  // THIS WILL CHANGE LATER, THIS IS JUST RUNNING VOLTS
-  // ALSO NEED TO ADD SET VELOCITY AND TORQUE PID
-  public void runVoltsLeft(double volts) {
-    volts = MathUtil.clamp(volts, -12, 12);
-    io.runVoltsLeft(volts);
+  public boolean atGoal() {
+    return Math.abs(getVelocity() - io.getSetpoint()) < Constants.ShooterConstants.kTolerance;
   }
 
-  public void runVoltsRight(double volts) {
-    volts = MathUtil.clamp(volts, -12, 12);
-    io.runVoltsRight(volts);
+  public void setVelocity(double RPM) {
+    io.setVelocity(RPM);
   }
 
-  public void stopRight() {
-    io.runVoltsRight(0);
+  public void stop() {
+    io.setVelocity(0.0);
   }
 
-  public void stopLeft() {
-    io.runVoltsLeft(0);
+  public double getVelocity() {
+    return (inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0;
   }
 
-  public void updatePID(double kp, double ki, double kd, double kg) {
-    io.updatePID(kp, ki, kd, kg);
+  public void updatePID(double kp, double ki, double kd, double kf) {
+    io.updatePID(kp, ki, kd, kf);
   }
 
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
 
-    leftDisconnectedAlert.set(!inputs.left_connected);
-    rightDisconnectedAlert.set(!inputs.right_connected);
+    leftDisconnectedAlert.set(!inputs.leftConnected);
+    rightDisconnectedAlert.set(!inputs.rightConnected);
   }
 }

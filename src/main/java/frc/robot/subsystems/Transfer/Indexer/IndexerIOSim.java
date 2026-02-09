@@ -2,24 +2,17 @@ package frc.robot.subsystems.Transfer.Indexer;
 
 public class IndexerIOSim implements IndexerIO {
 
-  private double applied_volts = 0;
+  private double appliedVolts;
 
-  public IndexerIOSim() {
-    applied_volts = 0;
+  public IndexerIOSim() {}
+
+  @Override
+  public void setOpenLoop(double output) {
+    appliedVolts = output;
   }
 
   @Override
-  public void runVolts(double volts) {
-    applied_volts = volts;
-  }
-
-  @Override
-  public boolean isStalled() {
-    return false;
-  }
-
-  @Override
-  public void UpdateInputs(IndexerIOInputs inputs) {
-    inputs.applied_volts = applied_volts;
+  public void updateInputs(IndexerIOInputs inputs) {
+    inputs.appliedVolts = appliedVolts;
   }
 }

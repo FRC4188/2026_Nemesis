@@ -18,15 +18,17 @@ public class Hopper {
 
   public void runVolts(double volts) {
     volts = MathUtil.clamp(volts, -12, 12);
-    io.runVolts(volts);
+    io.setOpenLoop(volts);
   }
 
   public void stop() {
-    io.runVolts(0);
+    io.setOpenLoop(0);
   }
 
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hopper", inputs);
+
+    hopperDisconnectedAlert.set(!inputs.connected);
   }
 }

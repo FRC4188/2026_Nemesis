@@ -21,8 +21,12 @@ public class Transfer extends SubsystemBase {
     indexer.periodic();
   }
 
-  public void runIndexer(double volts) {
+  public void index(double volts) {
     indexer.runVolts(volts);
+  }
+
+  public void outdex(double volts) {
+    indexer.runVolts(-volts);
   }
 
   public void aggitate(double volts) {

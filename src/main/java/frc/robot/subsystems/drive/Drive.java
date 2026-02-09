@@ -329,14 +329,14 @@ public class Drive extends SubsystemBase {
   /** Updates the PID Slot0 config of all Drive modules */
   public void updateDrivePID(double kP, double kI, double kD, double kF) {
     for (int i = 0; i < 4; i++) {
-      modules[i].updateDrivePID(kP, kI, kD, kF);
+      modules[i].updateDrivePID(kP, kI, kD);
     }
   }
 
   /** Updates the PID Slot0 config of all Turn modules */
   public void updateTurnPID(double kP, double kI, double kD, double kF) {
     for (int i = 0; i < 4; i++) {
-      modules[i].updateTurnPID(kP, kI, kD, kF);
+      modules[i].updateTurnPID(kP, kI, kD);
     }
   }
 
