@@ -46,9 +46,9 @@ public class DriveCommands {
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXACC);
+                  xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                  omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
 
           drive.runVelocity(
               ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -68,7 +68,7 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
-    ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -81,10 +81,10 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
               if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Robot.ANGLE_TOL
+                      < Constants.Drive.ANGLE_TOL
                   && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
               // Convert to field relative speeds & send command
@@ -97,6 +97,50 @@ public class DriveCommands {
               drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  public static Command joystickDriveAtAngle(
+      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+
+    // placeholder
+    Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
+
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(0.1);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
+              Logger.recordOutput(
+                  "Drive/Angle Current", drive.getPose().getRotation().getRadians());
+
+              double omega =
+                  angleController.calculate(
+                          drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+              if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+                      < Constants.Drive.ANGLE_TOL
+                  && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              drive.runVelocityOffset(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())),
+                  Constants.Shooter.location);
             },
             drive)
 
