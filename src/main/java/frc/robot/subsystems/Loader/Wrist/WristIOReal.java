@@ -1,7 +1,6 @@
 package frc.robot.subsystems.Loader.Wrist;
 
 import static edu.wpi.first.units.Units.Hertz;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -23,6 +22,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
@@ -38,6 +38,7 @@ public class WristIOReal implements WristIO {
   private final StatusSignal<Angle> posRots;
   // private final StatusSignal<Angle> canPos;
   private final StatusSignal<Voltage> appliedVolts;
+  private final StatusSignal<Current> currentAmps;
 
   private final Debouncer motorConnectedDebouncer = new Debouncer(0.5);
   // private final Debouncer encoderConnectedDebouncer = new Debouncer(0.5);
@@ -93,16 +94,18 @@ public class WristIOReal implements WristIO {
     posRots = motor.getPosition();
     tempC = motor.getDeviceTemp();
     appliedVolts = motor.getMotorVoltage();
+    currentAmps = motor.getStatorCurrent();
     // canPos = cancoder.getAbsolutePosition();
 
-    appliedVolts.setUpdateFrequency(Hertz.of(50));
+    appliedVolts.setUpdateFrequency(Hertz.of(5.0));
     posRots.setUpdateFrequency(Hertz.of(50));
     // canPos.setUpdateFrequency(50);
-    tempC.setUpdateFrequency(Hertz.of(0.5));
+    tempC.setUpdateFrequency(Hertz.of(5.0));
+    currentAmps.setUpdateFrequency(5.0);
 
     ParentDevice.optimizeBusUtilizationForAll(motor); // ,cancoder
 
-    tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig, 0.25));
+    motor.getConfigurator().apply(motorConfig);
   }
 
   @Override
@@ -142,7 +145,7 @@ public class WristIOReal implements WristIO {
             .withKG(kG)
             .withGravityType(GravityTypeValue.Arm_Cosine);
 
-    tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig, 0.25));
+    motor.getConfigurator().apply(motorConfig);
   }
 
   @Override

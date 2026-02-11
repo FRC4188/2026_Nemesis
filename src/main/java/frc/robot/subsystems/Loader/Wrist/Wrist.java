@@ -48,7 +48,7 @@ public class Wrist {
 
   @AutoLogOutput(key = "Wrist/Angle Radians")
   public double getAngle() {
-    return io.getAngle();
+    return inputs.posRads;
   }
 
   public void stop() {
@@ -60,7 +60,7 @@ public class Wrist {
   }
 
   public boolean atGoal() {
-    return Math.abs(io.getAngle() - io.getSetpoint()) < Constants.WristConstants.kTolerance;
+    return Math.abs(inputs.posRads - io.getSetpoint()) < Constants.WristConstants.kTolerance;
   }
 
   public void periodic() {

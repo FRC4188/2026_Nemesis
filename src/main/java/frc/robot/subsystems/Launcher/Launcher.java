@@ -10,6 +10,7 @@ import frc.robot.subsystems.Launcher.Shooter.ShooterIO;
 public class Launcher extends SubsystemBase {
   private final Shooter shooter;
   private final Hood hood;
+ 
 
   public Launcher(ShooterIO shooterIO, HoodIO hoodIO) {
     shooter = new Shooter(shooterIO);
@@ -18,6 +19,7 @@ public class Launcher extends SubsystemBase {
 
   public void runShooter(double RPM) {
     shooter.setVelocity(RPM);
+    
   }
 
   public void setHood(Rotation2d radians) {
