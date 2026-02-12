@@ -28,7 +28,6 @@ public class Hood {
     io.setOpenLoop(volts);
   }
 
-  
   public void setPosition(Rotation2d angle) {
     angle =
         Rotation2d.fromRadians(
@@ -45,7 +44,7 @@ public class Hood {
 
   @AutoLogOutput(key = "Hood/Angle Radians Horizontal")
   public double getAngleRad() {
-    return Math.PI/2.0 - inputs.posRads;
+    return Math.PI / 2.0 - inputs.posRads;
   }
 
   public void updatePID(double kp, double ki, double kd, double kg) {

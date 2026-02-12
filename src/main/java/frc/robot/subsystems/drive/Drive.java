@@ -13,6 +13,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,6 +41,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -100,7 +102,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    //TODO: 1. Find out if using this, 2. prevent flicks
+    // TODO: 1. Find out if using this, 2. prevent flicks
     Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
     Constants.Drive.CORRECTION_PID.setTolerance(Units.radiansToDegrees(Constants.Drive.ANGLE_TOL));
 
@@ -229,6 +231,12 @@ public class Drive extends SubsystemBase implements VisionConsumer {
             speeds.omegaRadiansPerSecond * offset.getY() + speeds.vxMetersPerSecond,
             -speeds.omegaRadiansPerSecond * offset.getX() + speeds.vyMetersPerSecond,
             speeds.omegaRadiansPerSecond));
+  }
+
+  public void trackVelocity(ChassisSpeeds speeds, Supplier<Rotation2d> rotationSupplier) {
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(0.1);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */

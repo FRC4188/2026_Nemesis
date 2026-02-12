@@ -9,6 +9,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
 import frc.robot.Constants.RobotMode;
+import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.LocalADStarAK;
@@ -36,6 +38,9 @@ import org.littletonrobotics.junction.Logger;
  */
 public final class PathBuilder {
   private static Drive drive;
+  public static FollowPath.Builder pathBuilder;
+
+  private static Supplier<Rotation2d> trackingSupplier;
 
   // Add Multiplier if too fast
   private static PathConstraints constraints =
@@ -54,6 +59,18 @@ public final class PathBuilder {
   public static void configure(Drive drivetrain) { // Add parameters for ALL subsystems
     if (drive != null) return;
     drive = drivetrain;
+
+    pathBuilder =
+        new FollowPath.Builder(
+                drive,
+                drive::getPose,
+                PathBuilder::getChassisSpeeds,
+                PathBuilder::runVelocity,
+                new PIDController(5, 0, 0),
+                new PIDController(5, 0, 0),
+                new PIDController(2, 0, 0))
+            .withDefaultShouldFlip()
+            .withPoseReset(drive::setPose);
 
     AutoBuilder.configure(
         PathBuilder::getPose,
@@ -94,11 +111,43 @@ public final class PathBuilder {
   public static void runVelocity(ChassisSpeeds speeds) {
     switch (Constants.Robot.robotMode) {
       case SHOOT:
-        drive.runVelocityOffset(speeds, Constants.ShooterConstants.location);
+        drive.runVelocityOffset(
+            new ChassisSpeeds(
+                speeds.vxMetersPerSecond,
+                speeds.vyMetersPerSecond,
+                (trackingSupplier != null)
+                    ? getOmega(trackingSupplier)
+                    : speeds.omegaRadiansPerSecond),
+            Constants.ShooterConstants.location);
         break;
       default:
-        drive.runVelocity(speeds);
+        drive.runVelocity(
+            new ChassisSpeeds(
+                speeds.vxMetersPerSecond,
+                speeds.vyMetersPerSecond,
+                (trackingSupplier != null)
+                    ? getOmega(trackingSupplier)
+                    : speeds.omegaRadiansPerSecond));
     }
+  }
+
+  public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
+    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+
+    Logger.recordOutput("PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
+    Logger.recordOutput(
+        "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
+
+    double omega =
+        Constants.Drive.ANGLE_PID.calculate(
+                drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+            + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+    if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
+            < Constants.Drive.ANGLE_TOL
+        && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+
+    return omega;
   }
 
   /**
@@ -132,6 +181,8 @@ public final class PathBuilder {
    */
   public static void targetTranslation(Supplier<Translation2d> wanted) {
     targetRotation(() -> wanted.get().minus(drive.getPose().getTranslation()).getAngle());
+
+    trackingSupplier = () -> wanted.get().minus(drive.getPose().getTranslation()).getAngle();
   }
 
   /**
@@ -141,6 +192,8 @@ public final class PathBuilder {
    */
   public static void targetRotation(Supplier<Rotation2d> wanted) {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
+
+    trackingSupplier = wanted;
 
     PPHolonomicDriveController.overrideRotationFeedback(
         () -> {
@@ -170,6 +223,8 @@ public final class PathBuilder {
    */
   public static void stopTarget() {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
+
+    trackingSupplier = null;
   }
 
   /**

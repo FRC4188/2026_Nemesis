@@ -42,7 +42,7 @@ public class Wrist {
         Rotation2d.fromRadians(
             inputs.appliedVolts > 0.0
                 ? Constants.WristConstants.Max_A
-                : Constants.WristConstants.Max_A));
+                : Constants.WristConstants.Min_A));
   }
 
   @AutoLogOutput(key = "Wrist/Angle Radians")

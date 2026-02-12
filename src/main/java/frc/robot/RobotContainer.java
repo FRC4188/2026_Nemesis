@@ -26,6 +26,7 @@ import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveToPose;
 import frc.robot.generated.TunerConstants;
+import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.Climber.Climber;
 import frc.robot.subsystems.Climber.ClimberIO;
 import frc.robot.subsystems.Climber.ClimberIOReal;
@@ -63,7 +64,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -205,6 +205,19 @@ public class RobotContainer {
 
     // Set up auto routines
     PathBuilder.configure(drive); // Add all subsystems as parameters later
+
+    // Set global constraints before creating any paths
+    Path.setDefaultGlobalConstraints(
+        new Path.DefaultGlobalConstraints(
+            Constants.Drive.DRIVE_MAXVEL, // maxVelocityMetersPerSec
+            Constants.Drive.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+            Constants.Drive.ANGLE_MAXVEL * 180 / Math.PI, // maxVelocityDegPerSec
+            Constants.Drive.ANGLE_MAXACC * 180 / Math.PI, // maxAccelerationDegPerSec2
+            0.03, // endTranslationToleranceMeters
+            2.0, // endRotationToleranceDeg
+            0.2 // intermediateHandoffRadiusMeters
+            ));
+
     autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
     // autoChooser.addOption(
@@ -254,6 +267,15 @@ public class RobotContainer {
                     new Pose2d(
                         FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
             .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
+
+    autoChooser.addOption(
+        "Sigma",
+        PathBuilder.pathBuilder.build(
+            new Path(
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero))));
 
     // .andThen(
     //     PathBuilder.mergeToKnownPath(
