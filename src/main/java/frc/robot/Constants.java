@@ -260,11 +260,11 @@ public final class Constants {
     public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
     public static final double kTolerance = 100.0; // rpm units
-    public static final double kLowVel = 500.0; //placeholder
-    public static final double kMiddleVel = 1000.0; //placeholder
-    public static final double kHighVel = 2000.0; //placeholder
-    public static final double kGearRatio = 1.0; 
-    public static final double kDropVel = 1.0; //placeholder
+    public static final double kLowVel = 500.0; // placeholder
+    public static final double kMiddleVel = 1000.0; // placeholder
+    public static final double kHighVel = 2000.0; // placeholder
+    public static final double kGearRatio = 1.0;
+    public static final double kDropVel = 1.0; // placeholder
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder

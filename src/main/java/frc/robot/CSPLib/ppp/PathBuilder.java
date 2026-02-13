@@ -13,6 +13,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -108,26 +109,13 @@ public final class PathBuilder {
    * @param speeds ChassisSpeeds
    */
   public static void runVelocity(ChassisSpeeds speeds) {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        drive.runVelocityOffset(
-            new ChassisSpeeds(
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
-                (trackingSupplier != null)
-                    ? getOmega(trackingSupplier)
-                    : speeds.omegaRadiansPerSecond),
-            Constants.ShooterConstants.location);
-        break;
-      default:
-        drive.runVelocity(
-            new ChassisSpeeds(
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
-                (trackingSupplier != null)
-                    ? getOmega(trackingSupplier)
-                    : speeds.omegaRadiansPerSecond));
-    }
+    drive.runVelocity(
+        new ChassisSpeeds(
+            speeds.vxMetersPerSecond,
+            speeds.vyMetersPerSecond,
+            (trackingSupplier != null)
+                ? getOmega(trackingSupplier)
+                : speeds.omegaRadiansPerSecond));
   }
 
   public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
@@ -153,24 +141,14 @@ public final class PathBuilder {
    * @return The robot chassis speeds, determined by the current robot mode, offsetted.
    */
   public static ChassisSpeeds getChassisSpeeds() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getChassisSpeedsOffset(Constants.ShooterConstants.location);
-      default:
-        return drive.getChassisSpeeds();
-    }
+    return drive.getChassisSpeeds();
   }
 
   /**
    * @return The robot position, determinedby the current robot mode, offsetted.
    */
   public static Pose2d getPose() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getPoseOffset(Constants.ShooterConstants.location);
-      default:
-        return drive.getPose();
-    }
+    return drive.getPose();
   }
 
   /**

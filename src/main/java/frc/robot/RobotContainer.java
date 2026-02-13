@@ -346,12 +346,10 @@ public class RobotContainer {
 
     transfer.setDefaultCommand(
         Commands.sequence(
-                Commands.runOnce(() -> transfer.index(0.0), transfer),
-                Commands.runOnce(() -> transfer.aggitate(0.0), transfer) 
-            ));
+            Commands.runOnce(() -> transfer.index(0.0), transfer),
+            Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
 
-    loader.setDefaultCommand(
-        Commands.runOnce(() -> loader.intake(0.0), loader));
+    loader.setDefaultCommand(Commands.runOnce(() -> loader.intake(0.0), loader));
 
     Trigger driveInput =
         new Trigger(
@@ -400,36 +398,40 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    pilot.rightTrigger()
+    pilot
+        .rightTrigger()
         .onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> transfer.index(5.0), transfer),
-                Commands.runOnce(() -> transfer.aggitate(5.0), transfer) 
-            )
-        );
-    
-    pilot.leftTrigger()
-        .onTrue(
-            Commands.runOnce(() -> loader.intake(5.0), loader)
-        );
+                Commands.runOnce(() -> transfer.aggitate(5.0), transfer)));
 
-    pilot.b().toggleOnTrue(
-        Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber)
-    ).toggleOnFalse(Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H), climber));
+    pilot.leftTrigger().onTrue(Commands.runOnce(() -> loader.intake(5.0), loader));
 
-    copilot.leftBumper().toggleOnTrue(Commands.runOnce(() -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
-     .toggleOnFalse(Commands.runOnce(() -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
-    
+    pilot
+        .b()
+        .toggleOnTrue(
+            Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber))
+        .toggleOnFalse(
+            Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H), climber));
+
+    copilot
+        .leftBumper()
+        .toggleOnTrue(
+            Commands.runOnce(
+                () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
+        .toggleOnFalse(
+            Commands.runOnce(
+                () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
+
     copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
     copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
     copilot.rightTrigger().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
     copilot.rightBumper().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
 
-    Trigger climberinput = new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
+    Trigger climberinput =
+        new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
 
-    climberinput.whileTrue(
-        Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR)))
-    );
+    climberinput.whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR))));
   }
 
   /**
