@@ -209,7 +209,7 @@ public class RobotContainer {
             DriveCommands.joystickDriveAtAngle(
                 drive, () -> -pilot.getLeftY(), () -> -pilot.getLeftX(), () -> Rotation2d.kZero));
 
-    // Switch to X pattern when X button is pressed
+    // Switch to X swerve alignment when X button is pressed
     pilot.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // Reset gyro to 0° when B button is pressed
