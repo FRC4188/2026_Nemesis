@@ -198,7 +198,7 @@ public final class Constants {
   public static class ClimberConstants {
     public static final double kTolerance = 0.2;
     public static final double kGearRatio = 45.0;
-    public static final double kConverter = 1.0; // placeholder
+    public static final double kConverter = 0.75; // placeholder
     public static final double Max_H = 1.0; // placeholder
     public static final double Min_H = 0.0;
 
