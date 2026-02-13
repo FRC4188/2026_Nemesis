@@ -30,6 +30,10 @@ public class Loader extends SubsystemBase {
     wrist.setPosition(radians);
   }
 
+  public double getWristAngle() {
+    return wrist.getAngle();
+  }
+
   public void intake(double volts) {
     intake.intakeVolts(volts);
   }

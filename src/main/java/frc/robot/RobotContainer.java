@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
+import frc.robot.commands.Scoring.LoadingCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber.Climber;
@@ -217,6 +218,13 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+
+    pilot
+        .a()
+        .onTrue(
+            (loader.getWristAngle() == Constants.WristConstants.Max_A)
+                ? LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A))
+                : LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)));
   }
 
   /**
