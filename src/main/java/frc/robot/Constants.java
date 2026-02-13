@@ -16,7 +16,6 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -255,14 +254,16 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final Translation2d location =
-        new Translation2d(-Robot.A_LENGTH / 2, 0); // placeholder
+    public static final Translation3d location =
+        new Translation3d(-Robot.A_LENGTH / 2, 0, 20.0); // placeholder
+    public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
     public static final double kTolerance = 100.0; // rpm units
-    public static final double kLowVel = 500.0;
-    public static final double kMiddleVel = 1000.0;
-    public static final double kHighVel = 2000.0;
-    public static final double kGearRatio = 1.0;
+    public static final double kLowVel = 500.0; //placeholder
+    public static final double kMiddleVel = 1000.0; //placeholder
+    public static final double kHighVel = 2000.0; //placeholder
+    public static final double kGearRatio = 1.0; 
+    public static final double kDropVel = 1.0; //placeholder
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder

@@ -9,10 +9,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,9 +19,8 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.CSPLib.util.ProjMath;
+import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber.Climber;
 import frc.robot.subsystems.Climber.ClimberIO;
@@ -61,9 +57,7 @@ import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
-import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -324,6 +318,18 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
+    launcher.setDefaultCommand(
+        Commands.runOnce(() -> launcher.runShooter(Constants.ShooterConstants.kLowVel), launcher));
+
+    transfer.setDefaultCommand(
+        Commands.sequence(
+                Commands.runOnce(() -> transfer.index(0.0), transfer),
+                Commands.runOnce(() -> transfer.aggitate(0.0), transfer) 
+            ));
+
+    loader.setDefaultCommand(
+        Commands.runOnce(() -> loader.intake(0.0), loader));
+
     Trigger driveInput =
         new Trigger(
             () ->
@@ -348,7 +354,7 @@ public class RobotContainer {
     pilot
         .a()
         .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
+            ScoringCommands.aim(
                     drive,
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getY()
@@ -356,28 +362,8 @@ public class RobotContainer {
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
                             * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () -> {
-                      Rotation3d result =
-                          ProjMath.movingShot(
-                              7,
-                              new Translation3d(
-                                  AllianceFlip.flipX(FieldConstants.Hub.hub_center_2d.getX())
-                                      - drive.getPose().getTranslation().getX(),
-                                  AllianceFlip.flipY(FieldConstants.Hub.hub_center_2d.getY())
-                                      - drive.getPose().getTranslation().getY(),
-                                  Units.inchesToMeters(72 - 20)),
-                              new Translation2d(
-                                      drive.getChassisSpeeds().vxMetersPerSecond,
-                                      drive.getChassisSpeeds().vyMetersPerSecond)
-                                  .rotateBy(drive.getRotation()));
-                      if (result.getY() == -Math.PI / 2) {
-                        return AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle();
-                      } else {
-                        return Rotation2d.fromRadians(result.getZ());
-                      }
-                    })
+                    launcher,
+                    () -> Constants.ShooterConstants.kMiddleVel)
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
@@ -391,30 +377,43 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    pilot
-        .x()
-        .and(pilot.leftBumper())
-        .onTrue(Commands.runOnce(() -> drive.acceptVision(true), drive));
+    pilot.rightTrigger()
+        .onTrue(
+            Commands.sequence(
+                Commands.runOnce(() -> transfer.index(5.0), transfer),
+                Commands.runOnce(() -> transfer.aggitate(5.0), transfer) 
+            )
+        );
+    
+    pilot.leftTrigger()
+        .onTrue(
+            Commands.runOnce(() -> loader.intake(5.0), loader)
+        );
 
-    pilot
-        .y()
-        .and(pilot.leftBumper())
-        .onTrue(Commands.runOnce(() -> drive.acceptVision(false), drive));
+    pilot.b().toggleOnTrue(
+        Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber)
+    ).toggleOnFalse(Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H), climber));
 
-    pilot
-        .b()
-        .whileTrue(
-            new DriveToPose(
-                    drive,
-                    () ->
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.left_trench_alliance_preentrance,
-                                Rotation2d.kZero)))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+    copilot.leftBumper().toggleOnTrue(Commands.runOnce(() -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
+     .toggleOnFalse(Commands.runOnce(() -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
+    
+    copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
+    copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
+    copilot.rightTrigger().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
+    copilot.rightBumper().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
+
+    Trigger climberinput = new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
+
+    climberinput.whileTrue(
+        Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR)))
+    );
   }
 
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }

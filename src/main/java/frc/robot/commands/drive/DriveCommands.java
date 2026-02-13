@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
@@ -44,19 +42,21 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
     return Commands.run(
-        () -> {
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
+            () -> {
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                      ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                      omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
 
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        drive).beforeStarting(() -> Constants.Drive.CORRECTION_PID.setSetpoint(drive.getRotation().getDegrees()));
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            drive)
+        .beforeStarting(
+            () -> Constants.Drive.CORRECTION_PID.setSetpoint(drive.getRotation().getDegrees()));
   }
 
   /**
@@ -78,7 +78,7 @@ public class DriveCommands {
               if (Constants.Robot.tuningMode == Constants.PIDTuning.ANGLE) {
                 Logger.recordOutput("Drive/Target Angle", rotationSupplier.get().getRadians());
                 Logger.recordOutput(
-                  "Drive/Current Angle", drive.getPose().getRotation().getRadians());
+                    "Drive/Current Angle", drive.getPose().getRotation().getRadians());
               }
 
               double omega =
@@ -86,8 +86,8 @@ public class DriveCommands {
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
                       + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
-
-              if (angleController.atGoal() && angleController.getVelocityTolerance() == 0.0) omega = 0.0;
+              if (angleController.atGoal() && angleController.getVelocityTolerance() == 0.0)
+                omega = 0.0;
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -139,10 +139,9 @@ public class DriveCommands {
                       ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
 
-              drive.runVelocityOffset(
+              drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())),
-                  Constants.ShooterConstants.location);
+                      speeds, AllianceFlip.apply(drive.getRotation())));
             },
             drive)
 

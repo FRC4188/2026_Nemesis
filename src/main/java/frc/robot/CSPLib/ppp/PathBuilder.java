@@ -12,7 +12,6 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -56,10 +55,10 @@ public final class PathBuilder {
     drive = drivetrain;
 
     AutoBuilder.configure(
-        PathBuilder::getPose,
+        drive::getPose,
         drive::setPose,
-        PathBuilder::getChassisSpeeds,
-        PathBuilder::runVelocity,
+        drive::getChassisSpeeds,
+        drive::runVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(
                 Constants.Drive.DRIVE_PID.getP(),
@@ -83,46 +82,6 @@ public final class PathBuilder {
         (targetPose) -> {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
-  }
-
-  /**
-   * Sets the velocity from ChassisSpeeds, determines which velocity method to run depending on the
-   * robot mode.
-   *
-   * @param speeds ChassisSpeeds
-   */
-  public static void runVelocity(ChassisSpeeds speeds) {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        drive.runVelocityOffset(speeds, Constants.ShooterConstants.location);
-        break;
-      default:
-        drive.runVelocity(speeds);
-    }
-  }
-
-  /**
-   * @return The robot chassis speeds, determined by the current robot mode, offsetted.
-   */
-  public static ChassisSpeeds getChassisSpeeds() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getChassisSpeedsOffset(Constants.ShooterConstants.location);
-      default:
-        return drive.getChassisSpeeds();
-    }
-  }
-
-  /**
-   * @return The robot position, determinedby the current robot mode, offsetted.
-   */
-  public static Pose2d getPose() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getPoseOffset(Constants.ShooterConstants.location);
-      default:
-        return drive.getPose();
-    }
   }
 
   /**
@@ -267,12 +226,14 @@ public final class PathBuilder {
 
   public static Command triggerWhenClose(
       Translation2d location, double distance, Command runnable) {
-    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) <= distance)
+    return Commands.waitUntil(
+            () -> drive.getPose().getTranslation().getDistance(location) <= distance)
         .andThen(runnable);
   }
 
   public static Command triggerWhenFar(Translation2d location, double distance, Command runnable) {
-    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) > distance)
+    return Commands.waitUntil(
+            () -> drive.getPose().getTranslation().getDistance(location) > distance)
         .andThen(runnable);
   }
 
@@ -295,12 +256,14 @@ public final class PathBuilder {
         Commands.repeatingSequence(
                 Commands.waitUntil(
                         () ->
-                            getPose()
+                            drive
+                                        .getPose()
                                         .getTranslation()
                                         .getDistance(
                                             FieldConstants.Trench.left_trench_alliance_entrance)
                                     > Constants.Robot.PATH_ERROR
-                                && getPose()
+                                && drive
+                                        .getPose()
                                         .getTranslation()
                                         .getDistance(
                                             FieldConstants.Trench.right_trench_alliance_entrance)
@@ -319,22 +282,22 @@ public final class PathBuilder {
                                                                     20, // placeholder
                                                                     FieldConstants.Hub.hub_center,
                                                                     new Translation2d(
-                                                                        PathBuilder
-                                                                            .getChassisSpeeds()
+                                                                        drive.getChassisSpeeds()
                                                                             .vxMetersPerSecond,
-                                                                        PathBuilder
-                                                                            .getChassisSpeeds()
+                                                                        drive.getChassisSpeeds()
                                                                             .vyMetersPerSecond))
                                                                 .getZ()))))
                                     .until(
                                         () ->
-                                            getPose()
+                                            drive
+                                                        .getPose()
                                                         .getTranslation()
                                                         .getDistance(
                                                             FieldConstants.Trench
                                                                 .left_trench_alliance_entrance)
                                                     <= Constants.Robot.PATH_ERROR
-                                                || getPose()
+                                                || drive
+                                                        .getPose()
                                                         .getTranslation()
                                                         .getDistance(
                                                             FieldConstants.Trench
@@ -346,12 +309,14 @@ public final class PathBuilder {
                                             Commands.runOnce(() -> PathBuilder.stopTarget()))))),
                 Commands.waitUntil(
                         () ->
-                            getPose()
+                            drive
+                                        .getPose()
                                         .getTranslation()
                                         .getDistance(
                                             FieldConstants.Trench.left_trench_neutral_entrance)
                                     > Constants.Robot.PATH_ERROR
-                                && getPose()
+                                && drive
+                                        .getPose()
                                         .getTranslation()
                                         .getDistance(
                                             FieldConstants.Trench.right_trench_neutral_entrance)
@@ -362,13 +327,15 @@ public final class PathBuilder {
                                 intakeTemp
                                     .until(
                                         () ->
-                                            getPose()
+                                            drive
+                                                        .getPose()
                                                         .getTranslation()
                                                         .getDistance(
                                                             FieldConstants.Trench
                                                                 .left_trench_neutral_entrance)
                                                     <= Constants.Robot.PATH_ERROR
-                                                || getPose()
+                                                || drive
+                                                        .getPose()
                                                         .getTranslation()
                                                         .getDistance(
                                                             FieldConstants.Trench

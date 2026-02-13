@@ -100,7 +100,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    //TODO: 1. Find out if using this, 2. prevent flicks
+    // TODO: 1. Find out if using this, 2. prevent flicks
     Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
     Constants.Drive.CORRECTION_PID.setTolerance(Units.radiansToDegrees(Constants.Drive.ANGLE_TOL));
 
