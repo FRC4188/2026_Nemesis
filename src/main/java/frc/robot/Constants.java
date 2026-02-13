@@ -175,7 +175,8 @@ public final class Constants {
     public static final double kStallCurrent = 50; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
-    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final NeutralModeValue kNuetralMode =
+        NeutralModeValue.Coast; // free pivot is faster
     public static final InvertedValue kInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
     public static final Slot0Configs wristGains =
