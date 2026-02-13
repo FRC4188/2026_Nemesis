@@ -344,13 +344,6 @@ public class RobotContainer {
     launcher.setDefaultCommand(
         Commands.runOnce(() -> launcher.runShooter(Constants.ShooterConstants.kLowVel), launcher));
 
-    transfer.setDefaultCommand(
-        Commands.sequence(
-            Commands.runOnce(() -> transfer.index(0.0), transfer),
-            Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
-
-    loader.setDefaultCommand(Commands.runOnce(() -> loader.intake(0.0), loader));
-
     Trigger driveInput =
         new Trigger(
             () ->
@@ -403,9 +396,13 @@ public class RobotContainer {
         .onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> transfer.index(5.0), transfer),
-                Commands.runOnce(() -> transfer.aggitate(5.0), transfer)));
+                Commands.runOnce(() -> transfer.aggitate(5.0), transfer)))
+        .onFalse(Commands.sequence(
+                Commands.runOnce(() -> transfer.index(0.0), transfer),
+                Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
 
-    pilot.leftTrigger().onTrue(Commands.runOnce(() -> loader.intake(5.0), loader));
+    pilot.leftTrigger().onTrue(Commands.runOnce(() -> loader.intake(5.0), loader))
+    .onFalse(Commands.runOnce(() -> loader.intake(0.0), loader));
 
     pilot
         .b()
@@ -425,13 +422,16 @@ public class RobotContainer {
 
     copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
     copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
-    copilot.rightTrigger().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
-    copilot.rightBumper().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader));
+
+    copilot.rightTrigger().onTrue(Commands.runOnce(() -> loader.eject(5.0), loader))
+    .onFalse(Commands.runOnce(() -> loader.eject(0.0), loader));
+    copilot.rightBumper().onTrue(Commands.runOnce(() -> transfer.outdex(5.0), transfer))
+    .onFalse(Commands.runOnce(() -> transfer.outdex(0.0), transfer));
 
     Trigger climberinput =
         new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
 
-    climberinput.whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR))));
+    climberinput.whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR)))).onFalse(Commands.runOnce(() -> climber.run(0.0)));
   }
 
   /**
