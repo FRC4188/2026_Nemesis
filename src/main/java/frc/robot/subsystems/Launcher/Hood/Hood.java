@@ -43,7 +43,7 @@ public class Hood {
 
   @AutoLogOutput(key = "Hood/Angle Radians")
   public double getAngleRad() {
-    return inputs.posRads;
+    return inputs.angleRads;
   }
 
   public void updatePID(double kp, double ki, double kd, double kg) {

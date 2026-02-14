@@ -118,7 +118,7 @@ public class HoodIOReal implements HoodIO {
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
-    inputs.posRads = positionRots.getValueAsDouble() * 2 * Math.PI;
+    inputs.angleRads = positionRots.getValueAsDouble() * 2 * Math.PI;
     inputs.canPos = canPos.getValueAsDouble();
   }
 

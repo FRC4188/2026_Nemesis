@@ -7,18 +7,16 @@ public class IntakeIOSim implements IntakeIO {
     applied_volts = 0;
   }
 
-  // @Override
-  // public void runVolts(double volts) {
-  //   applied_volts = volts;
-  // }
+  public void runVolts(double volts) {
+    applied_volts = volts;
+  }
 
-  // @Override
-  // public void stop() {
-  //   applied_volts = 0;
-  // }
+  public void stop() {
+    applied_volts = 0;
+  }
 
-  // @Override
-  // public void updateInputs(IntakeIOInputs inputs) {
-  //   inputs.appliedVolts = applied_volts;
-  // }
+  @Override
+  public void updateInputs(IntakeIOInputs inputs) {
+    inputs.appliedVolts = applied_volts;
+  }
 }

@@ -12,7 +12,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
@@ -51,6 +50,8 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.simulation.SimulationVisualizer;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
@@ -61,6 +62,7 @@ public class RobotContainer {
   private final Transfer transfer;
   private final Climber climber;
   private final PIDTuning pidTuner;
+  private SimulationVisualizer simvis;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -90,6 +92,7 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
+
         drive =
             new Drive(
                 new GyroIO() {},
@@ -102,6 +105,10 @@ public class RobotContainer {
         loader = new Loader(new IntakeIOSim(), new WristIOSim());
         transfer = new Transfer(new HopperIOSim(), new IndexerIOSim());
         climber = new Climber(new ClimberIOSim());
+
+        simvis =
+            new SimulationVisualizer(
+                "Models", () -> loader.getWristAngle(), () -> launcher.getHoodAngle(), () -> 0);
         break;
 
       default:
@@ -200,8 +207,6 @@ public class RobotContainer {
         DriveCommands.joystickDrive(
             drive, () -> -pilot.getLeftY(), () -> -pilot.getLeftX(), () -> -pilot.getRightX()));
 
-    
-        
     // Lock to 0° when A button is held
     pilot
         .a()
@@ -223,39 +228,37 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    //pivoting the intake toggle (up/down)
+    // pivoting the intake toggle (up/down)
     pilot
-    .a()
-    .toggleOnTrue(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A)))
-    .toggleOnFalse(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)));
+        .a()
+        .toggleOnTrue(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A)))
+        .toggleOnFalse(
+            LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)));
 
-    //intaking button (toggle)
+    // intaking button (toggle)
     pilot
-    .y()
-    .toggleOnTrue(LoadingCommands.load(loader, 12))
-    .toggleOnFalse(LoadingCommands.load(loader, 0));
+        .y()
+        .toggleOnTrue(LoadingCommands.load(loader, 12))
+        .toggleOnFalse(LoadingCommands.load(loader, 0));
 
-    //aggitating and indexing in one button
+    // aggitating and indexing in one button
     pilot
-    .rightBumper()
-    .whileTrue(
-        Commands.parallel(
-            LoadingCommands.aggitate(transfer, 6),
-         LoadingCommands.index(transfer, 6)
-         ));
+        .rightBumper()
+        .whileTrue(
+            Commands.parallel(
+                LoadingCommands.aggitate(transfer, 6), LoadingCommands.index(transfer, 6)));
 
-
-        //sighhhhhhhhhh Will skill issue; Reagan will fix V
+    // sighhhhhhhhhh Will skill issue; Reagan will fix V
     pilot
-    .getLeftTButton()
-    .onTrue(
-        ScoringCommands.WindUp(launcher, (pilot.getLeftTriggerAxis() > 0.75) 
-        ? Constants.ShooterConstants.kHighVel 
-        : (pilot.getLeftTriggerAxis() > 0.50) 
-        ? Constants.ShooterConstants.kMiddleVel 
-        : Constants.ShooterConstants.kLowVel)
-    );
-    
+        .getLeftTButton()
+        .onTrue(
+            ScoringCommands.WindUp(
+                launcher,
+                (pilot.getLeftTriggerAxis() > 0.75)
+                    ? Constants.ShooterConstants.kHighVel
+                    : (pilot.getLeftTriggerAxis() > 0.50)
+                        ? Constants.ShooterConstants.kMiddleVel
+                        : Constants.ShooterConstants.kLowVel));
   }
 
   /**
@@ -265,5 +268,20 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  public void resetSimulation() {
+    if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
+
+    // SimulatedArena.getInstance().resetFieldForAuto();
+
+  }
+
+  public void displaySimFieldToAdvantageScope() {
+    if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
+
+    simvis.update();
+
+    Logger.recordOutput("FieldSimulation/RobotPosition", drive.getPose());
   }
 }

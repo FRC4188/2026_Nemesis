@@ -20,7 +20,7 @@ public class LoadingCommands {
     return Commands.runOnce(() -> transfer.aggitate(volt), transfer);
   }
 
-  public static Command index (Transfer transfer, double volt){
+  public static Command index(Transfer transfer, double volt) {
     return Commands.runOnce(() -> transfer.index(volt));
   }
 }

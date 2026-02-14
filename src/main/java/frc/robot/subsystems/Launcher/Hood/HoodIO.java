@@ -9,7 +9,7 @@ public interface HoodIO {
     public boolean motorConnected = true;
     public boolean coderConnected = true;
 
-    public double posRads = 0.0;
+    public double angleRads = 0.0;
     public double appliedVolts = 0.0;
     public double canPos = 0.0;
     public double currentAmps = 0.0;
