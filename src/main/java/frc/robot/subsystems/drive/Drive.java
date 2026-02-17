@@ -7,7 +7,8 @@
 
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
@@ -37,8 +38,11 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
+import frc.robot.util.FieldConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -209,6 +213,95 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
     // Log optimized setpoints (runSetpoint mutates each state)
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+  }
+
+  public void setModuleOrientations(Rotation2d angle) {
+    for (int i = 0; i < modules.length; i++) {
+      modules[i].runSetpoint(new SwerveModuleState(0.0, angle));
+    }
+  }
+
+  public double getOmega(Supplier<Rotation2d> rotationSupplier) {
+    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+
+    Logger.recordOutput("Overrides/Target Angle", rotationSupplier.get().getRadians());
+    Logger.recordOutput("Overrides/Current Angle", getPose().getRotation().getRadians());
+
+    double omega =
+        Constants.Drive.ANGLE_PID.calculate(
+                getRotation().getRadians(), rotationSupplier.get().getRadians())
+            + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+    if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
+            < Constants.Drive.ANGLE_TOL
+        && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+
+    return omega;
+  }
+
+  public double getX(DoubleSupplier xSupplier) {
+    Logger.recordOutput("Overrides/Target X", xSupplier.getAsDouble());
+    Logger.recordOutput("Overrides/Current X", getPose().getX());
+
+    double xSpeed =
+        Constants.Drive.DRIVE_PID.calculate(getPose().getX(), xSupplier.getAsDouble())
+            + Constants.Drive.DRIVE_PID.getSetpoint().velocity * Constants.Drive.DRIVE_FF;
+
+    if (Math.abs(getPose().getX() - xSupplier.getAsDouble()) < Constants.Drive.DRIVE_TOL
+        && Constants.Drive.DRIVE_PID.getSetpoint().velocity == 0.0) xSpeed = 0.0;
+
+    return xSpeed;
+  }
+
+  public double getY(DoubleSupplier ySupplier) {
+    Logger.recordOutput("Overrides/Target Y", ySupplier.getAsDouble());
+    Logger.recordOutput("Overrides/Current Y", getPose().getY());
+
+    double ySpeed =
+        Constants.Drive.DRIVE_PID.calculate(getPose().getY(), ySupplier.getAsDouble())
+            + Constants.Drive.DRIVE_PID.getSetpoint().velocity * Constants.Drive.DRIVE_FF;
+
+    if (Math.abs(getPose().getY() - ySupplier.getAsDouble()) < Constants.Drive.DRIVE_TOL
+        && Constants.Drive.DRIVE_PID.getSetpoint().velocity == 0.0) ySpeed = 0.0;
+
+    return ySpeed;
+  }
+
+  public void runVelocityWithSafety(ChassisSpeeds speeds) {
+    if (getPose().getTranslation().getDistance(FieldConstants.Trench.right_trench_center)
+        < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+
+      runVelocity(
+          new ChassisSpeeds(
+              speeds.vxMetersPerSecond,
+              getY(() -> FieldConstants.Trench.right_trench_center.getY()),
+              getOmega(
+                  () ->
+                      (Math.abs(getPose().getRotation().minus(Rotation2d.kZero).getRadians())
+                              < Math.abs(
+                                  getPose().getRotation().minus(Rotation2d.k180deg).getRadians()))
+                          ? Rotation2d.kZero
+                          : Rotation2d.k180deg)));
+
+      return;
+    } else if (getPose().getTranslation().getDistance(FieldConstants.Trench.left_trench_center)
+        < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+      runVelocity(
+          new ChassisSpeeds(
+              speeds.vxMetersPerSecond,
+              getY(() -> FieldConstants.Trench.left_trench_center.getY()),
+              getOmega(
+                  () ->
+                      (Math.abs(getPose().getRotation().minus(Rotation2d.kZero).getRadians())
+                              < Math.abs(
+                                  getPose().getRotation().minus(Rotation2d.k180deg).getRadians()))
+                          ? Rotation2d.kZero
+                          : Rotation2d.k180deg)));
+
+      return;
+    } else {
+      runVelocity(speeds);
+    }
   }
 
   /**

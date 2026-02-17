@@ -21,11 +21,13 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
+import frc.robot.CSPLib.ppp.NodePathGenerator;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveToPose;
 import frc.robot.generated.TunerConstants;
+import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -193,6 +195,12 @@ public class RobotContainer {
     //         new Pose2d(FieldConstants.Tower.left_far_corner, new Rotation2d())));
 
     autoChooser.addOption(
+        "TestingPlease",
+        PathBuilder.interpolateTimedPath(
+            NodePathGenerator.generateNodePathWithPose2d(
+                drive.getPose().getTranslation(), FieldConstants.field_center)));
+
+    autoChooser.addOption(
         "PPP",
         Commands.runOnce(
                 () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
@@ -229,6 +237,20 @@ public class RobotContainer {
     //             PathBuilder.getConstraints(),
     //             null,
     //             new GoalEndState(0.0, Rotation2d.k180deg)))));
+
+    autoChooser.addOption(
+        "BLine",
+        PathBuilder.followPolylinePath(
+            new Path.Waypoint(
+                new Pose2d(
+                    FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                0.1),
+            new Path.Waypoint(
+                new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kZero), 0.1),
+            new Path.Waypoint(
+                new Pose2d(FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero),
+                0.1),
+            new Path.Waypoint(FieldConstants.FuelField.left_close_corner, Rotation2d.kZero)));
 
     autoChooser.addOption(
         "TO THE RIGHT, TO THE LEFT",
@@ -311,6 +333,7 @@ public class RobotContainer {
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
         .onFalse(Commands.runOnce(drive::stop, drive));
+        //should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to defend us
 
     pilot
         .a()
@@ -344,6 +367,24 @@ public class RobotContainer {
                       } else {
                         return Rotation2d.fromRadians(result.getZ());
                       }
+                    })
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
+        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+
+        //for will, do whatever you want man
+    pilot
+        .b()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                    () -> {
+                      return Rotation2d.kZero;
                     })
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));

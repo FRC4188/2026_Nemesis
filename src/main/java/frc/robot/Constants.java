@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.pathplanner.lib.config.ModuleConfig;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.generated.TunerConstants;
 
@@ -99,7 +101,9 @@ public final class Constants {
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
+    public static final double DRIVE_FF = 0.0;
     public static final double ANGLE_TOL = 0.2;
+    public static final double DRIVE_TOL = 0.01;
 
     public static final double ANGLE_MAXVEL = 3.0 * Math.PI;
     public static final double ANGLE_MAXACC = 40.0;
@@ -126,6 +130,21 @@ public final class Constants {
                 TunerConstants.FrontLeft.SlipCurrent,
                 1),
             frc.robot.subsystems.drive.Drive.getModuleTranslations());
+
+    public static final double BLINE_DRIVE_TOL = 0.03;
+    public static final Angle BLINE_ROT_TOL = Degrees.of(0.0349);
+    public static final double BLINE_HANDOFF_RADIUS =
+        0.1; // Increase for smooth motion / more inaccurate
+
+    public static final double TRENCH_SAFETY_RADIUS = 1.6; // meters
+
+    public static enum SafetyMode {
+      NONE,
+      LEFT_TRENCH,
+      RIGHT_TRENCH
+    }
+
+    public static SafetyMode currentSafetyMode = SafetyMode.NONE;
   }
 
   public static class Intake {

@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlip;
+import frc.robot.util.FieldConstants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -55,6 +56,130 @@ public class DriveCommands {
                   speeds, AllianceFlip.apply(drive.getRotation())));
         },
         drive);
+  }
+
+  public static Command joystickDriveWithSafety(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier) {
+
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
+    ProfiledPIDController yController = Constants.Drive.DRIVE_PID;
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              if (drive
+                      .getPose()
+                      .getTranslation()
+                      .getDistance(FieldConstants.Trench.right_trench_center)
+                  < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+                if (Constants.Drive.currentSafetyMode != Constants.Drive.SafetyMode.RIGHT_TRENCH) {
+                  yController.reset(drive.getPose().getTranslation().getY());
+                  angleController.reset(drive.getRotation().getRadians());
+                }
+                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.RIGHT_TRENCH;
+
+                Rotation2d wantedRot =
+                    (Math.abs(drive.getRotation().minus(Rotation2d.kZero).getRadians())
+                            < Math.abs(drive.getRotation().minus(Rotation2d.k180deg).getRadians()))
+                        ? Rotation2d.kZero
+                        : Rotation2d.k180deg;
+
+                double omega =
+                    angleController.calculate(
+                            drive.getRotation().getRadians(), wantedRot.getRadians())
+                        + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+                if (Math.abs(drive.getRotation().getRadians() - wantedRot.getRadians())
+                        < Constants.Drive.ANGLE_TOL
+                    && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+                double ySpeed =
+                    yController.calculate(
+                        drive.getPose().getTranslation().getY(),
+                        FieldConstants.Trench.right_trench_center.getY());
+
+                if (Math.abs(
+                            drive.getPose().getTranslation().getY()
+                                - FieldConstants.Trench.right_trench_center.getY())
+                        < Constants.Drive.DRIVE_TOL
+                    && yController.getSetpoint().velocity == 0.0) ySpeed = 0.0;
+
+                ChassisSpeeds speeds =
+                    new ChassisSpeeds(
+                        xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                        ySpeed,
+                        omega);
+
+                drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds, AllianceFlip.apply(drive.getRotation())));
+              } else if (drive
+                      .getPose()
+                      .getTranslation()
+                      .getDistance(FieldConstants.Trench.left_trench_center)
+                  < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+                if (Constants.Drive.currentSafetyMode != Constants.Drive.SafetyMode.LEFT_TRENCH) {
+                  yController.reset(drive.getPose().getTranslation().getY());
+                  angleController.reset(drive.getRotation().getRadians());
+                }
+                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.LEFT_TRENCH;
+
+                Rotation2d wantedRot =
+                    (Math.abs(drive.getRotation().minus(Rotation2d.kZero).getRadians())
+                            < Math.abs(drive.getRotation().minus(Rotation2d.k180deg).getRadians()))
+                        ? Rotation2d.kZero
+                        : Rotation2d.k180deg;
+
+                double omega =
+                    angleController.calculate(
+                            drive.getRotation().getRadians(), wantedRot.getRadians())
+                        + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+                if (Math.abs(drive.getRotation().getRadians() - wantedRot.getRadians())
+                        < Constants.Drive.ANGLE_TOL
+                    && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+
+                double ySpeed =
+                    yController.calculate(
+                        drive.getPose().getTranslation().getY(),
+                        FieldConstants.Trench.left_trench_center.getY());
+
+                if (Math.abs(
+                            drive.getPose().getTranslation().getY()
+                                - FieldConstants.Trench.left_trench_center.getY())
+                        < Constants.Drive.DRIVE_TOL
+                    && yController.getSetpoint().velocity == 0.0) ySpeed = 0.0;
+
+                ChassisSpeeds speeds =
+                    new ChassisSpeeds(
+                        xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                        ySpeed,
+                        omega);
+
+                drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds, AllianceFlip.apply(drive.getRotation())));
+              } else {
+                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.NONE;
+                ChassisSpeeds speeds =
+                    new ChassisSpeeds(
+                        xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                        ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                        omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
+
+                drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds, AllianceFlip.apply(drive.getRotation())));
+              }
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
   /**
