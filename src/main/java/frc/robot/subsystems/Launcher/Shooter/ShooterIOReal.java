@@ -25,7 +25,8 @@ public class ShooterIOReal implements ShooterIO {
   private final TalonFX motorLeft;
   private final TalonFX motorRight;
 
-  private final TalonFXConfiguration motorConfigs;
+  private final TalonFXConfiguration leftMotorConfigs;
+  private final TalonFXConfiguration rightMotorConfigs;
 
   private final StatusSignal<Voltage> leftAppliedVolts;
   private final StatusSignal<Voltage> rightAppliedVolts;
@@ -51,7 +52,7 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
     motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    motorConfigs =
+    rightMotorConfigs =
         new TalonFXConfiguration()
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
@@ -64,7 +65,25 @@ public class ShooterIOReal implements ShooterIO {
                     .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
             .withMotorOutput(
                 new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
-            .withSlot0(Constants.ShooterConstants.shooterGains)
+            .withSlot0(Constants.ShooterConstants.rightShooterGains)
+            .withFeedback(
+                new FeedbackConfigs()
+                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
+
+    leftMotorConfigs =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent)
+                    .withStatorCurrentLimitEnable(true))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withMotorOutput(
+                new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
+            .withSlot0(Constants.ShooterConstants.leftShooterGains)
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
@@ -72,11 +91,13 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft
         .getConfigurator()
         .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
+            leftMotorConfigs.MotorOutput.withInverted(
+                Constants.ShooterConstants.kLeftInvertedValue));
     motorRight
         .getConfigurator()
         .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
+            rightMotorConfigs.MotorOutput.withInverted(
+                Constants.ShooterConstants.kRightInvertedValue));
 
     leftAppliedVolts = motorLeft.getMotorVoltage();
     rightAppliedVolts = motorRight.getMotorVoltage();
@@ -139,17 +160,25 @@ public class ShooterIOReal implements ShooterIO {
   }
 
   @Override
-  public void updatePID(double kP, double kI, double kD, double kV) {
-    motorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
+  public void updateLeftPID(double kP, double kI, double kD, double kV) {
+    leftMotorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
 
     motorLeft
         .getConfigurator()
         .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
+            leftMotorConfigs.MotorOutput.withInverted(
+                Constants.ShooterConstants.kLeftInvertedValue));
+  }
+
+  @Override
+  public void updateRightPID(double kP, double kI, double kD, double kV) {
+    rightMotorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
+
     motorRight
         .getConfigurator()
         .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
+            rightMotorConfigs.MotorOutput.withInverted(
+                Constants.ShooterConstants.kRightInvertedValue));
   }
 
   @Override

@@ -278,7 +278,15 @@ public final class Constants {
     public static final InvertedValue kRightInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
 
-    public static final Slot0Configs shooterGains =
+    public static final Slot0Configs rightShooterGains =
+        new Slot0Configs()
+            .withKP(0.0) // placeholder
+            .withKI(0.0) // placeholder
+            .withKD(0.0) // placeholder
+            .withKS(0.0) // testing usefulness
+            .withKV(0.0); // placeholder
+
+    public static final Slot0Configs leftShooterGains =
         new Slot0Configs()
             .withKP(0.0) // placeholder
             .withKI(0.0) // placeholder

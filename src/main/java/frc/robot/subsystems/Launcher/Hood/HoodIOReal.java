@@ -2,10 +2,8 @@ package frc.robot.subsystems.Launcher.Hood;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
-import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -15,7 +13,6 @@ import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -30,19 +27,15 @@ import frc.robot.Constants;
 
 public class HoodIOReal implements HoodIO {
   private final TalonFX motor;
-  private final CANcoder cancoder;
 
   private final TalonFXConfiguration motorConfigs;
-  private final CANcoderConfiguration coderConfigs;
 
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
   private final StatusSignal<Angle> positionRots;
-  private final StatusSignal<Angle> canPos;
   private final StatusSignal<Temperature> tempC;
 
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
-  private final Debouncer coderDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final PositionVoltage positionVoltageRequest =
@@ -54,7 +47,6 @@ public class HoodIOReal implements HoodIO {
 
   public HoodIOReal() {
     motor = new TalonFX(Constants.Id.kHood, Constants.Robot.rio);
-    cancoder = new CANcoder(Constants.Id.kHoodCANCoder, Constants.Robot.rio);
 
     motorConfigs =
         new TalonFXConfiguration()
@@ -85,27 +77,17 @@ public class HoodIOReal implements HoodIO {
                     .withMotionMagicExpo_kV(0.12 * Constants.HoodConstants.kGearRatio)
                     .withMotionMagicExpo_kA(0.1));
 
-    coderConfigs =
-        new CANcoderConfiguration()
-            .withMagnetSensor(
-                new MagnetSensorConfigs()
-                    .withMagnetOffset(Constants.HoodConstants.kCanCoderOffset)
-                    .withSensorDirection(Constants.HoodConstants.kDirection));
-
-    cancoder.getConfigurator().apply(coderConfigs);
     motor.getConfigurator().apply(motorConfigs);
 
     appliedVolts = motor.getMotorVoltage();
     currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
     positionRots = motor.getPosition();
-    canPos = cancoder.getAbsolutePosition();
 
     BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC);
-    BaseStatusSignal.setUpdateFrequencyForAll(50.0, positionRots, canPos);
+    BaseStatusSignal.setUpdateFrequencyForAll(50.0, positionRots);
 
     motor.optimizeBusUtilization();
-    cancoder.optimizeBusUtilization();
   }
 
   @Override
@@ -113,13 +95,11 @@ public class HoodIOReal implements HoodIO {
     inputs.motorConnected =
         motorDebouncer.calculate(
             BaseStatusSignal.refreshAll(appliedVolts, currentAmps, positionRots, tempC).isOK());
-    inputs.coderConnected = coderDebouncer.calculate(BaseStatusSignal.refreshAll(canPos).isOK());
 
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.posRads = positionRots.getValueAsDouble() * 2 * Math.PI;
-    inputs.canPos = canPos.getValueAsDouble();
   }
 
   @Override

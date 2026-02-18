@@ -13,14 +13,12 @@ public class Hood {
   private final HoodIOInputsAutoLogged inputs;
 
   private final Alert hoodDisconnectedAlert;
-  private final Alert canDisconnectedAlert;
 
   public Hood(HoodIO io) {
     this.io = io;
     inputs = new HoodIOInputsAutoLogged();
 
     hoodDisconnectedAlert = new Alert("Hood motor disconnected.", AlertType.kError);
-    canDisconnectedAlert = new Alert("Hood CANcoder disconnected.", AlertType.kError);
   }
 
   public void runVolts(double volts) {
@@ -56,6 +54,5 @@ public class Hood {
     Logger.processInputs("Hood", inputs);
 
     hoodDisconnectedAlert.set(!inputs.motorConnected);
-    canDisconnectedAlert.set(!inputs.coderConnected);
   }
 }

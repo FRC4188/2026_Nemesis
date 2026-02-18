@@ -39,8 +39,22 @@ public class Shooter {
     return (inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0;
   }
 
-  public void updatePID(double kp, double ki, double kd, double kf) {
-    io.updatePID(kp, ki, kd, kf);
+  @AutoLogOutput(key = "Shooter/Right Velocity RPM")
+  public double getRightVelocity() {
+    return inputs.rightVelocityRPM;
+  }
+
+  @AutoLogOutput(key = "Shooter/Left Velocity RPM")
+  public double getLeftVelocity() {
+    return inputs.leftVelocityRPM;
+  }
+
+  public void updateRightPID(double kp, double ki, double kd, double kf) {
+    io.updateRightPID(kp, ki, kd, kf);
+  }
+
+  public void updateLeftPID(double kp, double ki, double kd, double kf) {
+    io.updateLeftPID(kp, ki, kd, kf);
   }
 
   public void periodic() {
