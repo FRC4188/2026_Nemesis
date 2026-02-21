@@ -64,7 +64,7 @@ public final class Constants {
     public static final int kRightShooter = 18;
     public static final int kLeftShooter = 19;
     public static final int kHood = 20;
-    public static final int kHoodCANCoder = 21;
+    // public static final int kHoodCANCoder = 21;
     public static final int kClimber = 22;
   }
 
@@ -114,7 +114,7 @@ public final class Constants {
     public static final double kStallCurrent = 50; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
-    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
     public static final Slot0Configs wristGains =
