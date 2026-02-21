@@ -41,6 +41,10 @@ public class Launcher extends SubsystemBase {
     return shooter.atGoal();
   }
 
+  public double getHoodAngle() {
+    return hood.getAngleRad();
+  }
+
   @Override
   public void periodic() {
     shooter.periodic();

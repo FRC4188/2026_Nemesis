@@ -50,7 +50,7 @@ public final class Constants {
     public static final int kRightShooter = 18;
     public static final int kLeftShooter = 19;
     public static final int kHood = 20;
-    public static final int kHoodCANCoder = 21;
+    // public static final int kHoodCANCoder = 21;
     public static final int kClimber = 22;
   }
 

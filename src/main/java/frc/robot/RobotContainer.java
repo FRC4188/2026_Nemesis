@@ -54,6 +54,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -77,6 +78,7 @@ public class RobotContainer {
   private final Climber climber;
   private final PIDTuning pidTuner;
   private final Vision vis;
+  private SimulationVisualizer simvis;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -112,6 +114,7 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
+
         drive =
             new Drive(
                 new GyroIO() {},
@@ -126,6 +129,10 @@ public class RobotContainer {
         loader = new Loader(new IntakeIOSim(), new WristIOSim());
         transfer = new Transfer(new HopperIOSim(), new IndexerIOSim());
         climber = new Climber(new ClimberIOSim());
+
+        simvis =
+            new SimulationVisualizer(
+                "Models", () -> loader.getWristAngle(), () -> launcher.getHoodAngle(), () -> 0);
         break;
 
       default:
@@ -391,6 +398,7 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
+    // pivoting the intake toggle (up/down)
     pilot
         .rightTrigger()
         .onTrue(
@@ -470,5 +478,13 @@ public class RobotContainer {
     // } else {
     //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
     // }
+  }
+
+  public void displaySimFieldToAdvantageScope() {
+    if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
+
+    simvis.update();
+
+    Logger.recordOutput("FieldSimulation/RobotPosition", drive.getPose());
   }
 }

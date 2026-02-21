@@ -14,7 +14,6 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -66,10 +65,8 @@ public class HoodIOReal implements HoodIO {
             .withSlot0(Constants.HoodConstants.hoodGains)
             .withFeedback(
                 new FeedbackConfigs()
-                    .withFeedbackRemoteSensorID(Constants.Id.kHoodCANCoder)
-                    .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-                    .withRotorToSensorRatio(Constants.HoodConstants.kGearBox)
-                    .withSensorToMechanismRatio(Constants.HoodConstants.kSproket))
+                    .withSensorToMechanismRatio(
+                        Constants.HoodConstants.kGearBox * Constants.HoodConstants.kSproket))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity(100.0 / Constants.HoodConstants.kGearRatio)
