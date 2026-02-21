@@ -29,7 +29,8 @@ public class Launcher extends SubsystemBase {
   }
 
   public void updateShooterPID(double kp, double ki, double kd, double kv) {
-    shooter.updatePID(kp, ki, kd, kv);
+    shooter.updateRightPID(kp, ki, kd, kv);
+    shooter.updateLeftPID(kp, ki, kd, kv);
   }
 
   public boolean hoodAtTarget() {

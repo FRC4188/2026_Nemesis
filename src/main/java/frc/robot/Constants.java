@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -86,8 +87,8 @@ public final class Constants {
     public static final PIDTuning tuningMode = PIDTuning.DRIVE_MOD;
     public static RobotMode robotMode = RobotMode.NONE;
 
-    public static final String rio = "rio";
-    public static final String canivore = "canivore";
+    public static final CANBus rio = CANBus.roboRIO();
+    public static final CANBus canivore = new CANBus("canivore");
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
@@ -278,7 +279,15 @@ public final class Constants {
     public static final InvertedValue kRightInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
 
-    public static final Slot0Configs shooterGains =
+    public static final Slot0Configs rightShooterGains =
+        new Slot0Configs()
+            .withKP(0.0) // placeholder
+            .withKI(0.0) // placeholder
+            .withKD(0.0) // placeholder
+            .withKS(0.0) // testing usefulness
+            .withKV(0.0); // placeholder
+
+    public static final Slot0Configs leftShooterGains =
         new Slot0Configs()
             .withKP(0.0) // placeholder
             .withKI(0.0) // placeholder

@@ -7,11 +7,9 @@ public interface HoodIO {
   @AutoLog
   public static class HoodIOInputs {
     public boolean motorConnected = true;
-    public boolean coderConnected = true;
 
     public double posRads = 0.0;
     public double appliedVolts = 0.0;
-    public double canPos = 0.0;
     public double currentAmps = 0.0;
     public double tempC = 0.0;
   }

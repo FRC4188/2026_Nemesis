@@ -24,7 +24,9 @@ public interface ShooterIO {
 
   public default void setVelocity(double rpm) {}
 
-  public default void updatePID(double kp, double ki, double kd, double kv) {}
+  public default void updateRightPID(double kp, double ki, double kd, double kv) {}
+
+  public default void updateLeftPID(double kp, double ki, double kd, double kv) {}
 
   public default double getSetpoint() {
     return 0;
