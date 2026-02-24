@@ -12,7 +12,6 @@ import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
@@ -36,11 +35,8 @@ public class HoodIOReal implements HoodIO {
 
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
-
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
   private final PositionTorqueCurrentFOC positionTorqueCurrentFOC =
       new PositionTorqueCurrentFOC(0.0);
 
@@ -100,12 +96,8 @@ public class HoodIOReal implements HoodIO {
   }
 
   @Override
-  public void setOpenLoop(double output) {
-    motor.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+  public void runVolts(double output) {
+    motor.setVoltage(output);
   }
 
   @Override
@@ -124,7 +116,7 @@ public class HoodIOReal implements HoodIO {
   @Override
   public void setPosition(Rotation2d radians) {
     motor.setControl(
-        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
+        switch (Constants.HoodConstants.motorClosedLoopOutput) {
           case Voltage -> positionVoltageRequest.withPosition(radians.getRotations());
           case TorqueCurrentFOC -> positionTorqueCurrentFOC.withPosition(radians.getRotations());
         });

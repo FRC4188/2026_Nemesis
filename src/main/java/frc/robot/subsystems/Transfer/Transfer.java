@@ -22,11 +22,11 @@ public class Transfer extends SubsystemBase {
   }
 
   public void index(double volts) {
-    indexer.runVolts(volts);
+    indexer.runVolts(-volts);
   }
 
   public void outdex(double volts) {
-    indexer.runVolts(-volts);
+    indexer.runVolts(volts);
   }
 
   public void aggitate(double volts) {

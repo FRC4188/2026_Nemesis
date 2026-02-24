@@ -20,7 +20,7 @@ public interface ShooterIO {
 
   public default void updateInputs(ShooterIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double volts) {}
 
   public default void setVelocity(double rpm) {}
 

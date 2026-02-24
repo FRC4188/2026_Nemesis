@@ -23,7 +23,7 @@ public class Hood {
 
   public void runVolts(double volts) {
     volts = MathUtil.clamp(volts, -12, 12);
-    io.setOpenLoop(volts);
+    io.runVolts(volts);
   }
 
   public void setPosition(Rotation2d angle) {

@@ -21,8 +21,8 @@ public class Climber extends SubsystemBase {
     climberDisconnectedAlert = new Alert("Climber motor disconnected.", AlertType.kError);
   }
 
-  public void run(double output) {
-    io.setOpenLoop(output);
+  public void runVolts(double output) {
+    io.runVolts(output);
   }
 
   @AutoLogOutput(key = "Climber/Height Meters")

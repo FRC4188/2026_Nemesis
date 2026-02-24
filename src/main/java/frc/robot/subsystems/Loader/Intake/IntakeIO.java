@@ -13,7 +13,7 @@ public interface IntakeIO {
 
   public default void updateInputs(IntakeIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double volts) {}
 
   public default boolean isStalled() {
     return false;

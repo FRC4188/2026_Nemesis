@@ -16,18 +16,13 @@ public class Intake {
     intakeDisconnectedAlert = new Alert("Intake motor disconnected.", AlertType.kError);
   }
 
-  public void intakeVolts(double volts) {
+  public void runVolts(double volts) {
     volts = MathUtil.clamp(-12, volts, 12);
-    io.setOpenLoop(volts);
-  }
-
-  public void ejectVolts(double volts) {
-    volts = MathUtil.clamp(-12, volts, 12);
-    io.setOpenLoop(-volts);
+    io.runVolts(volts);
   }
 
   public void stop() {
-    io.setOpenLoop(0);
+    io.runVolts(0);
   }
 
   public boolean isStalled() {

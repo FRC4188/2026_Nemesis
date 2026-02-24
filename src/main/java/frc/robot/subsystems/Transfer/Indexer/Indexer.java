@@ -16,11 +16,11 @@ public class Indexer {
   }
 
   public void runVolts(double volts) {
-    io.setOpenLoop(volts);
+    io.runVolts(volts);
   }
 
   public void stop() {
-    io.setOpenLoop(0);
+    io.runVolts(0);
   }
 
   public void periodic() {

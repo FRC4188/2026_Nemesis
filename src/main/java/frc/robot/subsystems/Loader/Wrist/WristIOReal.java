@@ -18,7 +18,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -34,7 +36,7 @@ public class WristIOReal implements WristIO {
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
 
-  private final Debouncer motorConnectedDebouncer = new Debouncer(0.5);
+  private final Debouncer motorConnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
@@ -55,11 +57,11 @@ public class WristIOReal implements WristIO {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.WristConstants.kNuetralMode)
-                    .withInverted(Constants.WristConstants.kInvertedValue)) // placeholder
+                    .withInverted(Constants.WristConstants.kInvertedValue))
             .withSlot0(Constants.WristConstants.wristGains)
             .withFeedback(
                 new FeedbackConfigs()
-                    .withSensorToMechanismRatio(Constants.WristConstants.kGearRatio)) // No CanCoder
+                    .withSensorToMechanismRatio(Constants.WristConstants.kGearRatio))
             .withTorqueCurrent(
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.WristConstants.kPeakForwardTC)
@@ -82,7 +84,11 @@ public class WristIOReal implements WristIO {
     tempC.setUpdateFrequency(Hertz.of(5.0));
     currentAmps.setUpdateFrequency(5.0);
 
+    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC);
+    BaseStatusSignal.setUpdateFrequencyForAll(50.0, posRots);
+
     motor.optimizeBusUtilization();
+    motor.setPosition(Units.radiansToRotations(Constants.WristConstants.Max_A));
   }
 
   @Override
@@ -99,17 +105,19 @@ public class WristIOReal implements WristIO {
 
   @Override
   public void updateInputs(WristIOInputs inputs) {
-    var motorStatus = BaseStatusSignal.refreshAll(appliedVolts, tempC, posRots);
+    var motorStatus = BaseStatusSignal.refreshAll(appliedVolts, tempC, posRots, currentAmps);
 
     inputs.connected = motorConnectedDebouncer.calculate(motorStatus.isOK());
 
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
+    inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.posRads = posRots.getValueAsDouble() * Math.PI * 2;
   }
 
   @Override
   public void updatePID(double kP, double kI, double kD, double kG) {
+
     motorConfig.Slot0 =
         new Slot0Configs()
             .withKP(kP)

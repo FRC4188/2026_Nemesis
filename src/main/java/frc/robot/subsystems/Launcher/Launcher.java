@@ -2,6 +2,7 @@ package frc.robot.subsystems.Launcher;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.subsystems.Launcher.Hood.Hood;
 import frc.robot.subsystems.Launcher.Hood.HoodIO;
 import frc.robot.subsystems.Launcher.Shooter.Shooter;
@@ -24,12 +25,23 @@ public class Launcher extends SubsystemBase {
     hood.setPosition(radians);
   }
 
+  public void runShooterVolts(double output) {
+    shooter.runVolts(output);
+  }
+
+  public void runHoodVolts(double output) {
+    hood.runVolts(output + Constants.HoodConstants.hoodGains.kG);
+  }
+
   public void updateHoodPID(double kp, double ki, double kd, double kg) {
     hood.updatePID(kp, ki, kd, kg);
   }
 
-  public void updateShooterPID(double kp, double ki, double kd, double kv) {
-    shooter.updateRightPID(kp, ki, kd, kv);
+  public void updateLShooterPID(double kp, double ki, double kd, double kv) {
+    shooter.updateLeftPID(kp, ki, kd, kv);
+  }
+
+  public void updateRShooterPID(double kp, double ki, double kd, double kv) {
     shooter.updateLeftPID(kp, ki, kd, kv);
   }
 

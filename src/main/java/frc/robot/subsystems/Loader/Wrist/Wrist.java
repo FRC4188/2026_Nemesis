@@ -35,16 +35,6 @@ public class Wrist {
     io.setPosition(angle);
   }
 
-  public void reloadPosition() {
-    if (!io.isStalled() || Math.abs(inputs.appliedVolts) < 1.0) return;
-
-    io.setPosition(
-        Rotation2d.fromRadians(
-            inputs.appliedVolts > 0.0
-                ? Constants.WristConstants.Max_A
-                : Constants.WristConstants.Min_A));
-  }
-
   @AutoLogOutput(key = "Wrist/Angle Radians")
   public double getAngle() {
     return inputs.posRads;
@@ -64,9 +54,6 @@ public class Wrist {
   }
 
   public void periodic() {
-    // TODO: Needs Testing
-    // reloadPosition();
-
     io.updateInputs(inputs);
     Logger.processInputs("Wrist", inputs);
 

@@ -18,11 +18,11 @@ public class Hopper {
 
   public void runVolts(double volts) {
     volts = MathUtil.clamp(volts, -12, 12);
-    io.setOpenLoop(volts);
+    io.runVolts(volts);
   }
 
   public void stop() {
-    io.setOpenLoop(0);
+    io.runVolts(0);
   }
 
   public void periodic() {

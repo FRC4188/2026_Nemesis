@@ -15,7 +15,7 @@ public interface ClimberIO {
 
   public default void updateInputs(ClimberIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double output) {}
 
   public default void setPosition(Rotation2d rotations) {}
 

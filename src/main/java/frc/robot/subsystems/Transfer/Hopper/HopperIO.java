@@ -13,5 +13,5 @@ public interface HopperIO {
 
   public default void updateInputs(HopperIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double volts) {}
 }

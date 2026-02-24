@@ -10,7 +10,7 @@ public class ShooterIOSim implements ShooterIO {
   public ShooterIOSim() {}
 
   @Override
-  public void setOpenLoop(double output) {
+  public void runVolts(double output) {
     leftTC = output;
     rightTC = output;
   }

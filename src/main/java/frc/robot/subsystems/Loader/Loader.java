@@ -35,11 +35,11 @@ public class Loader extends SubsystemBase {
   }
 
   public void intake(double volts) {
-    intake.intakeVolts(volts);
+    intake.runVolts(volts);
   }
 
   public void eject(double volts) {
-    intake.ejectVolts(volts);
+    intake.runVolts(-volts);
   }
 
   public boolean atWristGoal() {

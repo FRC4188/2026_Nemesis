@@ -13,5 +13,5 @@ public interface IndexerIO {
 
   public default void updateInputs(IndexerIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double volts) {}
 }

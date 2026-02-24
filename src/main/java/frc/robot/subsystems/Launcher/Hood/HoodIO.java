@@ -16,7 +16,7 @@ public interface HoodIO {
 
   public default void updateInputs(HoodIOInputs inputs) {}
 
-  public default void setOpenLoop(double output) {}
+  public default void runVolts(double output) {}
 
   public default void setPosition(Rotation2d radians) {}
 

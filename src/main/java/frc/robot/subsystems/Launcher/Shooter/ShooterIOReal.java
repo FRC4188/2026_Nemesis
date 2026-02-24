@@ -11,7 +11,6 @@ import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -40,11 +39,9 @@ public class ShooterIOReal implements ShooterIO {
   private final Debouncer leftDebouncer = new Debouncer(0.5, DebounceType.kFalling);
   private final Debouncer rightDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
   private final VelocityVoltage velocityVoltageRequest =
       new VelocityVoltage(0.0).withEnableFOC(true);
 
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0);
 
@@ -145,18 +142,9 @@ public class ShooterIOReal implements ShooterIO {
   }
 
   @Override
-  public void setOpenLoop(double output) {
-    motorLeft.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
-
-    motorRight.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+  public void runVolts(double volts) {
+    motorLeft.setVoltage(volts);
+    motorRight.setVoltage(volts);
   }
 
   @Override
@@ -191,7 +179,7 @@ public class ShooterIOReal implements ShooterIO {
 
     motorRight.setControl(
         switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(rpm / 60.0);
+          case Voltage -> velocityVoltageRequest.withVelocity(rpm / 60.0);
           case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(rpm / 60.0);
         });
 

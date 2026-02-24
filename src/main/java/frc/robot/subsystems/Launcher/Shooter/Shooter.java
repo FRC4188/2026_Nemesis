@@ -30,6 +30,10 @@ public class Shooter {
     io.setVelocity(RPM);
   }
 
+  public void runVolts(double volts) {
+    io.runVolts(volts);
+  }
+
   public void stop() {
     io.setVelocity(0.0);
   }

@@ -13,10 +13,10 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
@@ -39,10 +39,7 @@ public class ClimberIOReal implements ClimberIO {
   private final PositionTorqueCurrentFOC positionTorqueCurrentRequest =
       new PositionTorqueCurrentFOC(0.0);
 
-  private final Debouncer debouncer = new Debouncer(0.5);
-
-  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
+  private final Debouncer debouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public ClimberIOReal() {
     motor = new TalonFX(Constants.Id.kClimber, Constants.Robot.rio);
@@ -92,12 +89,9 @@ public class ClimberIOReal implements ClimberIO {
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
   }
 
-  public void setOpenLoop(double output) {
-    motor.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+  @Override
+  public void runVolts(double output) {
+    motor.setVoltage(output);
   }
 
   @Override

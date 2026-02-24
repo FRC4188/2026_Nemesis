@@ -84,7 +84,7 @@ public final class Constants {
     public static final double PATH_ERROR = B_CROSS * 2.5;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
-    public static final PIDTuning tuningMode = PIDTuning.DRIVE_MOD;
+    public static final PIDTuning tuningMode = PIDTuning.NONE;
     public static RobotMode robotMode = RobotMode.NONE;
 
     public static final CANBus rio = CANBus.roboRIO();
@@ -219,8 +219,7 @@ public final class Constants {
             .withKG(0.0) // placeholder
             .withGravityType(GravityTypeValue.Elevator_Static);
 
-    public static final ClosedLoopOutputType motorClosedLoopOutput =
-        ClosedLoopOutputType.TorqueCurrentFOC;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
   public static class HoodConstants {
@@ -277,7 +276,7 @@ public final class Constants {
     public static final InvertedValue kLeftInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
     public static final InvertedValue kRightInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+        InvertedValue.CounterClockwise_Positive; // placeholder
 
     public static final Slot0Configs rightShooterGains =
         new Slot0Configs()
@@ -295,8 +294,7 @@ public final class Constants {
             .withKS(0.0) // testing usefulness
             .withKV(0.0); // placeholder
 
-    public static final ClosedLoopOutputType motorClosedLoopOutput =
-        ClosedLoopOutputType.TorqueCurrentFOC;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
   public static class IndexerConstants {

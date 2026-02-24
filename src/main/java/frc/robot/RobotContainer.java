@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -19,7 +18,6 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
@@ -172,12 +170,13 @@ public class RobotContainer {
       case SHOOTER:
         pidTuner =
             new PIDTuning(
-                "Shooter",
+                "Shooter Left",
                 () -> {
                   return 0;
                 },
                 (set) -> launcher.runShooter(set),
-                launcher::updateShooterPID);
+                launcher::updateLShooterPID);
+        // TODO: figure out smth for this
         break;
       case HOOD:
         pidTuner =
@@ -348,8 +347,9 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
-    launcher.setDefaultCommand(
-        Commands.runOnce(() -> launcher.runShooter(Constants.ShooterConstants.kLowVel), launcher));
+    // launcher.setDefaultCommand(
+    //     Commands.runOnce(() -> launcher.runShooter(Constants.ShooterConstants.kLowVel),
+    // launcher));
 
     Trigger driveInput =
         new Trigger(
@@ -372,83 +372,140 @@ public class RobotContainer {
                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
         .onFalse(Commands.runOnce(drive::stop, drive));
 
-    pilot
+    // TEMP TEST INPUTS
+    copilot
         .a()
         .whileTrue(
-            ScoringCommands.aim(
-                    drive,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    launcher,
-                    () -> Constants.ShooterConstants.kMiddleVel)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            Commands.run(
+                () -> launcher.runShooterVolts(12 * copilot.getLeftY(Scale.LINEAR)), launcher));
 
-    pilot
-        .start()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
-
-    // pivoting the intake toggle (up/down)
-    pilot
-        .rightTrigger()
-        .onTrue(
-            Commands.sequence(
-                Commands.runOnce(() -> transfer.index(5.0), transfer),
-                Commands.runOnce(() -> transfer.aggitate(5.0), transfer)))
-        .onFalse(
-            Commands.sequence(
-                Commands.runOnce(() -> transfer.index(0.0), transfer),
-                Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
-
-    pilot
-        .leftTrigger()
-        .onTrue(Commands.runOnce(() -> loader.intake(5.0), loader))
-        .onFalse(Commands.runOnce(() -> loader.intake(0.0), loader));
-
-    pilot
+    copilot
         .b()
-        .toggleOnTrue(
-            Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber))
-        .toggleOnFalse(
-            Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H), climber));
+        .whileTrue(
+            Commands.run(
+                () -> launcher.runHoodVolts(3 * copilot.getLeftY(Scale.LINEAR)), launcher));
 
     copilot
-        .leftBumper()
-        .toggleOnTrue(
-            Commands.runOnce(
-                () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
-        .toggleOnFalse(
-            Commands.runOnce(
-                () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
-
-    copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
-    copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
+        .x()
+        .whileTrue(
+            Commands.run(() -> transfer.index(12 * copilot.getLeftY(Scale.LINEAR)), transfer));
 
     copilot
-        .rightTrigger()
-        .onTrue(Commands.runOnce(() -> loader.eject(5.0), loader))
-        .onFalse(Commands.runOnce(() -> loader.eject(0.0), loader));
+        .y()
+        .whileTrue(
+            Commands.run(() -> transfer.aggitate(12 * copilot.getLeftY(Scale.LINEAR)), transfer));
+
     copilot
-        .rightBumper()
-        .onTrue(Commands.runOnce(() -> transfer.outdex(5.0), transfer))
-        .onFalse(Commands.runOnce(() -> transfer.outdex(0.0), transfer));
+        .getDownButton()
+        .whileTrue(Commands.run(() -> loader.intake(12 * copilot.getRightY(Scale.LINEAR)), loader));
 
-    Trigger climberinput =
-        new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
+    copilot
+        .getUpButton()
+        .whileTrue(
+            Commands.run(() -> loader.runWrist(3 * copilot.getRightY(Scale.LINEAR)), loader));
 
-    climberinput
-        .whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR))))
-        .onFalse(Commands.runOnce(() -> climber.run(0.0)));
+    copilot
+        .getLeftButton()
+        .whileTrue(
+            Commands.run(() -> climber.runVolts(12 * copilot.getRightY(Scale.LINEAR)), climber));
+    // END OF TEST TEMP INPUTS
+
+    // pilot
+    //     .a()
+    //     .whileTrue(
+    //         ScoringCommands.aim(
+    //                 drive,
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+    //                 launcher,
+    //                 () -> Constants.ShooterConstants.kMiddleVel)
+    //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
+    //     .onFalse(Commands.runOnce(drive::stopWithX, drive));
+
+    // pilot
+    //     .start()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () ->
+    //                     drive.setPose(
+    //                         new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+    //                 drive)
+    //             .ignoringDisable(true));
+
+    // // pivoting the intake toggle (up/down)
+    // pilot
+    //     .rightTrigger()
+    //     .onTrue(
+    //         Commands.sequence(
+    //             Commands.runOnce(() -> transfer.index(10.0), transfer),
+    //             Commands.runOnce(() -> transfer.aggitate(10.0), transfer)))
+    //     .onFalse(
+    //         Commands.sequence(
+    //             Commands.runOnce(() -> transfer.index(0.0), transfer),
+    //             Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
+
+    // pilot
+    //     .leftTrigger()
+    //     .onTrue(Commands.runOnce(() -> loader.intake(10.0), loader))
+    //     .onFalse(Commands.runOnce(() -> loader.intake(0.0), loader));
+
+    // pilot
+    //     .b()
+    //     .toggleOnTrue(
+    //         Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber))
+    //     .toggleOnFalse(
+    //         Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H),
+    // climber));
+
+    // copilot
+    //     .leftBumper()
+    //     .toggleOnTrue(
+    //         Commands.runOnce(
+    //             () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
+    //     .toggleOnFalse(
+    //         Commands.runOnce(
+    //             () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
+
+    // copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
+    // copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
+
+    // copilot
+    //     .rightTrigger()
+    //     .onTrue(Commands.runOnce(() -> loader.eject(5.0), loader))
+    //     .onFalse(Commands.runOnce(() -> loader.eject(0.0), loader));
+    // copilot
+    //     .rightBumper()
+    //     .onTrue(Commands.runOnce(() -> transfer.outdex(5.0), transfer))
+    //     .onFalse(Commands.runOnce(() -> transfer.outdex(0.0), transfer));
+
+    // pilot
+    //     .x()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               launcher.setOpen(50);
+    //               launcher.setHood(Rotation2d.fromDegrees(45.0));
+    //             },
+    //             launcher))
+    //     .onFalse(
+    //         Commands.runOnce(
+    //             () -> {
+    //               launcher.setOpen(0);
+
+    //               launcher.setHood(Rotation2d.fromDegrees(0.0));
+    //             },
+    //             launcher));
+
+    // Trigger climberinput =
+    //     new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
+
+    // climberinput
+    //     .whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR))))
+    //     .onFalse(Commands.runOnce(() -> climber.run(0.0)));
   }
 
   /**

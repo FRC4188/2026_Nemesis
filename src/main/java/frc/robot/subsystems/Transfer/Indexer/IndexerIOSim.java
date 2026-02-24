@@ -7,8 +7,8 @@ public class IndexerIOSim implements IndexerIO {
   public IndexerIOSim() {}
 
   @Override
-  public void setOpenLoop(double output) {
-    appliedVolts = output;
+  public void runVolts(double volts) {
+    appliedVolts = volts;
   }
 
   @Override
