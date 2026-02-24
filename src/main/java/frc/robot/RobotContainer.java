@@ -275,7 +275,7 @@ public class RobotContainer {
 
     // SimulatedArena.getInstance().resetFieldForAuto();
 
-  }
+   }
 
   public void displaySimFieldToAdvantageScope() {
     if (Constants.Robot.currentMode != Constants.Mode.SIM) return;

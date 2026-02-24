@@ -31,7 +31,7 @@ public class SimulationConfig {
   public static Pose3d wristAxis =
       new Pose3d(
           Units.inchesToMeters(13.625000),
-          Units.inchesToMeters(-9.155369 + 2.37851),
+          0.172,
           Units.inchesToMeters(1.690000),
           new Rotation3d(0, 0, 0));
   public static Pose3d hoodAxis =
