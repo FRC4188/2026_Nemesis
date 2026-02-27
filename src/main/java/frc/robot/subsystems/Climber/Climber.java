@@ -25,13 +25,25 @@ public class Climber extends SubsystemBase {
     io.runVolts(output);
   }
 
-  @AutoLogOutput(key = "Climber/Height Meters")
-  public double getHeight() {
-    return inputs.posRots * Constants.ClimberConstants.kConverter;
+  @AutoLogOutput(key = "Climber/Height Rotations")
+  public double getHeightRots() {
+    return inputs.posRots;
   }
 
-  public void setHeight(double height) {
-    io.setPosition(Rotation2d.fromRotations(height / Constants.ClimberConstants.kConverter));
+  public void fall() {
+    io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Max_R), 1);
+  }
+
+  public void climb() {
+    io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Min_R), 1);
+  }
+
+  public void stow() {
+    io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Min_R), 0);
+  }
+
+  public void ready() {
+    io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Max_R), 0);
   }
 
   public boolean atGoal() {

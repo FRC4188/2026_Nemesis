@@ -191,15 +191,15 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
-    if (Constants.Robot.currentMode != Mode.SIM) {
-      if (speeds.omegaRadiansPerSecond != 0.0) {
-        Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
-      } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
-        double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
-        speeds.omegaRadiansPerSecond =
-            Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
-      }
-    }
+    // if (Constants.Robot.currentMode != Mode.SIM) {
+    //   if (speeds.omegaRadiansPerSecond != 0.0) {
+    //     Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
+    //   } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
+    //     double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
+    //     speeds.omegaRadiansPerSecond =
+    //         Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
+    //   }
+    // }
 
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);

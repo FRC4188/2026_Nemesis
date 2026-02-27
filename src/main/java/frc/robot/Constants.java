@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -177,9 +178,9 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode =
-        NeutralModeValue.Coast; // free pivot is faster
+        NeutralModeValue.Brake; // free pivot is faster
     public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+        InvertedValue.CounterClockwise_Positive; // placeholder
     public static final Slot0Configs wristGains =
         new Slot0Configs()
             .withKP(0.0) // placeholder
@@ -191,35 +192,40 @@ public final class Constants {
 
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
 
-    // public static final double kCanCoderOffset = 0.0;
-    // public static final SensorDirectionValue kDirection =
-    // SensorDirectionValue.Clockwise_Positive;
   }
 
   public static class ClimberConstants {
-    public static final double kTolerance = 0.2;
-    public static final double kGearRatio = 45.0;
-    public static final double kConverter = 0.75 * Math.PI; // placeholder
-    public static final double Max_H = 1.0; // placeholder
-    public static final double Min_H = 0.0;
+    public static final double kTolerance = 3.0;
+    public static final double Max_R = 80.0;
+    public static final double Min_R = 0.0;
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+        InvertedValue.CounterClockwise_Positive;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final Slot0Configs climberGains =
         new Slot0Configs()
-            .withKP(0.0) // placeholder
+            .withKP(1.0) // placeholder
             .withKI(0.0) // placeholder
-            .withKD(0.0) // placeholder
+            .withKD(0.3) // placeholder
             .withKS(0.0) // testing usefulness
             .withKG(0.0) // placeholder
             .withGravityType(GravityTypeValue.Elevator_Static);
 
-    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+    public static final Slot1Configs climberGains1 =
+        new Slot1Configs()
+            .withKP(1.0) // placeholder
+            .withKI(0.0) // placeholder
+            .withKD(0.3) // placeholder
+            .withKS(0.0) // testing usefulness
+            .withKG(3.0) // placeholder
+            .withGravityType(GravityTypeValue.Elevator_Static);
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput =
+        ClosedLoopOutputType.TorqueCurrentFOC;
   }
 
   public static class HoodConstants {
