@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
+import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.commands.Scoring.LoadingCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
@@ -205,7 +206,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -pilot.getLeftY(), () -> -pilot.getLeftX(), () -> -pilot.getRightX()));
+            drive, () -> pilot.getLeftY(Scale.SQUARED), () -> pilot.getLeftX(Scale.SQUARED), () -> -pilot.getRightX(Scale.LINEAR)));
 
     // Lock to 0° when A button is held
     pilot
@@ -275,7 +276,7 @@ public class RobotContainer {
 
     // SimulatedArena.getInstance().resetFieldForAuto();
 
-   }
+  }
 
   public void displaySimFieldToAdvantageScope() {
     if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
