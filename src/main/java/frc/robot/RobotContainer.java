@@ -8,6 +8,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -119,6 +120,7 @@ public class RobotContainer {
             new Vision(
                 drive::accept,
                 new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
+                new VisionIOPhoton(VisConstants.objPho, VisConstants.robotToCamera1),
                 new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
 
         break;
@@ -230,6 +232,18 @@ public class RobotContainer {
                         FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
             .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
 
+    autoChooser.addOption(
+        "i hate life",
+        Commands.runOnce(() -> PathBuilder.targetTranslation(() -> FieldConstants.field_center))
+            .andThen(
+                PathBuilder.createPath(
+                    vis.getCluster(
+                        new Pose3d(
+                            drive.getPose().getX(),
+                            drive.getPose().getY(),
+                            0,
+                            new Rotation3d(drive.getPose().getRotation()))))));
+
     // .andThen(
     //     PathBuilder.mergeToKnownPath(
     //         new PathPlannerPath(
@@ -252,45 +266,48 @@ public class RobotContainer {
                 0.1),
             new Path.Waypoint(FieldConstants.FuelField.left_close_corner, Rotation2d.kZero)));
 
-    autoChooser.addOption(
-        "TO THE RIGHT, TO THE LEFT",
-        Commands.runOnce(
-                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
-            .andThen(
-                PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance, 5))
-            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-            .andThen(
-                PathBuilder.createPath(
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_neutral_preentrance,
-                        Rotation2d.kCCW_90deg),
-                    5))
-            .andThen(
-                PathBuilder.createPath(
-                    new Pose2d(
-                        FieldConstants.FuelField.right_close_corner_approach,
-                        Rotation2d.kCCW_90deg),
-                    5))
-            .andThen(
-                PathBuilder.createPath(
-                    new Pose2d(
-                        FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCCW_90deg),
-                    5))
-            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-            .andThen(
-                PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
-            .andThen(
-                PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance, 5))
-            .andThen(
-                Commands.runOnce(
-                    () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
-            .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
-            .andThen(Commands.waitSeconds(5))
-            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-            .andThen(
-                PathBuilder.createPath(
-                    new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
+    // autoChooser.addOption(
+    //     "TO THE RIGHT, TO THE LEFT",
+    //     Commands.runOnce(
+    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+    //         .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance,
+    // 5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.right_trench_neutral_preentrance,
+    //                     Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.FuelField.right_close_corner_approach,
+    //                     Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.FuelField.left_close_corner_approach,
+    // Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance,
+    // 5))
+    //         .andThen(
+    //             Commands.runOnce(
+    //                 () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
+    //         .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
+    //         .andThen(Commands.waitSeconds(5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -333,7 +350,8 @@ public class RobotContainer {
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
         .onFalse(Commands.runOnce(drive::stop, drive));
-        //should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to defend us
+    // should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to
+    // defend us
 
     pilot
         .a()
@@ -371,7 +389,7 @@ public class RobotContainer {
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
-        //for will, do whatever you want man
+    // for will, do whatever you want man
     pilot
         .b()
         .whileTrue(

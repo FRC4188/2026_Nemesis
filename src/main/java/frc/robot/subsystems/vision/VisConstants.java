@@ -13,6 +13,7 @@ public class VisConstants {
 
   public static String frontPho = "front";
   public static String backPho = "back";
+  public static String objPho = "obj";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
@@ -28,6 +29,16 @@ public class VisConstants {
   //           new Rotation3d(0.0, 0.0, Math.PI));
 
   public static Transform3d robotToCamera0 =
+      new Transform3d(
+          Units.inchesToMeters(
+              6.46890 + 0.125 - 1.5 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),
+          Units.inchesToMeters(
+              3.00864 - 7 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getY()),
+          Units.inchesToMeters(
+              2.125 + 11 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getZ()),
+          new Rotation3d(0.0, 0, 0));
+
+  public static Transform3d robotToCamera1 =
       new Transform3d(
           Units.inchesToMeters(
               6.46890 + 0.125 - 1.5 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),

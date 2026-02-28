@@ -24,7 +24,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
-  private final VisionIO[] io;
+  public final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
   private final DigitalInput vrm;
@@ -61,6 +61,10 @@ public class Vision extends SubsystemBase {
    */
   public Rotation2d getTargetX(int cameraIndex) {
     return inputs[cameraIndex].latestTargetObservation.tx();
+  }
+
+  public Pose2d getCluster(Pose3d robotPose) {
+    return io[2].getCluster(robotPose);
   }
 
   @Override
