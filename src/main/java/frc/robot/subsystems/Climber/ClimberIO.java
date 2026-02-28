@@ -17,11 +17,9 @@ public interface ClimberIO {
 
   public default void runVolts(double output) {}
 
-  public default void setPosition(Rotation2d rotations) {}
+  public default void setPosition(Rotation2d rotations, int slot) {}
 
   public default double getSetpoint() {
     return 0;
   }
-
-  public default void updatePID(double kP, double kI, double kD, double kG) {}
 }

@@ -5,16 +5,13 @@ import static edu.wpi.first.units.Units.Hertz;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -56,13 +53,11 @@ public class ClimberIOReal implements ClimberIO {
                     .withNeutralMode(Constants.ClimberConstants.kNuetralMode)
                     .withInverted(Constants.ClimberConstants.kInvertedValue))
             .withSlot0(Constants.ClimberConstants.climberGains)
-            .withFeedback(
-                new FeedbackConfigs().withRotorToSensorRatio(Constants.ClimberConstants.kGearRatio))
             .withMotionMagic(
                 new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity(100.0 / Constants.ClimberConstants.kConverter)
-                    .withMotionMagicAcceleration(1000.0 / Constants.ClimberConstants.kConverter)
-                    .withMotionMagicExpo_kV(0.12 * Constants.ClimberConstants.kConverter)
+                    .withMotionMagicCruiseVelocity(100.0)
+                    .withMotionMagicAcceleration(1000.0)
+                    .withMotionMagicExpo_kV(0.12)
                     .withMotionMagicExpo_kA(0.1));
 
     posRots = motor.getPosition();
@@ -70,7 +65,7 @@ public class ClimberIOReal implements ClimberIO {
     currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
 
-    posRots.setUpdateFrequency(Hertz.of(5.0));
+    posRots.setUpdateFrequency(Hertz.of(50.0));
     appliedVolts.setUpdateFrequency(Hertz.of(5.0));
     currentAmps.setUpdateFrequency(Hertz.of(5.0));
     tempC.setUpdateFrequency(Hertz.of(5.0));
@@ -95,20 +90,7 @@ public class ClimberIOReal implements ClimberIO {
   }
 
   @Override
-  public void updatePID(double kP, double kI, double kD, double kG) {
-    motorConfig.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKG(kG)
-            .withGravityType(GravityTypeValue.Elevator_Static);
-
-    motor.getConfigurator().apply(motorConfig);
-  }
-
-  @Override
-  public void setPosition(Rotation2d rotation) {
+  public void setPosition(Rotation2d rotation, int slot) {
     motor.setControl(
         switch (Constants.WristConstants.motorClosedLoopOutput) {
           case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());

@@ -512,6 +512,27 @@ public class RobotContainer {
         .whileTrue(Commands.run(() -> loader.intake(12 * copilot.getRightY(Scale.LINEAR)), loader));
 
     copilot
+        .getLeftButton()
+        .whileTrue(
+            Commands.run(
+                () -> {
+                  transfer.index(12 * copilot.getLeftY(Scale.LINEAR));
+                  transfer.aggitate(12 * -copilot.getLeftY(Scale.LINEAR));
+                },
+                loader));
+
+    copilot
+        .getLeftButton()
+        .whileTrue(
+            Commands.run(
+                () -> {
+                  transfer.index(12 * copilot.getLeftY(Scale.LINEAR));
+                  transfer.aggitate(12 * -copilot.getLeftY(Scale.LINEAR));
+                  launcher.runShooterVolts(10.0);
+                },
+                loader));
+
+    copilot
         .getUpButton()
         .whileTrue(
             Commands.run(() -> loader.runWrist(3 * copilot.getRightY(Scale.LINEAR)), loader));
