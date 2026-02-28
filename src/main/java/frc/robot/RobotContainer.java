@@ -7,62 +7,76 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.pidtuning.PIDTuning;
-import frc.robot.commands.Scoring.LoadingCommands;
+import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climber.Climber;
-import frc.robot.subsystems.Climber.ClimberIO;
-import frc.robot.subsystems.Climber.ClimberIOReal;
-import frc.robot.subsystems.Climber.ClimberIOSim;
-import frc.robot.subsystems.Launcher.Hood.HoodIO;
-import frc.robot.subsystems.Launcher.Hood.HoodIOReal;
-import frc.robot.subsystems.Launcher.Hood.HoodIOSim;
-import frc.robot.subsystems.Launcher.Launcher;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIO;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIOReal;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIOSim;
-import frc.robot.subsystems.Loader.Intake.IntakeIO;
-import frc.robot.subsystems.Loader.Intake.IntakeIOReal;
-import frc.robot.subsystems.Loader.Intake.IntakeIOSim;
-import frc.robot.subsystems.Loader.Loader;
-import frc.robot.subsystems.Loader.Wrist.WristIO;
-import frc.robot.subsystems.Loader.Wrist.WristIOReal;
-import frc.robot.subsystems.Loader.Wrist.WristIOSim;
-import frc.robot.subsystems.Transfer.Hopper.HopperIO;
-import frc.robot.subsystems.Transfer.Hopper.HopperIOReal;
-import frc.robot.subsystems.Transfer.Hopper.HopperIOSim;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIO;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIOReal;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIOSim;
-import frc.robot.subsystems.Transfer.Transfer;
+import frc.robot.lib.BLine.*;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOReal;
+import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIO;
+import frc.robot.subsystems.hood.HoodIOReal;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOReal;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOReal;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
+import frc.robot.subsystems.vision.VisConstants;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhoton;
+import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.wrist.WristIO;
+import frc.robot.subsystems.wrist.WristIOReal;
+import frc.robot.subsystems.wrist.WristIOSim;
+import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+/**
+ * This class is where the bulk of the robot should be declared. Since Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * subsystems, commands, and button mappings) should be declared here.
+ */
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Launcher launcher;
-  private final Loader loader;
-  private final Transfer transfer;
+  private final Hood hood;
+  private final Shooter shooter;
+  private final Hopper hopper;
+  private final Intake intake;
+  private final Wrist wrist;
   private final Climber climber;
-  private final PIDTuning pidTuner;
+  private final Vision vis;
   private SimulationVisualizer simvis;
 
   // Controller
@@ -84,9 +98,18 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
-        launcher = new Launcher(new ShooterIOReal(), new HoodIOReal());
-        loader = new Loader(new IntakeIOReal(), new WristIOReal());
-        transfer = new Transfer(new HopperIOReal(), new IndexerIOReal());
+        vis =
+            new Vision(
+                drive::accept,
+                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+        // new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
+
+        hood = new Hood(new HoodIOReal());
+        shooter = new Shooter(new ShooterIOReal());
+        hopper = new Hopper(new HopperIOReal());
+        intake = new Intake(new IntakeIOReal());
+        wrist = new Wrist(new WristIOReal());
         climber = new Climber(new ClimberIOReal());
 
         break;
@@ -102,14 +125,18 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
 
-        launcher = new Launcher(new ShooterIOSim(), new HoodIOSim());
-        loader = new Loader(new IntakeIOSim(), new WristIOSim());
-        transfer = new Transfer(new HopperIOSim(), new IndexerIOSim());
+        vis = new Vision(drive::accept, new VisionIO() {});
+
+        hood = new Hood(new HoodIOSim());
+        shooter = new Shooter(new ShooterIOSim());
+        hopper = new Hopper(new HopperIOSim());
+        intake = new Intake(new IntakeIOSim());
+        wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        simvis =
-            new SimulationVisualizer(
-                "Models", () -> loader.getWristAngle(), () -> launcher.getHoodAngle(), () -> 0);
+        // simvis =
+        //     new SimulationVisualizer(
+        //         "Models", () -> wrist.getAngle(), () ->hood.getAngle(), () -> 0);
         break;
 
       default:
@@ -121,66 +148,321 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        launcher = new Launcher(new ShooterIO() {}, new HoodIO() {});
-        loader = new Loader(new IntakeIO() {}, new WristIO() {});
-        transfer = new Transfer(new HopperIO() {}, new IndexerIO() {});
+
+        vis = new Vision(drive::accept, new VisionIO() {});
+
+        hood = new Hood(new HoodIO() {});
+        shooter = new Shooter(new ShooterIO() {});
+        hopper = new Hopper(new HopperIO() {});
+        intake = new Intake(new IntakeIO() {});
+        wrist = new Wrist(new WristIO() {});
         climber = new Climber(new ClimberIO() {});
         break;
     }
 
-    switch (Constants.Robot.tuningMode) {
-      case DRIVE_MOD:
-        pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
-        break;
-      case TURN_MOD:
-        pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
-        break;
-      case ANGLE:
-        pidTuner =
-            new PIDTuning(
-                "Angle Controller",
-                () -> drive.getPose().getRotation().getRadians(),
-                (set) -> {},
-                Constants.Robot::updateAnglePID);
-        break;
-      case SHOOTER:
-        pidTuner =
-            new PIDTuning(
-                "Shooter",
-                () -> {
-                  return 0;
-                },
-                (set) -> launcher.runShooter(set),
-                launcher::updateShooterPID);
-        break;
-      case HOOD:
-        pidTuner =
-            new PIDTuning(
-                "Hood",
-                () -> {
-                  return 0;
-                },
-                (set) -> launcher.setHood(Rotation2d.fromRadians(set)),
-                launcher::updateHoodPID);
-        break;
-      case WRIST:
-        pidTuner =
-            new PIDTuning(
-                "Intake Wrist",
-                () -> {
-                  return 0;
-                },
-                (set) -> loader.setWrist(Rotation2d.fromRadians(set)),
-                loader::updateWristPID);
-        break;
-
-      case NONE:
-      default:
-        pidTuner = new PIDTuning();
-    }
-
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    PathBuilder.configure(drive); // Add all subsystems as parameters later
+
+    // Set global constraints before creating any paths
+    Path.setDefaultGlobalConstraints(
+        new Path.DefaultGlobalConstraints(
+            Constants.Drive.DRIVE_MAXVEL, // maxVelocityMetersPerSec
+            Constants.Drive.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+            Constants.Drive.ANGLE_MAXVEL * 180 / Math.PI, // maxVelocityDegPerSec
+            Constants.Drive.ANGLE_MAXACC * 180 / Math.PI, // maxAccelerationDegPerSec2
+            0.03, // endTranslationToleranceMeters
+            2.0, // endRotationToleranceDeg
+            0.2 // intermediateHandoffRadiusMeters
+            ));
+
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
+
+    // autoChooser.addOption(
+    //     "Test PathBuilder",
+    //     PathBuilder.generalAuton(
+    //         new Pose2d(FieldConstants.Trench.right_trench_alliance_preentrance, new
+    // Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_alliance_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_neutral_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.right_close_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.right_midline_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.left_midline_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_neutral_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_alliance_entrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Trench.left_trench_alliance_preentrance, new Rotation2d()),
+    //         new Pose2d(FieldConstants.Tower.left_far_corner, new Rotation2d())));
+
+    autoChooser.addOption(
+        "PPP",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 5.0))
+            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner, 0.0)));
+
+    autoChooser.addOption(
+        "TestChain",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.createPath(
+                    FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
+
+    autoChooser.addOption(
+        "All Together Now",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                () -> PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
+            .andThen(
+                PathBuilder.createPath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
+            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
+
+    autoChooser.addOption(
+        "Sigma",
+        PathBuilder.pathBuilder.build(
+            new Path(
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero))));
+
+    // .andThen(
+    //     PathBuilder.mergeToKnownPath(
+    //         new PathPlannerPath(
+    //             FieldConstants.Tower.left_approach,
+    //             PathBuilder.getConstraints(),
+    //             null,
+    //             new GoalEndState(0.0, Rotation2d.k180deg)))));
+
+    // autoChooser.addOption(
+    //     "TO THE RIGHT, TO THE LEFT",
+    //     Commands.runOnce(
+    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+    //         .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance,
+    // 5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.right_trench_neutral_preentrance,
+    //                     Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.FuelField.right_close_corner_approach,
+    //                     Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.FuelField.left_close_corner_approach,
+    // Rotation2d.kCCW_90deg),
+    //                 5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
+    //         .andThen(
+    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance,
+    // 5))
+    //         .andThen(
+    //             Commands.runOnce(
+    //                 () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
+    //         .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
+    //         .andThen(Commands.waitSeconds(5))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
+
+    autoChooser.addOption(
+        "TO THE RIGHT, TO THE LEFT",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kCCW_90deg))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance,
+                        Rotation2d.kCCW_90deg)))
+            .andThen(intakeDown())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.FuelField.right_close_corner_approach,
+                        Rotation2d.kCCW_90deg),
+                    new Pose2d(
+                        FieldConstants.FuelField.left_close_corner_approach,
+                        Rotation2d.kCCW_90deg)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero)))
+            .andThen(Commands.waitSeconds(5)) // replace with shooting command (and a wait ig?)
+            .andThen(() -> PathBuilder.stopTarget())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg)))
+            .andThen(PathBuilder.followPathEnd180(FieldConstants.Tower.left_approach)));
+
+    autoChooser.addOption(
+        "TO THE LEFT, TO THE RIGHT",
+        Commands.runOnce(
+                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kCW_90deg))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance,
+                        Rotation2d.kCW_90deg)))
+            .andThen(intakeDown())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCW_90deg),
+                    new Pose2d(
+                        FieldConstants.FuelField.right_close_corner_approach,
+                        Rotation2d.kCW_90deg)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero)))
+            .andThen(Commands.waitSeconds(5)) // replace with shooting command (and a wait ig?)
+            .andThen(() -> PathBuilder.stopTarget())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)))
+            .andThen(PathBuilder.followPathEndZero(FieldConstants.Tower.right_approach)));
+
+    autoChooser.addOption(
+        "righter disruptor",
+        Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kCCW_90deg))
+            .andThen(intakeDown())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.FuelField.right_close_corner_approach,
+                        Rotation2d.kCCW_90deg),
+                    new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg),
+                    new Pose2d(
+                        FieldConstants.FuelField.left_close_corner_approach,
+                        Rotation2d.kCCW_90deg)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance,
+                        Rotation2d.kCCW_90deg),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_preentrance,
+                        Rotation2d.kCCW_90deg)))
+            .andThen(() -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero)))
+            .andThen(Commands.waitSeconds(5))
+            .andThen(() -> PathBuilder.stopTarget())
+            .andThen(PathBuilder.interpolatePath(
+              new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
+              new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.kZero)
+            ))
+            .andThen(PathBuilder.followPathEnd180(FieldConstants.Tower.left_approach)));
+
+    autoChooser.addOption(
+        "lefter disruptor",
+        Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kCW_90deg))
+            .andThen(intakeDown())
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.FuelField.left_close_corner_approach,
+                        Rotation2d.kCW_90deg),
+                    new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg),
+                    new Pose2d(
+                        FieldConstants.FuelField.right_close_corner_approach,
+                        Rotation2d.kCW_90deg)))
+            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance,
+                        Rotation2d.kCW_90deg),
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_preentrance,
+                        Rotation2d.kCW_90deg)))
+            .andThen(() -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_alliance_approach, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero)))
+            .andThen(Commands.waitSeconds(5))
+            .andThen(() -> PathBuilder.stopTarget())
+            .andThen(PathBuilder.interpolatePath(
+              new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
+              new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)
+            ))
+            .andThen(PathBuilder.followPathEndZero(FieldConstants.Tower.right_approach)));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -202,67 +484,100 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
+  // placeholders
+  private Command intakeCommand() {
+    return Commands.none();
+  }
+
+  private Command intakeDown() {
+    return Commands.none();
+  }
+
+  private Command intakeUp() {
+    return Commands.none();
+  }
+
+  private Command shootCommand() {
+    return Commands.none();
+  }
+
   private void configureButtonBindings() {
-    // Default command, normal field-relative drive
-    drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive,
-            () -> -pilot.getLeftY(Scale.SQUARED),
-            () -> -pilot.getLeftX(Scale.SQUARED),
-            () -> -pilot.getRightX(Scale.LINEAR)));
+    Trigger driveInput =
+        new Trigger(
+            () ->
+                (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
+                    || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0));
 
-    // Lock to 0° when A button is held
-    pilot
-        .a()
+    driveInput
         .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive, () -> -pilot.getLeftY(), () -> -pilot.getLeftX(), () -> Rotation2d.kZero));
+            DriveCommands.joystickDrive(
+                drive,
+                () ->
+                    -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                () ->
+                    -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                () ->
+                    -pilot.getCorrectedRight(Scale.SQUARED).getX()
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0)))
+        .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
-    // Switch to X swerve alignment when X button is pressed
-    pilot.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // Reset gyro to 0° when B button is pressed
     pilot
-        .b()
+        .start()
         .onTrue(
             Commands.runOnce(
                     () ->
                         drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
 
-    // pivoting the intake toggle (up/down)
-    pilot
-        .y()
-        .toggleOnTrue(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)))
-        .toggleOnFalse(
-            LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A)));
+    // pilot
+    //     .rightBumper()
+    //     .whileTrue(
+    //         ScoringCommands.aim(
+    //                 drive,
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+    //                 shooter,
+    //                 hood,
+    //                 () -> Constants.ShooterConstants.kMiddleVel)
+    //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
+    //     .onFalse(
+    //         Commands.runOnce(drive::stopWithX, drive)
+    //             .andThen(
+    //                 hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
 
-    // intaking button (toggle)
-    pilot
-        .leftBumper()
-        .toggleOnTrue(LoadingCommands.load(loader, 12))
-        .toggleOnFalse(LoadingCommands.load(loader, 0));
-
-    // aggitating and indexing in one button
     pilot
         .rightBumper()
-        .whileTrue(
-            Commands.parallel(
-                LoadingCommands.aggitate(transfer, 6), LoadingCommands.index(transfer, 6)));
-
-    // sighhhhhhhhhh Will skill issue; Reagan will fix V
-    pilot
-        .getLeftTButton()
         .onTrue(
-            ScoringCommands.WindUp(
-                launcher,
-                (pilot.getLeftTriggerAxis() > 0.75)
-                    ? Constants.ShooterConstants.kHighVel
-                    : (pilot.getLeftTriggerAxis() > 0.50)
-                        ? Constants.ShooterConstants.kMiddleVel
-                        : Constants.ShooterConstants.kLowVel));
+            hood.setPosition(() -> Rotation2d.fromDegrees(55))
+                .alongWith(shooter.setVelocity(() -> Constants.ShooterConstants.kMiddleVel)))
+        .onFalse(hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop()));
+
+    pilot
+        .rightTrigger()
+        .onTrue(hopper.runVolts(() -> 0.5, () -> 0.5))
+        .onFalse(hopper.runVolts(() -> 0.0, () -> 0.0));
+    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7)).onFalse(intake.intake(() -> 0.0));
+    pilot
+        .leftBumper()
+        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)))
+        .onFalse(intake.intake(() -> 0.0).alongWith(hopper.runVolts(() -> 0.0, () -> 0.0)));
+
+    pilot.x().onTrue(climber.raise());
+    pilot.y().onTrue(climber.lower());
+
+    copilot.a().onTrue(wrist.down());
+    copilot.x().onTrue(wrist.stow());
+
+    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(climber.runVolts(()-> 0.0));;
+    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(wrist.runWrist(() -> 0.0));
   }
 
   /**
@@ -274,11 +589,23 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
-  public void resetSimulation() {
-    if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
+  public void simReset() {
+    drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+  }
 
-    // SimulatedArena.getInstance().resetFieldForAuto();
+  public void periodic() {
 
+    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.Drive.ANGLE_PID.atGoal());
+
+    // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
+
+    // testing placeholder
+    // if (AllianceFlip.flipX(drive.getPose().getX())
+    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    // } else {
+    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    // }
   }
 
   public void displaySimFieldToAdvantageScope() {

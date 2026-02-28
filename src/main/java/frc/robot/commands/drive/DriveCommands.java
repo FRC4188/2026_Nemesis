@@ -42,19 +42,21 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
     return Commands.run(
-        () -> {
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.Robot.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.Robot.DRIVE_MAXACC);
+            () -> {
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                      ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
+                      omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
 
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        drive);
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            drive)
+        .beforeStarting(
+            () -> Constants.Drive.CORRECTION_PID.setSetpoint(drive.getRotation().getDegrees()));
   }
 
   /**
@@ -68,8 +70,51 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
-    ProfiledPIDController angleController = Constants.Robot.ANGLE_PID;
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              if (Constants.Robot.tuningMode == Constants.PIDTuning.ANGLE) {
+                Logger.recordOutput("Drive/Target Angle", rotationSupplier.get().getRadians());
+                Logger.recordOutput(
+                    "Drive/Current Angle", drive.getPose().getRotation().getRadians());
+              }
+
+              double omega =
+                  angleController.calculate(
+                          drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+
+              if (angleController.atGoal() && angleController.getVelocityTolerance() == 0.0)
+                omega = 0.0;
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  public static Command joystickDriveAtAngle(
+      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+
+    // placeholder
+    Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
+
+    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(0.1);
 
     // Construct command
     return Commands.run(
@@ -81,10 +126,10 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Robot.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
 
               if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Robot.ANGLE_TOL
+                      < Constants.Drive.ANGLE_TOL
                   && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
               // Convert to field relative speeds & send command

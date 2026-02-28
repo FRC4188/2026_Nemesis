@@ -1,22 +1,20 @@
-package frc.robot.subsystems.Climber;
+package frc.robot.subsystems.climber;
 
 import static edu.wpi.first.units.Units.Hertz;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
@@ -33,16 +31,15 @@ public class ClimberIOReal implements ClimberIO {
   private final StatusSignal<Temperature> tempC;
   private final StatusSignal<Angle> posRots;
 
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
 
   private final PositionTorqueCurrentFOC positionTorqueCurrentRequest =
       new PositionTorqueCurrentFOC(0.0);
 
-  private final Debouncer debouncer = new Debouncer(0.5);
-
-  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
+  private final Debouncer debouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public ClimberIOReal() {
     motor = new TalonFX(Constants.Id.kClimber, Constants.Robot.rio);
@@ -59,13 +56,11 @@ public class ClimberIOReal implements ClimberIO {
                     .withNeutralMode(Constants.ClimberConstants.kNuetralMode)
                     .withInverted(Constants.ClimberConstants.kInvertedValue))
             .withSlot0(Constants.ClimberConstants.climberGains)
-            .withFeedback(
-                new FeedbackConfigs().withRotorToSensorRatio(Constants.ClimberConstants.kGearRatio))
             .withMotionMagic(
                 new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity(100.0 / Constants.ClimberConstants.kConverter)
-                    .withMotionMagicAcceleration(1000.0 / Constants.ClimberConstants.kConverter)
-                    .withMotionMagicExpo_kV(0.12 * Constants.ClimberConstants.kConverter)
+                    .withMotionMagicCruiseVelocity(100.0)
+                    .withMotionMagicAcceleration(1000.0)
+                    .withMotionMagicExpo_kV(0.12)
                     .withMotionMagicExpo_kA(0.1));
 
     posRots = motor.getPosition();
@@ -73,7 +68,7 @@ public class ClimberIOReal implements ClimberIO {
     currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
 
-    posRots.setUpdateFrequency(Hertz.of(5.0));
+    posRots.setUpdateFrequency(Hertz.of(50.0));
     appliedVolts.setUpdateFrequency(Hertz.of(5.0));
     currentAmps.setUpdateFrequency(Hertz.of(5.0));
     tempC.setUpdateFrequency(Hertz.of(5.0));
@@ -92,25 +87,9 @@ public class ClimberIOReal implements ClimberIO {
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
   }
 
-  public void setOpenLoop(double output) {
-    motor.setControl(
-        switch (Constants.IndexerConstants.motorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
-  }
-
   @Override
-  public void updatePID(double kP, double kI, double kD, double kG) {
-    motorConfig.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKG(kG)
-            .withGravityType(GravityTypeValue.Elevator_Static);
-
-    motor.getConfigurator().apply(motorConfig);
+  public void runVolts(double output) {
+    motor.setControl(voltageRequest.withOutput(output));
   }
 
   @Override
