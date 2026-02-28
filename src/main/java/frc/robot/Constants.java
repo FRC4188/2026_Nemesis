@@ -191,7 +191,6 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Arm_Cosine);
 
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
-
   }
 
   public static class ClimberConstants {
@@ -202,8 +201,7 @@ public final class Constants {
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final Slot0Configs climberGains =

@@ -63,6 +63,20 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d left_trench_neutral_preentrance =
         new Translation2d(
             Units.inchesToMeters(204.18) + 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
+
+    // just further out than preentrance
+    public static final Translation2d left_trench_alliance_approach =
+        new Translation2d(
+            Units.inchesToMeters(156.61) - Constants.Robot.B_CROSS,
+            Units.inchesToMeters(267.34) + trench_width / 2);
+    public static final Translation2d right_trench_alliance_approach =
+        new Translation2d(Units.inchesToMeters(156.61) - Constants.Robot.B_CROSS, trench_width / 2);
+    public static final Translation2d left_trench_neutral_approach =
+        new Translation2d(
+            Units.inchesToMeters(204.18) + Constants.Robot.B_CROSS,
+            Units.inchesToMeters(267.34 + trench_width / 2));
+    public static final Translation2d right_trench_neutral_approach =
+        new Translation2d(Units.inchesToMeters(204.18) + Constants.Robot.B_CROSS, trench_width / 2);
   }
 
   public static class Bump {
