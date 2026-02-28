@@ -106,8 +106,8 @@ public final class Constants {
   public static class WristConstants {
     public static final double kTolerance = 0.2;
     public static final double kGearRatio = 25.0;
-    public static final double Max_A = Units.degreesToRadians(144);
-    public static final double Min_A = Units.degreesToRadians(0.0);
+    public static final double Max_A = Units.degreesToRadians(120); // stowed
+    public static final double Min_A = Units.degreesToRadians(0.0); // unstowed
 
     public static final double kStatorCurrent = 100; // placeholder
     public static final double kSupplyCurrent = 80; // placeholder

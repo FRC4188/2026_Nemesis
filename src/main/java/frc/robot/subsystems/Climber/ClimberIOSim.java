@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Climber;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -17,20 +18,20 @@ public class ClimberIOSim implements ClimberIO {
             DCMotor.getKrakenX60(1));
   }
 
-  // public void updateInputs(ClimberIOInputs inputs) {
-  //   inputs.posRads = sim.getAngularPositionRad();
-  //   inputs.tempC = 0;
-  //   inputs.applied_volts = applied_volts;
-  // }
+  public void updateInputs(ClimberIOInputs inputs) {
+    inputs.posRots = sim.getAngularPositionRotations();
+    inputs.tempC = 0;
+    inputs.appliedVolts = applied_volts;
+  }
 
-  // public void runVolts(double volts) {
-  //   MathUtil.clamp(volts, -12, 12);
+  public void runVolts(double volts) {
+    MathUtil.clamp(volts, -12, 12);
 
-  //   applied_volts = volts;
-  //   sim.setInputVoltage(volts);
-  // }
+    applied_volts = volts;
+    sim.setInputVoltage(volts);
+  }
 
-  // public double getAngle() {
-  //   return sim.getAngularPositionRad();
-  // }
+  public double getAngle() {
+    return sim.getAngularPositionRad();
+  }
 }

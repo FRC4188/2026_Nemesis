@@ -206,7 +206,10 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> pilot.getLeftY(Scale.SQUARED), () -> pilot.getLeftX(Scale.SQUARED), () -> -pilot.getRightX(Scale.LINEAR)));
+            drive,
+            () -> -pilot.getLeftY(Scale.SQUARED),
+            () -> -pilot.getLeftX(Scale.SQUARED),
+            () -> -pilot.getRightX(Scale.LINEAR)));
 
     // Lock to 0° when A button is held
     pilot
@@ -231,14 +234,14 @@ public class RobotContainer {
 
     // pivoting the intake toggle (up/down)
     pilot
-        .a()
-        .toggleOnTrue(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A)))
+        .y()
+        .toggleOnTrue(LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)))
         .toggleOnFalse(
-            LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Max_A)));
+            LoadingCommands.pivot(loader, new Rotation2d(Constants.WristConstants.Min_A)));
 
     // intaking button (toggle)
     pilot
-        .y()
+        .leftBumper()
         .toggleOnTrue(LoadingCommands.load(loader, 12))
         .toggleOnFalse(LoadingCommands.load(loader, 0));
 

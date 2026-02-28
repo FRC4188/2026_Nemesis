@@ -1,6 +1,7 @@
 package frc.robot.subsystems.Loader.Wrist;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -18,15 +19,20 @@ public class WristIOSim implements WristIO {
             0.1,
             1,
             0.0,
-            Units.degreesToRadians(144),
+            Units.degreesToRadians(120),
             true,
-            Units.degreesToRadians(144));
+            Units.degreesToRadians(0));
   }
 
   @Override
   public void runVolts(double volts) {
 
     wSim.setInputVoltage(MathUtil.clamp(volts, -12, 12));
+  }
+
+  @Override
+  public void setPosition(Rotation2d rotation) {
+    wSim.setState(rotation.getRadians(), 1);
   }
 
   @Override
