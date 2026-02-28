@@ -1,12 +1,16 @@
-package frc.robot.subsystems.Launcher.Shooter;
+package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Shooter {
+public class Shooter extends SubsystemBase {
   private final ShooterIO io;
   private final ShooterIOInputsAutoLogged inputs;
 
@@ -23,24 +27,25 @@ public class Shooter {
 
   @AutoLogOutput(key = "Shooter/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(getVelocity() - io.getSetpoint()) < Constants.ShooterConstants.kTolerance;
+    return Math.abs(getAverageVelocity() - io.getSetpoint())
+        < Constants.ShooterConstants.kTolerance;
   }
 
-  public void setVelocity(double RPM) {
-    io.setVelocity(RPM);
+  public Command setVelocity(DoubleSupplier RPM) {
+    return Commands.run(() -> io.setVelocity(RPM.getAsDouble()), this);
   }
 
-  public void runVolts(double volts) {
-    io.runVolts(volts);
+  public Command runVolts(double input) {
+    return Commands.run(() -> io.runVolts(12 * input), this);
   }
 
-  public void stop() {
-    io.setVelocity(0.0);
+  public Command stop() {
+    return Commands.runOnce(() -> io.runVolts(0.0), this);
   }
 
-  @AutoLogOutput(key = "Shooter/Velocity RPM")
-  public double getVelocity() {
-    return (inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0;
+  @AutoLogOutput(key = "Shooter/Right Velocity RPM")
+  public double getAverageVelocity() {
+    return (inputs.rightVelocityRPM + inputs.leftVelocityRPM) / 2.0;
   }
 
   @AutoLogOutput(key = "Shooter/Right Velocity RPM")
@@ -51,14 +56,6 @@ public class Shooter {
   @AutoLogOutput(key = "Shooter/Left Velocity RPM")
   public double getLeftVelocity() {
     return inputs.leftVelocityRPM;
-  }
-
-  public void updateRightPID(double kp, double ki, double kd, double kf) {
-    io.updateRightPID(kp, ki, kd, kf);
-  }
-
-  public void updateLeftPID(double kp, double ki, double kd, double kf) {
-    io.updateLeftPID(kp, ki, kd, kf);
   }
 
   public void periodic() {

@@ -1,14 +1,17 @@
-package frc.robot.subsystems.Loader.Wrist;
+package frc.robot.subsystems.wrist;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Wrist {
+public class Wrist extends SubsystemBase {
   private final WristIO io;
   private final WristIOInputsAutoLogged inputs;
   private final Alert wristDisconnectedAlert;
@@ -19,33 +22,23 @@ public class Wrist {
     wristDisconnectedAlert = new Alert("Wrist motor disconnected.", AlertType.kError);
   }
 
-  public void runVolts(double volts) {
-    volts = MathUtil.clamp(volts, -12, 12);
-    io.runVolts(volts);
+  public Command runWrist(DoubleSupplier inputs) {
+    return Commands.run(() -> io.runVolts(3 * inputs.getAsDouble()));
   }
 
-  public void setPosition(Rotation2d angle) {
-    angle =
-        Rotation2d.fromRadians(
-            MathUtil.clamp(
-                angle.getRadians(),
-                Constants.WristConstants.Min_A,
-                Constants.WristConstants.Max_A));
+  public Command stow() {
+    return Commands.runOnce(
+        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)), this);
+  }
 
-    io.setPosition(angle);
+  public Command down() {
+    return Commands.runOnce(
+        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this);
   }
 
   @AutoLogOutput(key = "Wrist/Angle Radians")
   public double getAngle() {
     return inputs.posRads;
-  }
-
-  public void stop() {
-    io.runVolts(0);
-  }
-
-  public void updatePID(double kp, double ki, double kd, double kg) {
-    io.updatePID(kp, ki, kd, kg);
   }
 
   @AutoLogOutput(key = "Wrist/At Setpoint?")

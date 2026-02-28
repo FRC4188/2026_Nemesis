@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Loader.Wrist;
+package frc.robot.subsystems.wrist;
 
 import static edu.wpi.first.units.Units.Hertz;
 
@@ -8,15 +8,13 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,6 +35,8 @@ public class WristIOReal implements WristIO {
   private final StatusSignal<Current> currentAmps;
 
   private final Debouncer motorConnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
@@ -93,7 +93,7 @@ public class WristIOReal implements WristIO {
 
   @Override
   public void runVolts(double volts) {
-    motor.setVoltage(MathUtil.clamp(volts, -12, 12));
+    motor.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override
@@ -113,20 +113,6 @@ public class WristIOReal implements WristIO {
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.posRads = posRots.getValueAsDouble() * Math.PI * 2;
-  }
-
-  @Override
-  public void updatePID(double kP, double kI, double kD, double kG) {
-
-    motorConfig.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKG(kG)
-            .withGravityType(GravityTypeValue.Arm_Cosine);
-
-    motor.getConfigurator().apply(motorConfig);
   }
 
   @Override

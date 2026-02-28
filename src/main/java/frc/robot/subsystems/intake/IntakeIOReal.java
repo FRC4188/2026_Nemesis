@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Loader.Intake;
+package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -24,6 +25,8 @@ public class IntakeIOReal implements IntakeIO {
   private final StatusSignal<Temperature> tempC;
 
   private final Debouncer motorConnectedDebounce = new Debouncer(0.5, DebounceType.kFalling);
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
   public IntakeIOReal() {
     motor = new TalonFX(Constants.Id.kIntake, Constants.Robot.rio);
@@ -57,7 +60,7 @@ public class IntakeIOReal implements IntakeIO {
 
   @Override
   public void runVolts(double volts) {
-    motor.setVoltage(volts);
+    motor.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override

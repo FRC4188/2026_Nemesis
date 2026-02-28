@@ -11,52 +11,52 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.CSPLib.ppp.PathBuilder;
+import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
-import frc.robot.subsystems.Climber.Climber;
-import frc.robot.subsystems.Climber.ClimberIO;
-import frc.robot.subsystems.Climber.ClimberIOReal;
-import frc.robot.subsystems.Climber.ClimberIOSim;
-import frc.robot.subsystems.Launcher.Hood.HoodIO;
-import frc.robot.subsystems.Launcher.Hood.HoodIOReal;
-import frc.robot.subsystems.Launcher.Hood.HoodIOSim;
-import frc.robot.subsystems.Launcher.Launcher;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIO;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIOReal;
-import frc.robot.subsystems.Launcher.Shooter.ShooterIOSim;
-import frc.robot.subsystems.Loader.Intake.IntakeIO;
-import frc.robot.subsystems.Loader.Intake.IntakeIOReal;
-import frc.robot.subsystems.Loader.Intake.IntakeIOSim;
-import frc.robot.subsystems.Loader.Loader;
-import frc.robot.subsystems.Loader.Wrist.WristIO;
-import frc.robot.subsystems.Loader.Wrist.WristIOReal;
-import frc.robot.subsystems.Loader.Wrist.WristIOSim;
-import frc.robot.subsystems.Transfer.Hopper.HopperIO;
-import frc.robot.subsystems.Transfer.Hopper.HopperIOReal;
-import frc.robot.subsystems.Transfer.Hopper.HopperIOSim;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIO;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIOReal;
-import frc.robot.subsystems.Transfer.Indexer.IndexerIOSim;
-import frc.robot.subsystems.Transfer.Transfer;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOReal;
+import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIO;
+import frc.robot.subsystems.hood.HoodIOReal;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOReal;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOReal;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
+import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.wrist.WristIO;
+import frc.robot.subsystems.wrist.WristIOReal;
+import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -70,11 +70,12 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Launcher launcher;
-  private final Loader loader;
-  private final Transfer transfer;
+  private final Hood hood;
+  private final Shooter shooter;
+  private final Hopper hopper;
+  private final Intake intake;
+  private final Wrist wrist;
   private final Climber climber;
-  private final PIDTuning pidTuner;
   private final Vision vis;
   private SimulationVisualizer simvis;
 
@@ -100,12 +101,15 @@ public class RobotContainer {
         vis =
             new Vision(
                 drive::accept,
-                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
-                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+        // new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
 
-        launcher = new Launcher(new ShooterIOReal(), new HoodIOReal());
-        loader = new Loader(new IntakeIOReal(), new WristIOReal());
-        transfer = new Transfer(new HopperIOReal(), new IndexerIOReal());
+        hood = new Hood(new HoodIOReal());
+        shooter = new Shooter(new ShooterIOReal());
+        hopper = new Hopper(new HopperIOReal());
+        intake = new Intake(new IntakeIOReal());
+        wrist = new Wrist(new WristIOReal());
         climber = new Climber(new ClimberIOReal());
 
         break;
@@ -123,14 +127,16 @@ public class RobotContainer {
 
         vis = new Vision(drive::accept, new VisionIO() {});
 
-        launcher = new Launcher(new ShooterIOSim(), new HoodIOSim());
-        loader = new Loader(new IntakeIOSim(), new WristIOSim());
-        transfer = new Transfer(new HopperIOSim(), new IndexerIOSim());
+        hood = new Hood(new HoodIOSim());
+        shooter = new Shooter(new ShooterIOSim());
+        hopper = new Hopper(new HopperIOSim());
+        intake = new Intake(new IntakeIOSim());
+        wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        simvis =
-            new SimulationVisualizer(
-                "Models", () -> loader.getWristAngle(), () -> launcher.getHoodAngle(), () -> 0);
+        // simvis =
+        //     new SimulationVisualizer(
+        //         "Models", () -> wrist.getAngle(), () ->hood.getAngle(), () -> 0);
         break;
 
       default:
@@ -145,63 +151,13 @@ public class RobotContainer {
 
         vis = new Vision(drive::accept, new VisionIO() {});
 
-        launcher = new Launcher(new ShooterIO() {}, new HoodIO() {});
-        loader = new Loader(new IntakeIO() {}, new WristIO() {});
-        transfer = new Transfer(new HopperIO() {}, new IndexerIO() {});
+        hood = new Hood(new HoodIO() {});
+        shooter = new Shooter(new ShooterIO() {});
+        hopper = new Hopper(new HopperIO() {});
+        intake = new Intake(new IntakeIO() {});
+        wrist = new Wrist(new WristIO() {});
         climber = new Climber(new ClimberIO() {});
         break;
-    }
-
-    switch (Constants.Robot.tuningMode) {
-      case DRIVE_MOD:
-        pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
-        break;
-      case TURN_MOD:
-        pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
-        break;
-      case ANGLE:
-        pidTuner =
-            new PIDTuning(
-                "Angle Controller",
-                () -> drive.getPose().getRotation().getRadians(),
-                (set) -> {},
-                Constants.Drive::updateAnglePID);
-        break;
-      case SHOOTER:
-        pidTuner =
-            new PIDTuning(
-                "Shooter Left",
-                () -> {
-                  return 0;
-                },
-                (set) -> launcher.runShooter(set),
-                launcher::updateLShooterPID);
-        // TODO: figure out smth for this
-        break;
-      case HOOD:
-        pidTuner =
-            new PIDTuning(
-                "Hood",
-                () -> {
-                  return 0;
-                },
-                (set) -> launcher.setHood(Rotation2d.fromRadians(set)),
-                launcher::updateHoodPID);
-        break;
-      case WRIST:
-        pidTuner =
-            new PIDTuning(
-                "Intake Wrist",
-                () -> {
-                  return 0;
-                },
-                (set) -> loader.setWrist(Rotation2d.fromRadians(set)),
-                loader::updateWristPID);
-        break;
-
-      case NONE:
-      default:
-        pidTuner = new PIDTuning();
     }
 
     // Set up auto routines
@@ -347,10 +303,6 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
-    // launcher.setDefaultCommand(
-    //     Commands.runOnce(() -> launcher.runShooter(Constants.ShooterConstants.kLowVel),
-    // launcher));
-
     Trigger driveInput =
         new Trigger(
             () ->
@@ -363,170 +315,70 @@ public class RobotContainer {
                 drive,
                 () ->
                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                 () ->
                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                 () ->
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
-        .onFalse(Commands.runOnce(drive::stop, drive));
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0)))
+        .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
-    // TEMP TEST INPUTS
-    copilot
-        .a()
-        .whileTrue(
-            Commands.run(
-                () -> launcher.runShooterVolts(12 * copilot.getLeftY(Scale.LINEAR)), launcher));
-
-    copilot
-        .b()
-        .whileTrue(
-            Commands.run(
-                () -> launcher.runHoodVolts(3 * copilot.getLeftY(Scale.LINEAR)), launcher));
-
-    copilot
-        .x()
-        .whileTrue(
-            Commands.run(() -> transfer.index(12 * copilot.getLeftY(Scale.LINEAR)), transfer));
-
-    copilot
-        .y()
-        .whileTrue(
-            Commands.run(() -> transfer.aggitate(12 * copilot.getLeftY(Scale.LINEAR)), transfer));
-
-    copilot
-        .getDownButton()
-        .whileTrue(Commands.run(() -> loader.intake(12 * copilot.getRightY(Scale.LINEAR)), loader));
-
-    copilot
-        .getLeftButton()
-        .whileTrue(
-            Commands.run(
-                () -> {
-                  transfer.index(12 * copilot.getLeftY(Scale.LINEAR));
-                  transfer.aggitate(12 * -copilot.getLeftY(Scale.LINEAR));
-                },
-                loader));
-
-    copilot
-        .getLeftButton()
-        .whileTrue(
-            Commands.run(
-                () -> {
-                  transfer.index(12 * copilot.getLeftY(Scale.LINEAR));
-                  transfer.aggitate(12 * -copilot.getLeftY(Scale.LINEAR));
-                  launcher.runShooterVolts(10.0);
-                },
-                loader));
-
-    copilot
-        .getUpButton()
-        .whileTrue(
-            Commands.run(() -> loader.runWrist(3 * copilot.getRightY(Scale.LINEAR)), loader));
-
-    copilot
-        .getLeftButton()
-        .whileTrue(
-            Commands.run(() -> climber.runVolts(12 * copilot.getRightY(Scale.LINEAR)), climber));
-    // END OF TEST TEMP INPUTS
+    pilot
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
 
     // pilot
-    //     .a()
+    //     .rightBumper()
     //     .whileTrue(
     //         ScoringCommands.aim(
     //                 drive,
     //                 () ->
     //                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
     //                 () ->
     //                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-    //                 launcher,
+    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+    //                 shooter,
+    //                 hood,
     //                 () -> Constants.ShooterConstants.kMiddleVel)
     //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-    //     .onFalse(Commands.runOnce(drive::stopWithX, drive));
-
-    // pilot
-    //     .start()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     drive.setPose(
-    //                         new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-    //                 drive)
-    //             .ignoringDisable(true));
-
-    // // pivoting the intake toggle (up/down)
-    // pilot
-    //     .rightTrigger()
-    //     .onTrue(
-    //         Commands.sequence(
-    //             Commands.runOnce(() -> transfer.index(10.0), transfer),
-    //             Commands.runOnce(() -> transfer.aggitate(10.0), transfer)))
     //     .onFalse(
-    //         Commands.sequence(
-    //             Commands.runOnce(() -> transfer.index(0.0), transfer),
-    //             Commands.runOnce(() -> transfer.aggitate(0.0), transfer)));
+    //         Commands.runOnce(drive::stopWithX, drive)
+    //             .andThen(
+    //                 hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
 
-    // pilot
-    //     .leftTrigger()
-    //     .onTrue(Commands.runOnce(() -> loader.intake(10.0), loader))
-    //     .onFalse(Commands.runOnce(() -> loader.intake(0.0), loader));
+    pilot
+        .rightBumper()
+        .onTrue(
+            hood.setPosition(() -> Rotation2d.fromDegrees(55))
+                .alongWith(shooter.setVelocity(() -> Constants.ShooterConstants.kMiddleVel)))
+        .onFalse(hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop()));
 
-    // pilot
-    //     .b()
-    //     .toggleOnTrue(
-    //         Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Max_H), climber))
-    //     .toggleOnFalse(
-    //         Commands.runOnce(() -> climber.setHeight(Constants.ClimberConstants.Min_H),
-    // climber));
+    pilot
+        .rightTrigger()
+        .onTrue(hopper.runVolts(() -> 0.5, () -> 0.5))
+        .onFalse(hopper.runVolts(() -> 0.0, () -> 0.0));
+    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7)).onFalse(intake.intake(() -> 0.0));
+    pilot
+        .leftBumper()
+        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)))
+        .onFalse(intake.intake(() -> 0.0).alongWith(hopper.runVolts(() -> 0.0, () -> 0.0)));
 
-    // copilot
-    //     .leftBumper()
-    //     .toggleOnTrue(
-    //         Commands.runOnce(
-    //             () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Min_A))))
-    //     .toggleOnFalse(
-    //         Commands.runOnce(
-    //             () -> loader.setWrist(Rotation2d.fromRadians(Constants.WristConstants.Max_A))));
+    pilot.x().onTrue(climber.raise());
+    pilot.y().onTrue(climber.lower());
 
-    // copilot.x().onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
-    // copilot.y().onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
+    copilot.a().onTrue(wrist.down());
+    copilot.x().onTrue(wrist.stow());
 
-    // copilot
-    //     .rightTrigger()
-    //     .onTrue(Commands.runOnce(() -> loader.eject(5.0), loader))
-    //     .onFalse(Commands.runOnce(() -> loader.eject(0.0), loader));
-    // copilot
-    //     .rightBumper()
-    //     .onTrue(Commands.runOnce(() -> transfer.outdex(5.0), transfer))
-    //     .onFalse(Commands.runOnce(() -> transfer.outdex(0.0), transfer));
-
-    // pilot
-    //     .x()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () -> {
-    //               launcher.setOpen(50);
-    //               launcher.setHood(Rotation2d.fromDegrees(45.0));
-    //             },
-    //             launcher))
-    //     .onFalse(
-    //         Commands.runOnce(
-    //             () -> {
-    //               launcher.setOpen(0);
-
-    //               launcher.setHood(Rotation2d.fromDegrees(0.0));
-    //             },
-    //             launcher));
-
-    // Trigger climberinput =
-    //     new Trigger(() -> copilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0);
-
-    // climberinput
-    //     .whileTrue(Commands.run(() -> climber.run(copilot.getLeftY(Scale.LINEAR))))
-    //     .onFalse(Commands.runOnce(() -> climber.run(0.0)));
+    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(climber.runVolts(()-> 0.0));;
+    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(wrist.runWrist(() -> 0.0));
   }
 
   /**
@@ -543,7 +395,6 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
 
     Logger.recordOutput("Drive/Angle At Setpoint?", Constants.Drive.ANGLE_PID.atGoal());
 

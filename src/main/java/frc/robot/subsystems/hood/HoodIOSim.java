@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Launcher.Hood;
+package frc.robot.subsystems.hood;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;

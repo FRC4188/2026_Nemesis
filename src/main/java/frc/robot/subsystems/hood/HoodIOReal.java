@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Launcher.Hood;
+package frc.robot.subsystems.hood;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -6,14 +6,13 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -34,6 +33,8 @@ public class HoodIOReal implements HoodIO {
   private final StatusSignal<Temperature> tempC;
 
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
@@ -61,8 +62,7 @@ public class HoodIOReal implements HoodIO {
             .withSlot0(Constants.HoodConstants.hoodGains)
             .withFeedback(
                 new FeedbackConfigs()
-                    .withSensorToMechanismRatio(
-                        Constants.HoodConstants.kGearBox * Constants.HoodConstants.kSproket))
+                    .withSensorToMechanismRatio(Constants.HoodConstants.kGearRatio))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity(100.0 / Constants.HoodConstants.kGearRatio)
@@ -97,20 +97,7 @@ public class HoodIOReal implements HoodIO {
 
   @Override
   public void runVolts(double output) {
-    motor.setVoltage(output);
-  }
-
-  @Override
-  public void updatePID(double kP, double kI, double kD, double kV) {
-    motorConfigs.Slot0 =
-        new Slot0Configs()
-            .withKP(kP)
-            .withKI(kI)
-            .withKD(kD)
-            .withKG(kV)
-            .withGravityType(GravityTypeValue.Arm_Cosine);
-
-    motor.getConfigurator().apply(motorConfigs);
+    motor.setControl(voltageRequest.withOutput(output));
   }
 
   @Override

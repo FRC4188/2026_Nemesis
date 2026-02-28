@@ -2,9 +2,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 
 public class VisConstants {
@@ -12,28 +10,15 @@ public class VisConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   // TODO: to be implemented
+  public static String leftPho = "left";
+  public static String rightPho = "right";
   public static String frontPho = "front";
-  public static String backPho = "back";
 
-  public static Transform3d robotToCamera0 =
-      new Transform3d(
-          Units.inchesToMeters(
-              6.46890 + 0.125 - 1.5 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),
-          Units.inchesToMeters(
-              3.00864 - 7 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getY()),
-          Units.inchesToMeters(
-              2.125 + 11 + Constants.Robot.RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getZ()),
-          new Rotation3d(0.0, 0, 0));
+  public static Transform3d robotToCameraLeft = Constants.CameraConstants.cameraLeft;
 
-  public static Transform3d robotToCamera2 =
-      new Transform3d(
-          Units.inchesToMeters(
-              6.46890 + 0.125 - 1.5 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getX()),
-          Units.inchesToMeters(
-              3.00864 - 7 - 2 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getY()),
-          Units.inchesToMeters(
-              2.125 + 11 + 0.5 + Constants.Robot.LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW.getZ()),
-          new Rotation3d(0.0, 0, Math.PI));
+  public static Transform3d robotToCameraRight = Constants.CameraConstants.cameraRight;
+
+  public static Transform3d robotToCameraFront = Constants.CameraConstants.cameraFront;
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;

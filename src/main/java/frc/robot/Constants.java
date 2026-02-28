@@ -8,16 +8,16 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -93,7 +93,7 @@ public final class Constants {
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
-    private static final double ROBOT_MASS_KG = 34.261; // placeholder
+    private static final double ROBOT_MASS_KG = 130; // placeholder
     private static final double ROBOT_MOI = ROBOT_MASS_KG * B_CROSS * B_CROSS; // placeholer
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
 
@@ -178,50 +178,38 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode =
-        NeutralModeValue.Brake; // free pivot is faster
+        NeutralModeValue.Coast; // free pivot is faster
     public static final InvertedValue kInvertedValue =
-        InvertedValue.CounterClockwise_Positive; // placeholder
+        InvertedValue.Clockwise_Positive; // placeholder
     public static final Slot0Configs wristGains =
         new Slot0Configs()
-            .withKP(0.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.0) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKG(0.0) // placeholder
+            .withKP(10.0)
+            .withKI(6.0)
+            .withKD(0.0)
+            .withKS(0.0)
+            .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
 
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
-
   }
 
   public static class ClimberConstants {
-    public static final double kTolerance = 3.0;
+    public static final double kTolerance = 5.0;
     public static final double Max_R = 80.0;
     public static final double Min_R = 0.0;
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final Slot0Configs climberGains =
         new Slot0Configs()
-            .withKP(1.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.3) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKG(0.0) // placeholder
-            .withGravityType(GravityTypeValue.Elevator_Static);
-
-    public static final Slot1Configs climberGains1 =
-        new Slot1Configs()
-            .withKP(1.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.3) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKG(3.0) // placeholder
+            .withKP(1.0)
+            .withKI(0.0)
+            .withKD(0.3)
+            .withKG(0.0)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
     public static final ClosedLoopOutputType motorClosedLoopOutput =
@@ -229,10 +217,8 @@ public final class Constants {
   }
 
   public static class HoodConstants {
-    public static final double kGearBox = 16.0;
-    public static final double kSproket = 3.0;
-    public static final double kGearRatio = kGearBox * kSproket;
-    public static final double kTolerance = 0.01;
+    public static final double kGearRatio = 40.0;
+    public static final double kTolerance = 0.05;
     public static final double Max_A = Units.degreesToRadians(90.0);
     public static final double Min_A = Units.degreesToRadians(8.0);
 
@@ -242,22 +228,17 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(0.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.0) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKG(0.0) // placeholder
-            .withGravityType(GravityTypeValue.Arm_Cosine); // TODO: workaround 1:1
+            .withKP(25.0)
+            .withKI(5.0)
+            .withKD(0.0)
+            .withKS(0.0)
+            .withKG(0.4)
+            .withGravityType(GravityTypeValue.Arm_Cosine);
 
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
-
-    public static final double kCanCoderOffset = 0.0; // placeholder
-    public static final SensorDirectionValue kDirection =
-        SensorDirectionValue.Clockwise_Positive; // placeholder
   }
 
   public static class ShooterConstants {
@@ -265,12 +246,12 @@ public final class Constants {
         new Translation3d(-Robot.A_LENGTH / 2, 0, 20.0); // placeholder
     public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
-    public static final double kTolerance = 100.0; // rpm units
-    public static final double kLowVel = 500.0; // placeholder
-    public static final double kMiddleVel = 1000.0; // placeholder
-    public static final double kHighVel = 2000.0; // placeholder
+    public static final double kTolerance = 240.0; // rpm units
+    public static final double kLowVel = 1800.0; // placeholder
+    public static final double kMiddleVel = 2250.0; // placeholder
+    public static final double kHighVel = 5400.0; // placeholder
     public static final double kGearRatio = 1.0;
-    public static final double kDropVel = 1.0; // placeholder
+    public static final double kDropVel = 10.0; // placeholder
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder
@@ -281,26 +262,16 @@ public final class Constants {
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kLeftInvertedValue =
         InvertedValue.Clockwise_Positive; // placeholder
-    public static final InvertedValue kRightInvertedValue =
-        InvertedValue.CounterClockwise_Positive; // placeholder
+    public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
     public static final Slot0Configs rightShooterGains =
-        new Slot0Configs()
-            .withKP(0.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.0) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKV(0.0); // placeholder
+        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
 
     public static final Slot0Configs leftShooterGains =
-        new Slot0Configs()
-            .withKP(0.0) // placeholder
-            .withKI(0.0) // placeholder
-            .withKD(0.0) // placeholder
-            .withKS(0.0) // testing usefulness
-            .withKV(0.0); // placeholder
+        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
 
-    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+    public static final ClosedLoopOutputType motorClosedLoopOutput =
+        ClosedLoopOutputType.TorqueCurrentFOC;
   }
 
   public static class IndexerConstants {
@@ -311,7 +282,7 @@ public final class Constants {
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+        InvertedValue.CounterClockwise_Positive; // placeholder
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
@@ -323,7 +294,30 @@ public final class Constants {
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+        InvertedValue.CounterClockwise_Positive; // placeholder
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+  }
+
+  public static class CameraConstants {
+    public static final Transform3d cameraLeft =
+        new Transform3d(
+            Units.inchesToMeters(-11.29914),
+            Units.inchesToMeters(11.1000),
+            Units.inchesToMeters(13.64718),
+            new Rotation3d(0, 0, Math.PI / 2));
+
+    public static final Transform3d cameraRight =
+        new Transform3d(
+            Units.inchesToMeters(-11.29914),
+            Units.inchesToMeters(-11.1000),
+            Units.inchesToMeters(13.64718),
+            new Rotation3d(0, 0, -Math.PI / 2));
+
+    public static final Transform3d cameraFront =
+        new Transform3d(
+            Units.inchesToMeters(7.89473),
+            Units.inchesToMeters(9.73216),
+            Units.inchesToMeters(7.44761),
+            new Rotation3d(0, 0, 0));
   }
 }

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Climber;
+package frc.robot.subsystems.climber;
 
 import static edu.wpi.first.units.Units.Hertz;
 
@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -29,6 +30,8 @@ public class ClimberIOReal implements ClimberIO {
   private final StatusSignal<Current> currentAmps;
   private final StatusSignal<Temperature> tempC;
   private final StatusSignal<Angle> posRots;
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
@@ -86,11 +89,11 @@ public class ClimberIOReal implements ClimberIO {
 
   @Override
   public void runVolts(double output) {
-    motor.setVoltage(output);
+    motor.setControl(voltageRequest.withOutput(output));
   }
 
   @Override
-  public void setPosition(Rotation2d rotation, int slot) {
+  public void setPosition(Rotation2d rotation) {
     motor.setControl(
         switch (Constants.WristConstants.motorClosedLoopOutput) {
           case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());

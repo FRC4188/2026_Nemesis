@@ -13,23 +13,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
-import frc.robot.subsystems.Launcher.Launcher;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.function.DoubleSupplier;
 
 public class ScoringCommands {
 
-  public static Command WindUp(Launcher launcher, double RPM) {
-    return Commands.runOnce(() -> launcher.runShooter(RPM), launcher);
-  }
-
   public static Command aim(
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Launcher launcher,
+      Shooter shooter,
+      Hood hood,
       DoubleSupplier RPM) {
 
     ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
@@ -80,8 +78,8 @@ public class ScoringCommands {
                 azimuth = new Rotation2d(calc.getZ());
               }
 
-              launcher.setHood(incline);
-              launcher.runShooter(RPM.getAsDouble());
+              hood.setPosition(() -> incline).execute();
+              shooter.setVelocity(RPM).execute();
 
               double omega =
                   angleController.calculate(drive.getRotation().getRadians(), azimuth.getRadians())
@@ -108,7 +106,8 @@ public class ScoringCommands {
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds, AllianceFlip.apply(drive.getRotation())));
             },
-            launcher,
+            hood,
+            shooter,
             drive)
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }

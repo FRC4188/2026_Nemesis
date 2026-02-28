@@ -1,16 +1,16 @@
-package frc.robot.subsystems.Launcher.Shooter;
+package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -38,6 +38,8 @@ public class ShooterIOReal implements ShooterIO {
 
   private final Debouncer leftDebouncer = new Debouncer(0.5, DebounceType.kFalling);
   private final Debouncer rightDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+
+  private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
   private final VelocityVoltage velocityVoltageRequest =
       new VelocityVoltage(0.0).withEnableFOC(true);
@@ -143,37 +145,14 @@ public class ShooterIOReal implements ShooterIO {
 
   @Override
   public void runVolts(double volts) {
-    motorLeft.setVoltage(volts);
-    motorRight.setVoltage(volts);
-  }
-
-  @Override
-  public void updateLeftPID(double kP, double kI, double kD, double kV) {
-    leftMotorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
-
-    motorLeft
-        .getConfigurator()
-        .apply(
-            leftMotorConfigs.MotorOutput.withInverted(
-                Constants.ShooterConstants.kLeftInvertedValue));
-  }
-
-  @Override
-  public void updateRightPID(double kP, double kI, double kD, double kV) {
-    rightMotorConfigs.Slot0 = new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKV(kV);
-
-    motorRight
-        .getConfigurator()
-        .apply(
-            rightMotorConfigs.MotorOutput.withInverted(
-                Constants.ShooterConstants.kRightInvertedValue));
+    motorRight.setControl(voltageRequest.withOutput(volts));
+    motorLeft.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override
   public void setVelocity(double rpm) {
     if (rpm == 0.0) {
-      motorLeft.setVoltage(0.0);
-      motorRight.setVoltage(0.0);
+      runVolts(0.0);
       return;
     }
 
