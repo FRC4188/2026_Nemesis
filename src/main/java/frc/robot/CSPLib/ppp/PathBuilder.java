@@ -233,10 +233,19 @@ public final class PathBuilder {
             new GoalEndState(0, Rotation2d.kZero)));
   }
 
-  public static Command followPath(List<Waypoint> waypoints) {
+  public static Command followPathEndZero(List<Waypoint> waypoints) {
     return AutoBuilder.followPath(
         new PathPlannerPath(
             waypoints, PathBuilder.getConstraints(), null, new GoalEndState(0, Rotation2d.kZero)));
+  }
+
+  public static Command followPathEnd180(List<Waypoint> waypoints) {
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            waypoints,
+            PathBuilder.getConstraints(),
+            null,
+            new GoalEndState(0, Rotation2d.k180deg)));
   }
 
   public static Command interpolatePath(Pose2d... poses) {
