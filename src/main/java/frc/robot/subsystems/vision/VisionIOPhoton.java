@@ -154,7 +154,7 @@ public class VisionIOPhoton implements VisionIO {
   }
 
   public Pose2d getGridResults(ArrayList<Translation2d> fuelposes, Pose3d robotPose) {
-    double cellSize = 0.6096; // 24 inches cause intake is like that big
+    double cellSize = 0.6096; // 24 inches cause intake is like that big that number in meters btw
     Translation2d translation = new Translation2d();
     ArrayList<int[]> gridData = new ArrayList<int[]>();
     for (int i = 0; i < fuelposes.size(); i++) {
@@ -178,9 +178,9 @@ public class VisionIOPhoton implements VisionIO {
         translation = new Translation2d((x + 0.5) * cellSize, (y + 0.5) * cellSize);
       }
     }
-
+    double inchesToMeters = 0.0254;
     Transform3d poseShift =
-        new Transform3d(translation.getX(), translation.getY(), 0.0, new Rotation3d());
+        new Transform3d(translation.getX()*inchesToMeters , translation.getY()*inchesToMeters, 0.0, new Rotation3d());
 
     Pose3d newPose = robotPose.transformBy(poseShift);
     return newPose.toPose2d();
