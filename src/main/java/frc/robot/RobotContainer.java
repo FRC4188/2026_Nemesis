@@ -13,21 +13,19 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOReal;
-import frc.robot.subsystems.climber.ClimberIOSim;
+import frc.robot.subsystems.Climber.Climber;
+import frc.robot.subsystems.Climber.ClimberIO;
+import frc.robot.subsystems.Climber.ClimberIOReal;
+import frc.robot.subsystems.Climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -553,7 +551,8 @@ public class RobotContainer {
     //     .onFalse(
     //         Commands.runOnce(drive::stopWithX, drive)
     //             .andThen(
-    //                 hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
+    //                 hood.setPosition(() ->
+    // Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
 
     pilot
         .rightBumper()
@@ -578,8 +577,15 @@ public class RobotContainer {
     copilot.a().onTrue(wrist.down());
     copilot.x().onTrue(wrist.stow());
 
-    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(climber.runVolts(()-> 0.0));;
-    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(wrist.runWrist(() -> 0.0));
+    copilot
+        .b()
+        .whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)))
+        .onFalse(climber.runVolts(() -> 0.0));
+    ;
+    copilot
+        .y()
+        .whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)))
+        .onFalse(wrist.runWrist(() -> 0.0));
   }
 
   /**

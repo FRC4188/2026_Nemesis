@@ -299,25 +299,46 @@ public final class Constants {
   }
 
   public static class CameraConstants {
+    // public static final Transform3d cameraLeft =
+    //     new Transform3d(
+    //         Units.inchesToMeters(-11.29914),
+    //         Units.inchesToMeters(11.1000),
+    //         Units.inchesToMeters(13.64718),
+    //         new Rotation3d(0, 0, Math.PI / 2));
+
     public static final Transform3d cameraLeft =
         new Transform3d(
-            Units.inchesToMeters(-11.29914),
-            Units.inchesToMeters(11.1000),
-            Units.inchesToMeters(13.64718),
+            Units.inchesToMeters(-11.500000),
+            Units.inchesToMeters(11.100000 - 1.600000),
+            Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, Math.PI / 2));
+
+    // public static final Transform3d cameraRight =
+    //     new Transform3d(
+    //         Units.inchesToMeters(-11.29914),
+    //         Units.inchesToMeters(-11.1000),
+    //         Units.inchesToMeters(13.64718),
+    //         new Rotation3d(0, 0, -Math.PI / 2));
 
     public static final Transform3d cameraRight =
         new Transform3d(
-            Units.inchesToMeters(-11.29914),
-            Units.inchesToMeters(-11.1000),
-            Units.inchesToMeters(13.64718),
+            Units.inchesToMeters(-11.500000),
+            Units.inchesToMeters(-11.100000 + 1.600000),
+            Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, -Math.PI / 2));
+
+    // public static final Transform3d cameraFront =
+    //     new Transform3d(
+    //         Units.inchesToMeters(7.89473),
+    //         Units.inchesToMeters(9.73216),
+    //         Units.inchesToMeters(7.44761),
+    //         new Rotation3d(0, 0, 0));
 
     public static final Transform3d cameraFront =
         new Transform3d(
-            Units.inchesToMeters(7.89473),
-            Units.inchesToMeters(9.73216),
-            Units.inchesToMeters(7.44761),
+            Units.inchesToMeters(8.812214),
+            Units.inchesToMeters(-9.982283),
+            Units.inchesToMeters(8.205321),
             new Rotation3d(0, 0, 0));
   }
 }
