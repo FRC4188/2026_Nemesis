@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Loader.Wrist;
+package frc.robot.subsystems.wrist;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
@@ -27,6 +27,4 @@ public interface WristIO {
   default boolean isStalled() {
     return false;
   }
-
-  default void updatePID(double kp, double ki, double kd, double kg) {}
 }

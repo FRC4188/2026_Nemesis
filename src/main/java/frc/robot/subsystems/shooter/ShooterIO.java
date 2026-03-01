@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Launcher.Shooter;
+package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -23,10 +23,6 @@ public interface ShooterIO {
   public default void runVolts(double volts) {}
 
   public default void setVelocity(double rpm) {}
-
-  public default void updateRightPID(double kp, double ki, double kd, double kv) {}
-
-  public default void updateLeftPID(double kp, double ki, double kd, double kv) {}
 
   public default double getSetpoint() {
     return 0;

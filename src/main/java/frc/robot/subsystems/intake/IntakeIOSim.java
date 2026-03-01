@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Loader.Intake;
+package frc.robot.subsystems.intake;
 
 public class IntakeIOSim implements IntakeIO {
   private double applied_volts = 0;

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Launcher.Shooter;
+package frc.robot.subsystems.shooter;
 
 public class ShooterIOSim implements ShooterIO {
 

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Launcher.Hood;
+package frc.robot.subsystems.hood;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
@@ -23,6 +23,4 @@ public interface HoodIO {
   public default double getSetpoint() {
     return 0.0;
   }
-
-  public default void updatePID(double kp, double ki, double kd, double kg) {}
 }
