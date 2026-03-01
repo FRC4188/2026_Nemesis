@@ -48,6 +48,10 @@ public class Hood extends SubsystemBase {
     return Math.abs(inputs.posRads - io.getSetpoint()) < Constants.HoodConstants.kTolerance;
   }
 
+  /**
+   * 
+   * @return Hood angle in radians
+   */
   @AutoLogOutput(key = "Hood/Shooting Angle Rads")
   public double getShotAngle() {
     return Math.PI / 2.0 - inputs.posRads;

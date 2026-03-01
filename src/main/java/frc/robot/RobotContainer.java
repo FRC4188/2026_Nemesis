@@ -135,9 +135,12 @@ public class RobotContainer {
         wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        // simvis =
-        //     new SimulationVisualizer(
-        //         "Models", () -> wrist.getAngle(), () ->hood.getAngle(), () -> 0);
+        simvis =
+            new SimulationVisualizer(
+                "Models",
+                () -> wrist.getAngle(),
+                () -> hood.getShotAngle(),
+                () -> climber.getHeightRots());
         break;
 
       default:
@@ -242,49 +245,6 @@ public class RobotContainer {
     //             PathBuilder.getConstraints(),
     //             null,
     //             new GoalEndState(0.0, Rotation2d.k180deg)))));
-
-    // autoChooser.addOption(
-    //     "TO THE RIGHT, TO THE LEFT",
-    //     Commands.runOnce(
-    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-    //         .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance,
-    // 5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.Trench.right_trench_neutral_preentrance,
-    //                     Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.FuelField.right_close_corner_approach,
-    //                     Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.FuelField.left_close_corner_approach,
-    // Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance,
-    // 5))
-    //         .andThen(
-    //             Commands.runOnce(
-    //                 () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
-    //         .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
-    //         .andThen(Commands.waitSeconds(5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
     autoChooser.addOption(
         "TO THE RIGHT, TO THE LEFT",
@@ -490,11 +450,11 @@ public class RobotContainer {
   }
 
   private Command intakeDown() {
-    return Commands.none();
+    return wrist.down();
   }
 
   private Command intakeUp() {
-    return Commands.none();
+    return wrist.stow();
   }
 
   private Command shootCommand() {

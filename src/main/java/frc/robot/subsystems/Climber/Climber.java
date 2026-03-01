@@ -43,6 +43,10 @@ public class Climber extends SubsystemBase {
     return Math.abs(inputs.posRots - io.getSetpoint()) < Constants.ClimberConstants.kTolerance;
   }
 
+  /**
+   * 
+   * @return Climber height in rotations
+   */
   @AutoLogOutput(key = "Climber/Height Rotations")
   public double getHeightRots() {
     return inputs.posRots;
