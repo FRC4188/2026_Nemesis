@@ -239,10 +239,16 @@ public class RobotContainer {
                 PathBuilder.createPath(
                     vis.getCluster(
                         new Pose3d(
-                            drive.getPose().getX(),
-                            drive.getPose().getY(),
-                            0,
-                            new Rotation3d(drive.getPose().getRotation()))))));
+                                drive.getPose().getX(),
+                                drive.getPose().getY(),
+                                0,
+                                new Rotation3d(drive.getPose().getRotation()
+                            )
+                        )
+                    )
+                )
+            )
+    );
 
     // .andThen(
     //     PathBuilder.mergeToKnownPath(

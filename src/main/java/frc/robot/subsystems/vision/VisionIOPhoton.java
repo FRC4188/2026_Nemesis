@@ -154,33 +154,61 @@ public class VisionIOPhoton implements VisionIO {
   }
 
   public Pose2d getGridResults(ArrayList<Translation2d> fuelposes, Pose3d robotPose) {
-    double cellSize = 0.6096; // 24 inches cause intake is like that big that number in meters btw
+    double cellSize = 0.6096; // 24 inches in meters
     Translation2d translation = new Translation2d();
     ArrayList<int[]> gridData = new ArrayList<int[]>();
+
     for (int i = 0; i < fuelposes.size(); i++) {
       int CellX = (int) Math.floor(fuelposes.get(i).getX() / cellSize);
       int CellY = (int) Math.floor(fuelposes.get(i).getY() / cellSize);
       gridData.add(new int[] {CellX, CellY});
     }
+
     int maxCount = 0;
+    int bestX = 0;
+    int bestY = 0;
 
     for (int i = 0; i < gridData.size(); i++) {
       int count = 0;
       int x = gridData.get(i)[0];
       int y = gridData.get(i)[1];
+
       for (int j = 0; j < gridData.size(); j++) {
         if (gridData.get(j)[0] == x && gridData.get(j)[1] == y) {
           count++;
         }
       }
+
       if (count > maxCount) {
         maxCount = count;
-        translation = new Translation2d((x + 0.5) * cellSize, (y + 0.5) * cellSize);
+        bestX = x;
+        bestY = y;
       }
     }
-    double inchesToMeters = 0.0254;
+
+    // Compute mean inside best cell
+    double sumX = 0.0;
+    double sumY = 0.0;
+    int count = 0;
+
+    for (int i = 0; i < fuelposes.size(); i++) {
+      if (gridData.get(i)[0] == bestX && gridData.get(i)[1] == bestY) {
+        sumX += fuelposes.get(i).getX();
+        sumY += fuelposes.get(i).getY();
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      translation = new Translation2d(sumX / count, sumY / count);
+    }
+    
     Transform3d poseShift =
-        new Transform3d(translation.getX()*inchesToMeters , translation.getY()*inchesToMeters, 0.0, new Rotation3d());
+        new Transform3d(
+            Units.inchesToMeters(translation.getX()),
+            Units.inchesToMeters(translation.getY()),
+            0.0,
+            new Rotation3d());
 
     Pose3d newPose = robotPose.transformBy(poseShift);
     return newPose.toPose2d();
@@ -192,10 +220,9 @@ public class VisionIOPhoton implements VisionIO {
     double pitchDeg = target.getPitch(); // degrees
 
     // pls dont explode
-    // TODO: double check what our extrema are tmrw akhil this is arbitrary for know
     double x = Math.max(-20, Math.min(0, pitchDeg));
 
-    // stuff me and zaki did forward and back (just use a ruler a long one)
+    // stuff me and zaki did forward and back (just use a ruler, a long one)
     double forwardInches =
         0.699005 * Math.pow(x, 3) + 13.00874 * Math.pow(x, 2) + 86.31382 * x + 266.36636;
 
