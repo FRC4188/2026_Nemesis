@@ -10,6 +10,8 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -57,6 +59,7 @@ import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
+import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -459,10 +462,10 @@ public class RobotContainer {
                     new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero)))
             .andThen(Commands.waitSeconds(5))
             .andThen(() -> PathBuilder.stopTarget())
-            .andThen(PathBuilder.interpolatePath(
-              new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
-              new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.kZero)
-            ))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.kZero)))
             .andThen(PathBuilder.followPathEnd180(FieldConstants.Tower.left_approach)));
 
     autoChooser.addOption(
@@ -479,8 +482,7 @@ public class RobotContainer {
             .andThen(
                 PathBuilder.interpolatePath(
                     new Pose2d(
-                        FieldConstants.FuelField.left_close_corner_approach,
-                        Rotation2d.kCW_90deg),
+                        FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCW_90deg),
                     new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg),
                     new Pose2d(
                         FieldConstants.FuelField.right_close_corner_approach,
@@ -502,10 +504,10 @@ public class RobotContainer {
                     new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero)))
             .andThen(Commands.waitSeconds(5))
             .andThen(() -> PathBuilder.stopTarget())
-            .andThen(PathBuilder.interpolatePath(
-              new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
-              new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)
-            ))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)))
             .andThen(PathBuilder.followPathEndZero(FieldConstants.Tower.right_approach)));
 
     // Set up SysId routines
@@ -737,8 +739,38 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
+  // maybe making this easier for different positions in sim?!
+  // idk man - ansh
   public void simReset() {
-    drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero));
+      }
+    } else if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(AllianceFlip.apply(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            AllianceFlip.apply(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            AllianceFlip.apply(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero)));
+      }
+    }
   }
 
   public void periodic() {
