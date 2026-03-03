@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
-import frc.robot.Constants.RobotMode;
 import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants;
@@ -351,44 +350,42 @@ public final class PathBuilder {
                                             FieldConstants.Trench.right_trench_alliance_entrance)
                                     > Constants.Robot.PATH_ERROR)
                     .andThen(
-                        Commands.runOnce(() -> Constants.Robot.robotMode = RobotMode.SHOOT)
-                            .andThen(
-                                shootTemp
-                                    .alongWith(
-                                        Commands.runOnce(
+                        shootTemp
+                            .alongWith(
+                                Commands.runOnce(
+                                    () ->
+                                        PathBuilder.targetRotation(
                                             () ->
-                                                PathBuilder.targetRotation(
-                                                    () ->
-                                                        new Rotation2d(
-                                                            ProjMath.movingShot(
-                                                                    20, // placeholder
-                                                                    FieldConstants.Hub.hub_center,
-                                                                    new Translation2d(
-                                                                        drive.getChassisSpeeds()
-                                                                            .vxMetersPerSecond,
-                                                                        drive.getChassisSpeeds()
-                                                                            .vyMetersPerSecond))
-                                                                .getZ()))))
-                                    .until(
-                                        () ->
-                                            drive
-                                                        .getPose()
-                                                        .getTranslation()
-                                                        .getDistance(
-                                                            FieldConstants.Trench
-                                                                .left_trench_alliance_entrance)
-                                                    <= Constants.Robot.PATH_ERROR
-                                                || drive
-                                                        .getPose()
-                                                        .getTranslation()
-                                                        .getDistance(
-                                                            FieldConstants.Trench
-                                                                .right_trench_alliance_entrance)
-                                                    <= Constants.Robot.PATH_ERROR)
-                                    .andThen(
-                                        Commands.parallel(
-                                            Commands.print("Just a IdleCommand placeholder"),
-                                            Commands.runOnce(() -> PathBuilder.stopTarget()))))),
+                                                new Rotation2d(
+                                                    ProjMath.movingShot(
+                                                            20, // placeholder
+                                                            FieldConstants.Hub.hub_center,
+                                                            new Translation2d(
+                                                                drive.getChassisSpeeds()
+                                                                    .vxMetersPerSecond,
+                                                                drive.getChassisSpeeds()
+                                                                    .vyMetersPerSecond))
+                                                        .getZ()))))
+                            .until(
+                                () ->
+                                    drive
+                                                .getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .left_trench_alliance_entrance)
+                                            <= Constants.Robot.PATH_ERROR
+                                        || drive
+                                                .getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .right_trench_alliance_entrance)
+                                            <= Constants.Robot.PATH_ERROR)
+                            .andThen(
+                                Commands.parallel(
+                                    Commands.print("Just a IdleCommand placeholder"),
+                                    Commands.runOnce(() -> PathBuilder.stopTarget())))),
                 Commands.waitUntil(
                         () ->
                             drive
@@ -404,26 +401,24 @@ public final class PathBuilder {
                                             FieldConstants.Trench.right_trench_neutral_entrance)
                                     > Constants.Robot.PATH_ERROR)
                     .andThen(
-                        Commands.runOnce(() -> Constants.Robot.robotMode = RobotMode.INTAKE)
-                            .andThen(
-                                intakeTemp
-                                    .until(
-                                        () ->
-                                            drive
-                                                        .getPose()
-                                                        .getTranslation()
-                                                        .getDistance(
-                                                            FieldConstants.Trench
-                                                                .left_trench_neutral_entrance)
-                                                    <= Constants.Robot.PATH_ERROR
-                                                || drive
-                                                        .getPose()
-                                                        .getTranslation()
-                                                        .getDistance(
-                                                            FieldConstants.Trench
-                                                                .right_trench_neutral_entrance)
-                                                    <= Constants.Robot.PATH_ERROR)
-                                    .andThen(idleTemp))))
+                        intakeTemp
+                            .until(
+                                () ->
+                                    drive
+                                                .getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .left_trench_neutral_entrance)
+                                            <= Constants.Robot.PATH_ERROR
+                                        || drive
+                                                .getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .right_trench_neutral_entrance)
+                                            <= Constants.Robot.PATH_ERROR)
+                            .andThen(idleTemp)))
             .andThen(climbTemp));
   }
 

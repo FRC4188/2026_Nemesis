@@ -49,7 +49,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
   // failsafe
   @AutoLogOutput(key = "Vision/Accept?")
-  public boolean vision_accept = true;
+  public boolean vision_accept = false;
 
   private final Field2d field;
 

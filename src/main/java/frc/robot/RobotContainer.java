@@ -11,14 +11,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
@@ -103,7 +101,6 @@ public class RobotContainer {
                 drive::accept,
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
                 new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
-        // new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
 
         hood = new Hood(new HoodIOReal());
         shooter = new Shooter(new ShooterIOReal());
@@ -415,10 +412,10 @@ public class RobotContainer {
                     new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero)))
             .andThen(Commands.waitSeconds(5))
             .andThen(() -> PathBuilder.stopTarget())
-            .andThen(PathBuilder.interpolatePath(
-              new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
-              new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.kZero)
-            ))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.left_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.kZero)))
             .andThen(PathBuilder.followPathEnd180(FieldConstants.Tower.left_approach)));
 
     autoChooser.addOption(
@@ -435,8 +432,7 @@ public class RobotContainer {
             .andThen(
                 PathBuilder.interpolatePath(
                     new Pose2d(
-                        FieldConstants.FuelField.left_close_corner_approach,
-                        Rotation2d.kCW_90deg),
+                        FieldConstants.FuelField.left_close_corner_approach, Rotation2d.kCW_90deg),
                     new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg),
                     new Pose2d(
                         FieldConstants.FuelField.right_close_corner_approach,
@@ -458,10 +454,10 @@ public class RobotContainer {
                     new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero)))
             .andThen(Commands.waitSeconds(5))
             .andThen(() -> PathBuilder.stopTarget())
-            .andThen(PathBuilder.interpolatePath(
-              new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
-              new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)
-            ))
+            .andThen(
+                PathBuilder.interpolatePath(
+                    new Pose2d(FieldConstants.right_shooting_pos, Rotation2d.kZero),
+                    new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero)))
             .andThen(PathBuilder.followPathEndZero(FieldConstants.Tower.right_approach)));
 
     // Set up SysId routines
@@ -551,7 +547,8 @@ public class RobotContainer {
     //     .onFalse(
     //         Commands.runOnce(drive::stopWithX, drive)
     //             .andThen(
-    //                 hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
+    //                 hood.setPosition(() ->
+    // Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
 
     pilot
         .rightBumper()
@@ -576,8 +573,19 @@ public class RobotContainer {
     copilot.a().onTrue(wrist.down());
     copilot.x().onTrue(wrist.stow());
 
-    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(climber.runVolts(()-> 0.0));;
-    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR))).onFalse(wrist.runWrist(() -> 0.0));
+    copilot
+        .b()
+        .whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)))
+        .onFalse(climber.runVolts(() -> 0.0));
+    ;
+    copilot
+        .y()
+        .whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)))
+        .onFalse(wrist.runWrist(() -> 0.0));
+
+    copilot.getUpButton().onTrue(Commands.runOnce(() -> drive.vision_accept = true));
+
+    copilot.getDownButton().onTrue(Commands.runOnce(() -> drive.vision_accept = false));
   }
 
   /**

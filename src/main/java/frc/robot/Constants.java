@@ -35,23 +35,14 @@ import frc.robot.generated.TunerConstants;
  */
 public final class Constants {
 
-  public static enum RobotMode {
-    NONE,
-    INTAKE,
-    SHOOT,
-    CLIMB
-  }
-
   public static class Id {
     public static final int kWrist = 13;
     public static final int kIntake = 14;
-    // public static final int kIntakeCANCoder = 15;
     public static final int kHopper = 16;
     public static final int kIndexer = 17;
     public static final int kRightShooter = 18;
     public static final int kLeftShooter = 19;
     public static final int kHood = 20;
-    // public static final int kHoodCANCoder = 21;
     public static final int kClimber = 22;
   }
 
@@ -59,16 +50,6 @@ public final class Constants {
     REAL,
     SIM,
     REPLAY
-  }
-
-  public static enum PIDTuning {
-    NONE,
-    DRIVE_MOD,
-    TURN_MOD,
-    ANGLE,
-    SHOOTER,
-    HOOD,
-    WRIST
   }
 
   public static class Robot {
@@ -85,8 +66,6 @@ public final class Constants {
     public static final double PATH_ERROR = B_CROSS * 2.5;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
-    public static final PIDTuning tuningMode = PIDTuning.NONE;
-    public static RobotMode robotMode = RobotMode.NONE;
 
     public static final CANBus rio = CANBus.roboRIO();
     public static final CANBus canivore = new CANBus("canivore");
@@ -96,18 +75,6 @@ public final class Constants {
     private static final double ROBOT_MASS_KG = 130; // placeholder
     private static final double ROBOT_MOI = ROBOT_MASS_KG * B_CROSS * B_CROSS; // placeholer
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
-
-    public static final Translation3d RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
-        new Translation3d(
-            Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
-            Units.inchesToMeters(2.0740 / 2),
-            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
-
-    public static final Translation3d LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
-        new Translation3d(
-            -Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
-            -Units.inchesToMeters(2.0740 / 2),
-            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
   }
 
   public static class Controller {
@@ -161,8 +128,7 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+    public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
@@ -177,10 +143,8 @@ public final class Constants {
     public static final double kStallCurrent = 50; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
-    public static final NeutralModeValue kNuetralMode =
-        NeutralModeValue.Coast; // free pivot is faster
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
     public static final Slot0Configs wristGains =
         new Slot0Configs()
             .withKP(10.0)
@@ -195,7 +159,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final double kTolerance = 5.0;
-    public static final double Max_R = 80.0;
+    public static final double Max_R = 90.0;
     public static final double Min_R = 0.0;
 
     public static final double kStatorCurrent = 100.0; // placeholder
@@ -249,9 +213,9 @@ public final class Constants {
     public static final double kTolerance = 240.0; // rpm units
     public static final double kLowVel = 1800.0; // placeholder
     public static final double kMiddleVel = 2250.0; // placeholder
-    public static final double kHighVel = 5400.0; // placeholder
+    public static final double kHighVel = 4800.0;
     public static final double kGearRatio = 1.0;
-    public static final double kDropVel = 10.0; // placeholder
+    public static final double kDropVel = 600.0; // placeholder
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder
@@ -260,8 +224,7 @@ public final class Constants {
     public static final double kPeakReverseTC = 50.0; // placeholder
 
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
-    public static final InvertedValue kLeftInvertedValue =
-        InvertedValue.Clockwise_Positive; // placeholder
+    public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
     public static final Slot0Configs rightShooterGains =
@@ -281,8 +244,7 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.CounterClockwise_Positive; // placeholder
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
@@ -293,8 +255,7 @@ public final class Constants {
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
-    public static final InvertedValue kInvertedValue =
-        InvertedValue.CounterClockwise_Positive; // placeholder
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 

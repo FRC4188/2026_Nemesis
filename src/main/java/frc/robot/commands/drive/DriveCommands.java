@@ -75,12 +75,6 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
-              if (Constants.Robot.tuningMode == Constants.PIDTuning.ANGLE) {
-                Logger.recordOutput("Drive/Target Angle", rotationSupplier.get().getRadians());
-                Logger.recordOutput(
-                    "Drive/Current Angle", drive.getPose().getRotation().getRadians());
-              }
-
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())

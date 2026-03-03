@@ -9,7 +9,6 @@ public class VisConstants {
   public static AprilTagFieldLayout aprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  // TODO: to be implemented
   public static String leftPho = "left";
   public static String rightPho = "right";
   public static String frontPho = "front";
