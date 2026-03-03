@@ -36,6 +36,10 @@ public class Wrist extends SubsystemBase {
         () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this);
   }
 
+  /**
+   * 
+   * @return Wrist position in radians
+   */
   @AutoLogOutput(key = "Wrist/Angle Radians")
   public double getAngle() {
     return inputs.posRads;

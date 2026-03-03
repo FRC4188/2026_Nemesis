@@ -10,6 +10,8 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -20,10 +22,10 @@ import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOReal;
-import frc.robot.subsystems.climber.ClimberIOSim;
+import frc.robot.subsystems.Climber.Climber;
+import frc.robot.subsystems.Climber.ClimberIO;
+import frc.robot.subsystems.Climber.ClimberIOReal;
+import frc.robot.subsystems.Climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -55,6 +57,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIOReal;
 import frc.robot.subsystems.wrist.WristIOSim;
+import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -131,9 +134,12 @@ public class RobotContainer {
         wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        // simvis =
-        //     new SimulationVisualizer(
-        //         "Models", () -> wrist.getAngle(), () ->hood.getAngle(), () -> 0);
+        simvis =
+            new SimulationVisualizer(
+                "Models",
+                () -> wrist.getAngle(),
+                () -> hood.getShotAngle(),
+                () -> climber.getHeightRots());
         break;
 
       default:
@@ -238,49 +244,6 @@ public class RobotContainer {
     //             PathBuilder.getConstraints(),
     //             null,
     //             new GoalEndState(0.0, Rotation2d.k180deg)))));
-
-    // autoChooser.addOption(
-    //     "TO THE RIGHT, TO THE LEFT",
-    //     Commands.runOnce(
-    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-    //         .andThen(PathBuilder.createPath(FieldConstants.Tower.right_far_corner, 5))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.right_trench_alliance_preentrance,
-    // 5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.Trench.right_trench_neutral_preentrance,
-    //                     Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.FuelField.right_close_corner_approach,
-    //                     Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(
-    //                     FieldConstants.FuelField.left_close_corner_approach,
-    // Rotation2d.kCCW_90deg),
-    //                 5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_neutral_preentrance, 5))
-    //         .andThen(
-    //             PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance,
-    // 5))
-    //         .andThen(
-    //             Commands.runOnce(
-    //                 () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)))
-    //         .andThen(PathBuilder.createPath(FieldConstants.Depot.left_far_corner, 0))
-    //         .andThen(Commands.waitSeconds(5))
-    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-    //         .andThen(
-    //             PathBuilder.createPath(
-    //                 new Pose2d(FieldConstants.Tower.left_far_corner, Rotation2d.k180deg), 0)));
 
     autoChooser.addOption(
         "TO THE RIGHT, TO THE LEFT",
@@ -486,11 +449,11 @@ public class RobotContainer {
   }
 
   private Command intakeDown() {
-    return Commands.none();
+    return wrist.down();
   }
 
   private Command intakeUp() {
-    return Commands.none();
+    return wrist.stow();
   }
 
   private Command shootCommand() {
@@ -597,8 +560,38 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
+  // maybe making this easier for different positions in sim?!
+  // idk man - ansh
   public void simReset() {
-    drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero));
+      }
+    } else if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(AllianceFlip.apply(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            AllianceFlip.apply(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            AllianceFlip.apply(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero)));
+      }
+    }
   }
 
   public void periodic() {

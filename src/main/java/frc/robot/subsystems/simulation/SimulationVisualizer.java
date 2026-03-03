@@ -24,28 +24,21 @@ public class SimulationVisualizer {
   }
 
   public void update() {
-
-    // Pose3d wristPos =
-    //     SimulationConfig.wristAxis.transformBy(
-    //         new Transform3d(
-    //             new Translation3d(0, 0, 0), new Rotation3d(0, wristpos.getAsDouble(), 0)));
-
     Pose3d wristPos =
         SimulationConfig.wristAxis.transformBy(
-            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)));
+            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, wristpos.getAsDouble()+Math.PI/2, 0)));
 
     Pose3d hopperPos =
         SimulationConfig.hopper.transformBy(
             new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)));
 
-    // replace pitch for hood with hoodpos.getAsDouble() so it actually moves
     Pose3d hoodPos =
         SimulationConfig.hoodAxis.transformBy(
-            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)));
+            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, hoodpos.getAsDouble()-Math.PI/2, 0)));
 
     Pose3d climberPos =
         SimulationConfig.climberAxis.transformBy(
-            new Transform3d(new Translation3d(), new Rotation3d(0, climberpos.getAsDouble(), 0)));
+            new Transform3d(new Translation3d(0, 0, climberpos.getAsDouble()), new Rotation3d(0, 0, 0)));
 
     Pose3d agitatorPos =
         SimulationConfig.agitator.transformBy(
@@ -55,8 +48,6 @@ public class SimulationVisualizer {
         SimulationConfig.indexer.transformBy(
             new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)));
 
-    // might need to add agitation, and indexer
-    // Logger.recordOutput("Mechanism3d/" + key, wristPos, hoodPos, climberPos, hopperPos);
     Logger.recordOutput(
         "Mechanism3d/" + key, wristPos, hopperPos, hoodPos, climberPos, agitatorPos, indexerPos);
   }
