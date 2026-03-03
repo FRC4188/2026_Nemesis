@@ -18,6 +18,14 @@ public final class FieldConstants { // going off of an onshape cad of field
 
   public static final double alliance_zone_x = Units.inchesToMeters(158.6);
 
+  // idk about this
+  public static final Translation2d right_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, field_width / 4);
+  public static final Translation2d left_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, 3 * field_width / 4);
+  public static final Translation2d center_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, field_width / 2);
+
   //   public static final Translation2d alliance_area_center =
   //     new Translation2d()
 

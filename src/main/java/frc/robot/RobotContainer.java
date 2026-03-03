@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -40,6 +41,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -101,6 +103,7 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  @SuppressWarnings("unchecked")
   public RobotContainer() {
     switch (Constants.Robot.currentMode) {
       case REAL:
@@ -174,6 +177,7 @@ public class RobotContainer {
 
     // Set up auto routines
     PathBuilder.configure(drive); // Add all subsystems as parameters later
+
     autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
     // autoChooser.addOption(
@@ -195,10 +199,53 @@ public class RobotContainer {
     //         new Pose2d(FieldConstants.Tower.left_far_corner, new Rotation2d())));
 
     autoChooser.addOption(
-        "TestingPlease",
-        PathBuilder.interpolateTimedPath(
-            NodePathGenerator.generateNodePathWithPose2d(
-                drive.getPose().getTranslation(), FieldConstants.field_center)));
+        "Gen",
+        PathBuilder.followNPGPath(new Pose2d(FieldConstants.field_center, new Rotation2d()))
+            .andThen(
+                PathBuilder.followNPGPath(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_alliance_entrance, new Rotation2d()))));
+
+    autoChooser.addOption(
+        "GenJanGonJin",
+        PathBuilder.followNPGPathAccurate(
+            NodePathGenerator.generatePath(
+                drive.getPose(),
+                new Translation2d(
+                    FieldConstants.FuelField.right_midline_corner.getX()
+                        + Constants.Robot.B_LENGTH * 2 / 3,
+                    FieldConstants.FuelField.right_midline_corner.getY() - 0.25),
+                FieldConstants.field_center,
+                    FieldConstants.Trench.left_trench_alliance_preentrance)));
+
+    autoChooser.addOption(
+        "inter",
+        Commands.sequence(
+            PathBuilder.interpolateTimedPath(
+                drive.getPose(),
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_alliance_preentrance, new Rotation2d()),
+                new Pose2d(FieldConstants.Trench.right_trench_alliance_entrance, new Rotation2d()),
+                new Pose2d(FieldConstants.Trench.right_trench_center, new Rotation2d()),
+                new Pose2d(FieldConstants.Trench.right_trench_neutral_entrance, new Rotation2d()),
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_neutral_preentrance, new Rotation2d()),
+                new Pose2d(FieldConstants.field_center, new Rotation2d()))));
+
+    autoChooser.addOption(
+        "Debug",
+        Commands.sequence(
+            Commands.run(
+                () -> {
+                  List<Waypoint> crap =
+                      NodePathGenerator.generatePath(
+                          drive.getPose(),
+                          new Pose2d(FieldConstants.field_center, new Rotation2d()));
+
+                  for (Waypoint w : crap.toArray(new Waypoint[0])) {
+                    Commands.print("X: " + w.anchor().getX() + ", Y: " + w.anchor().getY());
+                  }
+                })));
 
     autoChooser.addOption(
         "PPP",
@@ -333,7 +380,8 @@ public class RobotContainer {
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
         .onFalse(Commands.runOnce(drive::stop, drive));
-        //should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to defend us
+    // should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to
+    // defend us
 
     pilot
         .a()
@@ -371,7 +419,7 @@ public class RobotContainer {
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
         .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
-        //for will, do whatever you want man
+    // for will, do whatever you want man
     pilot
         .b()
         .whileTrue(
