@@ -159,4 +159,10 @@ public final class Constants {
   public static class Climber {
     public static final Translation2d location = new Translation2d(0, 0); // placeholder
   }
+
+  public static class Camera {
+    public static final Translation3d cameraLeft = new Translation3d(Units.inchesToMeters(-11.29914), Units.inchesToMeters(-11.1000), Units.inchesToMeters(13.64718));
+    public static final Translation3d cameraRight = new Translation3d(Units.inchesToMeters(-11.29914), Units.inchesToMeters(11.1000), Units.inchesToMeters(13.64718));
+    public static final Translation3d cameraFront = new Translation3d(Units.inchesToMeters(7.89473), Units.inchesToMeters(9.73216), Units.inchesToMeters(7.44761));
+  }
 }
