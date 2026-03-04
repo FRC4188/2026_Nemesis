@@ -7,11 +7,18 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -20,31 +27,31 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.generated.TunerConstants;
 
+/**
+ * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants should be declared
+ * globally (i.e. public static). Do not put anything functional in this class.
+ *
+ * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * constants are needed, to reduce verbosity.
+ */
 public final class Constants {
 
-  public static enum RobotMode {
-    NONE,
-    INTAKE,
-    SHOOT,
-    CLIMB
+  public static class Id {
+    public static final int kWrist = 13;
+    public static final int kIntake = 14;
+    public static final int kHopper = 16;
+    public static final int kIndexer = 17;
+    public static final int kRightShooter = 18;
+    public static final int kLeftShooter = 19;
+    public static final int kHood = 20;
+    public static final int kClimber = 22;
   }
 
   public static enum Mode {
-    /** Running on a real robot. */
     REAL,
-
-    /** Running a physics simulator. */
     SIM,
-
-    /** Replaying from a log file. */
     REPLAY
-  }
-
-  public static enum PIDTuning {
-    NONE,
-    DRIVE_MOD,
-    TURN_MOD,
-    ANGLE,
   }
 
   public static class Robot {
@@ -61,29 +68,15 @@ public final class Constants {
     public static final double PATH_ERROR = B_CROSS * 2.5;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.SIM;
-    public static final PIDTuning tuningMode = PIDTuning.DRIVE_MOD;
-    public static RobotMode robotMode = RobotMode.NONE;
 
-    public static final String rio = "rio";
-    public static final String canivore = "canivore";
+    public static final CANBus rio = CANBus.roboRIO();
+    public static final CANBus canivore = new CANBus("canivore");
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
-    private static final double ROBOT_MASS_KG = 34.261; // placeholder
+    private static final double ROBOT_MASS_KG = 130; // placeholder
     private static final double ROBOT_MOI = ROBOT_MASS_KG * B_CROSS * B_CROSS; // placeholer
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
-
-    public static final Translation3d RIGHT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
-        new Translation3d(
-            Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
-            Units.inchesToMeters(2.0740 / 2),
-            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
-
-    public static final Translation3d LEFT_CAMERA_FOCAL_TO_BOTTOM_SCREW =
-        new Translation3d(
-            -Units.inchesToMeters((1.4025 - 0.0745) - 0.3625 / 2),
-            -Units.inchesToMeters(2.0740 / 2),
-            Units.inchesToMeters(2.0445 / 2 - 0.6880 + 0.3625 / 2));
   }
 
   public static class Controller {
@@ -93,8 +86,8 @@ public final class Constants {
     public static final double DEADBAND = 0.1;
   }
 
-  public static class Drive {
-    public static final double DRIVE_MAXVEL = 4.8;
+  public static class DriveConstants {
+    public static final double DRIVE_MAXVEL = 4.5;
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
         new ProfiledPIDController(
@@ -147,17 +140,186 @@ public final class Constants {
     public static SafetyMode currentSafetyMode = SafetyMode.NONE;
   }
 
-  public static class Intake {
-    public static final Translation2d location = new Translation2d(0, 0); // location
+  public static class IntakeConstants {
+    public static final double kStatorCurrent = 100.0; // placeholder
+    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStallCurrent = 50.0; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
-  public static class Shooter {
-    public static final Translation2d location =
-        new Translation2d(-Robot.A_LENGTH / 2, 0); // placeholder
+  public static class WristConstants {
+    public static final double kTolerance = 0.2;
+    public static final double kGearRatio = 25.0;
+    public static final double Max_A = Units.degreesToRadians(144);
+    public static final double Min_A = Units.degreesToRadians(0.0);
+
+    public static final double kStatorCurrent = 100; // placeholder
+    public static final double kSupplyCurrent = 80; // placeholder
+    public static final double kStallCurrent = 50; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
+    public static final Slot0Configs wristGains =
+        new Slot0Configs()
+            .withKP(10.0)
+            .withKI(6.0)
+            .withKD(0.0)
+            .withKS(0.0)
+            .withKG(0.4)
+            .withGravityType(GravityTypeValue.Arm_Cosine);
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
   }
 
-  public static class Climber {
-    public static final Translation2d location = new Translation2d(0, 0); // placeholder
+  public static class ClimberConstants {
+    public static final double kTolerance = 5.0;
+    public static final double Max_R = 85.0;
+    public static final double Min_R = 0.0;
+
+    public static final double kStatorCurrent = 100.0; // placeholder
+    public static final double kSupplyCurrent = 80.0; // paceholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final Slot0Configs climberGains =
+        new Slot0Configs()
+            .withKP(1.0)
+            .withKI(0.0)
+            .withKD(0.3)
+            .withKG(0.0)
+            .withGravityType(GravityTypeValue.Elevator_Static);
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput =
+        ClosedLoopOutputType.TorqueCurrentFOC;
+  }
+
+  public static class HoodConstants {
+    public static final double kGearRatio = 40.0;
+    public static final double kTolerance = 0.05;
+    public static final double Max_A = Units.degreesToRadians(90.0);
+    public static final double Min_A = Units.degreesToRadians(8.0);
+
+    public static final double kStatorCurrent = 100; // placeholder
+    public static final double kSupplyCurrent = 80; // placeholder
+    public static final double kStallCurrent = 50; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
+    public static final Slot0Configs hoodGains =
+        new Slot0Configs()
+            .withKP(25.0)
+            .withKI(5.0)
+            .withKD(0.0)
+            .withKS(0.0)
+            .withKG(0.4)
+            .withGravityType(GravityTypeValue.Arm_Cosine);
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+  }
+
+  public static class ShooterConstants {
+    public static final Translation3d location =
+        new Translation3d(-Robot.A_LENGTH / 2, 0, 22.0); // placeholder
+    public static final double kWheelDiam = Units.inchesToMeters(4.0);
+
+    public static final double kTolerance = 240.0;
+    public static final double kLowVel = 1800.0;
+    public static final double kMiddleVel = 2400.0;
+    public static final double kHighVel = 4800.0;
+    public static final double kGearRatio = 1.0;
+    public static final double kDropVel = 600.0; // placeholder
+
+    public static final double kStatorCurrent = 100.0; // placeholder
+    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStallCurrent = 50.0; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
+    public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
+
+    public static final Slot0Configs rightShooterGains =
+        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
+
+    public static final Slot0Configs leftShooterGains =
+        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
+
+    public static final ClosedLoopOutputType motorClosedLoopOutput =
+        ClosedLoopOutputType.TorqueCurrentFOC;
+  }
+
+  public static class IndexerConstants {
+    public static final double kStatorCurrent = 100.0; // placeholder
+    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStallCurrent = 50.0; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+  }
+
+  public static class HopperConstants {
+    public static final double kStatorCurrent = 100.0; // placeholder
+    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStallCurrent = 50.0; // placeholder
+    public static final double kPeakForwardTC = 50.0; // placeholder
+    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
+    public static final ClosedLoopOutputType motorClosedLoopOutput = ClosedLoopOutputType.Voltage;
+  }
+
+  public static class CameraConstants {
+    // public static final Transform3d cameraLeft =
+    //     new Transform3d(
+    //         Units.inchesToMeters(-11.29914),
+    //         Units.inchesToMeters(11.1000),
+    //         Units.inchesToMeters(13.64718),
+    //         new Rotation3d(0, 0, Math.PI / 2));
+
+    public static final Transform3d cameraLeft =
+        new Transform3d(
+            Units.inchesToMeters(-11.500000),
+            Units.inchesToMeters(11.100000 - 1.600000),
+            Units.inchesToMeters(13.889783),
+            new Rotation3d(0, 0, Math.PI / 2));
+
+    // public static final Transform3d cameraRight =
+    //     new Transform3d(
+    //         Units.inchesToMeters(-11.29914),
+    //         Units.inchesToMeters(-11.1000),
+    //         Units.inchesToMeters(13.64718),
+    //         new Rotation3d(0, 0, -Math.PI / 2));
+
+    public static final Transform3d cameraRight =
+        new Transform3d(
+            Units.inchesToMeters(-11.500000),
+            Units.inchesToMeters(-11.100000 + 1.600000),
+            Units.inchesToMeters(13.889783),
+            new Rotation3d(0, 0, -Math.PI / 2));
+
+    // public static final Transform3d cameraFront =
+    //     new Transform3d(
+    //         Units.inchesToMeters(7.89473),
+    //         Units.inchesToMeters(9.73216),
+    //         Units.inchesToMeters(7.44761),
+    //         new Rotation3d(0, 0, 0));
+
+    public static final Transform3d cameraFront =
+        new Transform3d(
+            Units.inchesToMeters(8.812214),
+            Units.inchesToMeters(-9.982283),
+            Units.inchesToMeters(8.205321),
+            new Rotation3d(0, 0, 0));
   }
 
   public static class Camera {

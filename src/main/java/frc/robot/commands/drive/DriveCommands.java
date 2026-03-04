@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double FF_START_DELAY = 2.0; // Secs
@@ -42,20 +41,25 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
-    return Commands.run(
-        () -> {
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
+    return Commands.runEnd(
+            () -> {
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                      ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                      omegaSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXACC);
 
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        drive);
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            drive::stopWithX,
+            drive)
+        .beforeStarting(
+            () ->
+                Constants.DriveConstants.CORRECTION_PID.setSetpoint(
+                    drive.getRotation().getDegrees()));
   }
 
   public static Command joystickDriveWithSafety(
@@ -64,8 +68,8 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
 
-    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
-    ProfiledPIDController yController = Constants.Drive.DRIVE_PID;
+    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
+    ProfiledPIDController yController = Constants.DriveConstants.DRIVE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -75,12 +79,14 @@ public class DriveCommands {
                       .getPose()
                       .getTranslation()
                       .getDistance(FieldConstants.Trench.right_trench_center)
-                  < Constants.Drive.TRENCH_SAFETY_RADIUS) {
-                if (Constants.Drive.currentSafetyMode != Constants.Drive.SafetyMode.RIGHT_TRENCH) {
+                  < Constants.DriveConstants.TRENCH_SAFETY_RADIUS) {
+                if (Constants.DriveConstants.currentSafetyMode
+                    != Constants.DriveConstants.SafetyMode.RIGHT_TRENCH) {
                   yController.reset(drive.getPose().getTranslation().getY());
                   angleController.reset(drive.getRotation().getRadians());
                 }
-                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.RIGHT_TRENCH;
+                Constants.DriveConstants.currentSafetyMode =
+                    Constants.DriveConstants.SafetyMode.RIGHT_TRENCH;
 
                 Rotation2d wantedRot =
                     (Math.abs(drive.getRotation().minus(Rotation2d.kZero).getRadians())
@@ -91,10 +97,11 @@ public class DriveCommands {
                 double omega =
                     angleController.calculate(
                             drive.getRotation().getRadians(), wantedRot.getRadians())
-                        + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+                        + angleController.getSetpoint().velocity
+                            * Constants.DriveConstants.ANGLE_FF;
 
                 if (Math.abs(drive.getRotation().getRadians() - wantedRot.getRadians())
-                        < Constants.Drive.ANGLE_TOL
+                        < Constants.DriveConstants.ANGLE_TOL
                     && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
                 double ySpeed =
@@ -105,7 +112,7 @@ public class DriveCommands {
                 if (Math.abs(
                             drive.getPose().getTranslation().getY()
                                 - FieldConstants.Trench.right_trench_center.getY())
-                        < Constants.Drive.DRIVE_TOL
+                        < Constants.DriveConstants.DRIVE_TOL
                     && yController.getSetpoint().velocity == 0.0) ySpeed = 0.0;
 
                 ChassisSpeeds speeds =
@@ -121,12 +128,14 @@ public class DriveCommands {
                       .getPose()
                       .getTranslation()
                       .getDistance(FieldConstants.Trench.left_trench_center)
-                  < Constants.Drive.TRENCH_SAFETY_RADIUS) {
-                if (Constants.Drive.currentSafetyMode != Constants.Drive.SafetyMode.LEFT_TRENCH) {
+                  < Constants.DriveConstants.TRENCH_SAFETY_RADIUS) {
+                if (Constants.DriveConstants.currentSafetyMode
+                    != Constants.DriveConstants.SafetyMode.LEFT_TRENCH) {
                   yController.reset(drive.getPose().getTranslation().getY());
                   angleController.reset(drive.getRotation().getRadians());
                 }
-                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.LEFT_TRENCH;
+                Constants.DriveConstants.currentSafetyMode =
+                    Constants.DriveConstants.SafetyMode.LEFT_TRENCH;
 
                 Rotation2d wantedRot =
                     (Math.abs(drive.getRotation().minus(Rotation2d.kZero).getRadians())
@@ -137,10 +146,11 @@ public class DriveCommands {
                 double omega =
                     angleController.calculate(
                             drive.getRotation().getRadians(), wantedRot.getRadians())
-                        + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+                        + angleController.getSetpoint().velocity
+                            * Constants.DriveConstants.ANGLE_FF;
 
                 if (Math.abs(drive.getRotation().getRadians() - wantedRot.getRadians())
-                        < Constants.Drive.ANGLE_TOL
+                        < Constants.DriveConstants.ANGLE_TOL
                     && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
 
                 double ySpeed =
@@ -151,7 +161,7 @@ public class DriveCommands {
                 if (Math.abs(
                             drive.getPose().getTranslation().getY()
                                 - FieldConstants.Trench.left_trench_center.getY())
-                        < Constants.Drive.DRIVE_TOL
+                        < Constants.DriveConstants.DRIVE_TOL
                     && yController.getSetpoint().velocity == 0.0) ySpeed = 0.0;
 
                 ChassisSpeeds speeds =
@@ -164,12 +174,13 @@ public class DriveCommands {
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         speeds, AllianceFlip.apply(drive.getRotation())));
               } else {
-                Constants.Drive.currentSafetyMode = Constants.Drive.SafetyMode.NONE;
+                Constants.DriveConstants.currentSafetyMode =
+                    Constants.DriveConstants.SafetyMode.NONE;
                 ChassisSpeeds speeds =
                     new ChassisSpeeds(
-                        xSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                        ySupplier.getAsDouble() * Constants.Drive.DRIVE_MAXVEL,
-                        omegaSupplier.getAsDouble() * Constants.Drive.DRIVE_MAXACC);
+                        xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                        ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                        omegaSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXACC);
 
                 drive.runVelocity(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -193,24 +204,24 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
-    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
 
     // Construct command
-    return Commands.run(
+    return Commands.runEnd(
             () -> {
-              Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-              Logger.recordOutput(
-                  "Drive/Angle Current", drive.getPose().getRotation().getRadians());
-
               double omega =
                   angleController.calculate(
                           drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+                      + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
-              if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Drive.ANGLE_TOL
-                  && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+              if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+                if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
+                  drive.stopWithX();
+                  return;
+                } else {
+                  omega = 0.0;
+                }
+              }
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -223,50 +234,7 @@ public class DriveCommands {
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds, AllianceFlip.apply(drive.getRotation())));
             },
-            drive)
-
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
-  }
-
-  public static Command joystickDriveAtAngle(
-      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-
-    // placeholder
-    Supplier<Rotation2d> rotationSupplier = () -> drive.getPose().getTranslation().getAngle();
-
-    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-    angleController.setTolerance(0.1);
-
-    // Construct command
-    return Commands.run(
-            () -> {
-              Logger.recordOutput("Drive/Angle Target", rotationSupplier.get().getRadians());
-              Logger.recordOutput(
-                  "Drive/Angle Current", drive.getPose().getRotation().getRadians());
-
-              double omega =
-                  angleController.calculate(
-                          drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
-
-              if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                      < Constants.Drive.ANGLE_TOL
-                  && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
-
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                      ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-
-              drive.runVelocityOffset(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())),
-                  Constants.Shooter.location);
-            },
+            drive::stopWithX,
             drive)
 
         // Reset PID controller when command starts

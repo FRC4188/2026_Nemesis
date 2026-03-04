@@ -21,7 +21,7 @@ public class ProjMath {
             - 2 * Math.pow(velocity, 2) * goal.getY() * grav
             + Math.pow(grav, 2) * Math.pow(goal.getX(), 2);
 
-    if (boundary < 0) return Rotation2d.kCW_90deg;
+    if (boundary < 0) return Rotation2d.kCCW_90deg;
 
     return Rotation2d.fromRadians(
         Math.atan((Math.pow(velocity, 2) + Math.sqrt(boundary)) / (grav * goal.getX())));
