@@ -44,10 +44,10 @@ public final class PathBuilder {
   // Add Multiplier if too fast
   private static PathConstraints constraints =
       new PathConstraints(
-          Constants.Drive.DRIVE_MAXVEL * 0.5,
-          Constants.Drive.DRIVE_MAXACC * 0.5,
-          Constants.Drive.ANGLE_MAXVEL * 0.5,
-          Constants.Drive.ANGLE_MAXACC * 0.5);
+          Constants.DriveConstants.DRIVE_MAXVEL * 0.5,
+          Constants.DriveConstants.DRIVE_MAXACC * 0.5,
+          Constants.DriveConstants.ANGLE_MAXVEL * 0.5,
+          Constants.DriveConstants.ANGLE_MAXACC * 0.5);
 
   /**
    * A method to configure the PathBuilder class, setting it up with the Drivetrain instance.
@@ -78,14 +78,14 @@ public final class PathBuilder {
         drive::runVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(
-                Constants.Drive.DRIVE_PID.getP(),
-                Constants.Drive.DRIVE_PID.getI(),
-                Constants.Drive.DRIVE_PID.getD()),
+                Constants.DriveConstants.DRIVE_PID.getP(),
+                Constants.DriveConstants.DRIVE_PID.getI(),
+                Constants.DriveConstants.DRIVE_PID.getD()),
             new PIDConstants(
-                Constants.Drive.ANGLE_PID.getP(),
-                Constants.Drive.ANGLE_PID.getI(),
-                Constants.Drive.ANGLE_PID.getD())),
-        Constants.Drive.PP_CONFIG,
+                Constants.DriveConstants.ANGLE_PID.getP(),
+                Constants.DriveConstants.ANGLE_PID.getI(),
+                Constants.DriveConstants.ANGLE_PID.getD())),
+        Constants.DriveConstants.PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
 
@@ -118,20 +118,21 @@ public final class PathBuilder {
   }
 
   public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
-    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
 
     Logger.recordOutput("PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
     Logger.recordOutput(
         "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
 
     double omega =
-        Constants.Drive.ANGLE_PID.calculate(
+        Constants.DriveConstants.ANGLE_PID.calculate(
                 drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.ANGLE_FF;
 
     if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.Drive.ANGLE_TOL
-        && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+            < Constants.DriveConstants.ANGLE_TOL
+        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
     return omega;
   }
@@ -174,7 +175,7 @@ public final class PathBuilder {
     PPHolonomicDriveController.overrideRotationFeedback(
         () -> {
           Supplier<Rotation2d> rotationSupplier = wanted;
-          Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+          Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
 
           Logger.recordOutput(
               "PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
@@ -182,13 +183,14 @@ public final class PathBuilder {
               "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
 
           double omega =
-              Constants.Drive.ANGLE_PID.calculate(
+              Constants.DriveConstants.ANGLE_PID.calculate(
                       drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                  + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+                  + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                      * Constants.DriveConstants.ANGLE_FF;
 
           if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                  < Constants.Drive.ANGLE_TOL
-              && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+                  < Constants.DriveConstants.ANGLE_TOL
+              && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
           return omega;
         });
@@ -485,7 +487,8 @@ public final class PathBuilder {
   public static Command createPath(Translation2d endTranslation) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, 0.0)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
+        .beforeStarting(
+            () -> Constants.DriveConstants.ANGLE_PID.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());
   }
 
@@ -510,7 +513,8 @@ public final class PathBuilder {
   public static Command createPath(Translation2d endTranslation, double endVel) {
     return AutoBuilder.pathfindToPose(
             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
+        .beforeStarting(
+            () -> Constants.DriveConstants.ANGLE_PID.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());
   }
 
@@ -522,7 +526,8 @@ public final class PathBuilder {
    */
   public static Command mergeToPath(PathPlannerPath knownPath) {
     return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
+        .beforeStarting(
+            () -> Constants.DriveConstants.ANGLE_PID.reset(drive.getRotation().getRadians()))
         .finallyDo(() -> drive.stop());
   }
 }

@@ -23,7 +23,7 @@ public class Wrist extends SubsystemBase {
   }
 
   public Command runWrist(DoubleSupplier inputs) {
-    return Commands.run(() -> io.runVolts(3 * inputs.getAsDouble()));
+    return Commands.runEnd(() -> io.runVolts(inputs.getAsDouble()), () -> io.runVolts(0.0), this);
   }
 
   public Command stow() {
@@ -37,7 +37,6 @@ public class Wrist extends SubsystemBase {
   }
 
   /**
-   * 
    * @return Wrist position in radians
    */
   @AutoLogOutput(key = "Wrist/Angle Radians")

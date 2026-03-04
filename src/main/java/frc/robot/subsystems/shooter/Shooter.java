@@ -32,11 +32,20 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command setVelocity(DoubleSupplier RPM) {
-    return Commands.run(() -> io.setVelocity(RPM.getAsDouble()), this);
+    return Commands.runEnd(() -> io.setVelocity(RPM.getAsDouble()), () -> io.runVolts(0.0), this);
   }
 
-  public Command runVolts(double input) {
-    return Commands.run(() -> io.runVolts(12 * input), this);
+  public Command setVelocity(double RPM) {
+    return Commands.runOnce(() -> io.setVelocity(RPM), this);
+  }
+
+  public Command runVolts(DoubleSupplier input) {
+    return Commands.runEnd(
+        () -> io.runVolts(12 * input.getAsDouble()), () -> io.runVolts(0.0), this);
+  }
+
+  public Command runVolts(double voltage) {
+    return Commands.runOnce(() -> io.runVolts(voltage), this);
   }
 
   public Command stop() {

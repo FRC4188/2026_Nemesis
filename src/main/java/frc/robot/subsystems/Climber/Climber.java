@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Climber;
+package frc.robot.subsystems.climber;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
@@ -25,7 +25,8 @@ public class Climber extends SubsystemBase {
   }
 
   public Command runVolts(DoubleSupplier input) {
-    return Commands.run(() -> io.runVolts(6 * input.getAsDouble()), this);
+    return Commands.runEnd(
+        () -> io.runVolts(6 * input.getAsDouble()), () -> io.runVolts(0.0), this);
   }
 
   public Command raise() {
@@ -44,7 +45,6 @@ public class Climber extends SubsystemBase {
   }
 
   /**
-   * 
    * @return Climber height in rotations
    */
   @AutoLogOutput(key = "Climber/Height Rotations")

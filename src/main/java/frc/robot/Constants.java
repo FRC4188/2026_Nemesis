@@ -84,7 +84,7 @@ public final class Constants {
     public static final double DEADBAND = 0.1;
   }
 
-  public static class Drive {
+  public static class DriveConstants {
     public static final double DRIVE_MAXVEL = 4.8;
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
@@ -159,7 +159,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final double kTolerance = 5.0;
-    public static final double Max_R = 90.0;
+    public static final double Max_R = 85.0;
     public static final double Min_R = 0.0;
 
     public static final double kStatorCurrent = 100.0; // placeholder
@@ -207,12 +207,12 @@ public final class Constants {
 
   public static class ShooterConstants {
     public static final Translation3d location =
-        new Translation3d(-Robot.A_LENGTH / 2, 0, 20.0); // placeholder
+        new Translation3d(-Robot.A_LENGTH / 2, 0, 22.0); // placeholder
     public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
-    public static final double kTolerance = 240.0; // rpm units
-    public static final double kLowVel = 1800.0; // placeholder
-    public static final double kMiddleVel = 2250.0; // placeholder
+    public static final double kTolerance = 240.0; 
+    public static final double kLowVel = 1800.0;
+    public static final double kMiddleVel = 2400.0; 
     public static final double kHighVel = 4800.0;
     public static final double kGearRatio = 1.0;
     public static final double kDropVel = 600.0; // placeholder

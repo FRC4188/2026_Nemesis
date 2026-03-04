@@ -27,8 +27,8 @@ public class DriveToPose extends Command {
   private double ffMinRadius = 0.2, ffMaxRadius = 0.8;
 
   public DriveToPose(Drive driveSubsystem, Supplier<Pose2d> poseSupplier) {
-    driveController = Constants.Drive.DRIVE_PID;
-    thetaController = Constants.Drive.ANGLE_PID;
+    driveController = Constants.DriveConstants.DRIVE_PID;
+    thetaController = Constants.DriveConstants.ANGLE_PID;
 
     this.poseSupplier = poseSupplier;
     this.driveSubsystem = driveSubsystem;

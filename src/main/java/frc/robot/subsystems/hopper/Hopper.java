@@ -23,10 +23,23 @@ public class Hopper extends SubsystemBase {
   }
 
   public Command runVolts(DoubleSupplier a_input, DoubleSupplier i_input) {
-    return Commands.run(
+    return Commands.runEnd(
         () -> {
           io.runAggitateVolts(12 * a_input.getAsDouble());
           io.runIndexerVolts(12 * i_input.getAsDouble());
+        },
+        () -> {
+          io.runAggitateVolts(0.0);
+          io.runIndexerVolts(0.0);
+        },
+        this);
+  }
+
+  public Command runVolts(double a_volts, double i_volts) {
+    return Commands.runOnce(
+        () -> {
+          io.runAggitateVolts(a_volts);
+          io.runIndexerVolts(i_volts);
         },
         this);
   }

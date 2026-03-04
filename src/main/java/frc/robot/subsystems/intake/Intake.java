@@ -24,6 +24,10 @@ public class Intake extends SubsystemBase {
     return Commands.run(() -> io.runVolts(12 * inputs.getAsDouble()), this);
   }
 
+  public Command intake(double voltage) {
+    return Commands.runOnce(() -> io.runVolts(voltage), this);
+  }
+
   public Command stop() {
     return Commands.runOnce(() -> io.runVolts(0.0), this);
   }

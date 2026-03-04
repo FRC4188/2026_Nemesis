@@ -26,7 +26,9 @@ public class SimulationVisualizer {
   public void update() {
     Pose3d wristPos =
         SimulationConfig.wristAxis.transformBy(
-            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, wristpos.getAsDouble()+Math.PI/2, 0)));
+            new Transform3d(
+                new Translation3d(0, 0, 0),
+                new Rotation3d(0, wristpos.getAsDouble() + Math.PI / 2, 0)));
 
     Pose3d hopperPos =
         SimulationConfig.hopper.transformBy(
@@ -34,11 +36,14 @@ public class SimulationVisualizer {
 
     Pose3d hoodPos =
         SimulationConfig.hoodAxis.transformBy(
-            new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, hoodpos.getAsDouble()-Math.PI/2, 0)));
+            new Transform3d(
+                new Translation3d(0, 0, 0),
+                new Rotation3d(0, hoodpos.getAsDouble() - Math.PI / 2, 0)));
 
     Pose3d climberPos =
         SimulationConfig.climberAxis.transformBy(
-            new Transform3d(new Translation3d(0, 0, climberpos.getAsDouble()), new Rotation3d(0, 0, 0)));
+            new Transform3d(
+                new Translation3d(0, 0, climberpos.getAsDouble()), new Rotation3d(0, 0, 0)));
 
     Pose3d agitatorPos =
         SimulationConfig.agitator.transformBy(

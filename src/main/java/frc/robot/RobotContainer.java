@@ -13,19 +13,21 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.PathBuilder;
+import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
-import frc.robot.subsystems.Climber.Climber;
-import frc.robot.subsystems.Climber.ClimberIO;
-import frc.robot.subsystems.Climber.ClimberIOReal;
-import frc.robot.subsystems.Climber.ClimberIOSim;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOReal;
+import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -169,10 +171,10 @@ public class RobotContainer {
     // Set global constraints before creating any paths
     Path.setDefaultGlobalConstraints(
         new Path.DefaultGlobalConstraints(
-            Constants.Drive.DRIVE_MAXVEL, // maxVelocityMetersPerSec
-            Constants.Drive.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
-            Constants.Drive.ANGLE_MAXVEL * 180 / Math.PI, // maxVelocityDegPerSec
-            Constants.Drive.ANGLE_MAXACC * 180 / Math.PI, // maxAccelerationDegPerSec2
+            Constants.DriveConstants.DRIVE_MAXVEL, // maxVelocityMetersPerSec
+            Constants.DriveConstants.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+            Constants.DriveConstants.ANGLE_MAXVEL * 180 / Math.PI, // maxVelocityDegPerSec
+            Constants.DriveConstants.ANGLE_MAXACC * 180 / Math.PI, // maxAccelerationDegPerSec2
             0.03, // endTranslationToleranceMeters
             2.0, // endRotationToleranceDeg
             0.2 // intermediateHandoffRadiusMeters
@@ -492,63 +494,46 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // pilot
-    //     .rightBumper()
-    //     .whileTrue(
-    //         ScoringCommands.aim(
-    //                 drive,
-    //                 () ->
-    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-    //                 () ->
-    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-    //                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-    //                 shooter,
-    //                 hood,
-    //                 () -> Constants.ShooterConstants.kMiddleVel)
-    //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-    //     .onFalse(
-    //         Commands.runOnce(drive::stopWithX, drive)
-    //             .andThen(
-    //                 hood.setPosition(() ->
-    // Rotation2d.fromDegrees(90)).alongWith(shooter.stop())));
-
     pilot
         .rightBumper()
-        .onTrue(
-            hood.setPosition(() -> Rotation2d.fromDegrees(55))
-                .alongWith(shooter.setVelocity(() -> Constants.ShooterConstants.kMiddleVel)))
-        .onFalse(hood.setPosition(() -> Rotation2d.fromDegrees(90)).alongWith(shooter.stop()));
+        .whileTrue(
+            ScoringCommands.aim(
+                    drive,
+                    shooter,
+                    hood,
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () -> Constants.ShooterConstants.kMiddleVel)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .beforeStarting(drive.disableVision()))
+        .onFalse(drive.enableVision());
 
-    pilot
-        .rightTrigger()
-        .onTrue(hopper.runVolts(() -> 0.5, () -> 0.5))
-        .onFalse(hopper.runVolts(() -> 0.0, () -> 0.0));
-    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7)).onFalse(intake.intake(() -> 0.0));
+    pilot.rightTrigger().onTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
+    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7));
+
     pilot
         .leftBumper()
-        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)))
-        .onFalse(intake.intake(() -> 0.0).alongWith(hopper.runVolts(() -> 0.0, () -> 0.0)));
+        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)));
 
-    pilot.x().onTrue(climber.raise());
-    pilot.y().onTrue(climber.lower());
+    // pilot.x().onTrue(climber.raise());
+    // pilot.y().onTrue(climber.lower());
 
-    copilot.a().onTrue(wrist.down());
-    copilot.x().onTrue(wrist.stow());
+    pilot.y().toggleOnTrue(climber.raise()).toggleOnFalse(climber.lower());
 
-    copilot
-        .b()
-        .whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)))
-        .onFalse(climber.runVolts(() -> 0.0));
-    ;
-    copilot
-        .y()
-        .whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)))
-        .onFalse(wrist.runWrist(() -> 0.0));
+    // copilot.a().onTrue(wrist.down());
+    // copilot.x().onTrue(wrist.stow());
 
-    copilot.getUpButton().onTrue(Commands.runOnce(() -> drive.vision_accept = true));
+    copilot.a().toggleOnTrue(wrist.down()).toggleOnFalse(wrist.stow());
 
-    copilot.getDownButton().onTrue(Commands.runOnce(() -> drive.vision_accept = false));
+    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
+    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));
+
+    copilot.getUpButton().onTrue(drive.enableVision());
+    copilot.getDownButton().onTrue(drive.disableVision());
   }
 
   /**
@@ -596,7 +581,7 @@ public class RobotContainer {
 
   public void periodic() {
 
-    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.Drive.ANGLE_PID.atGoal());
+    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
     // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 

@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -49,7 +50,15 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
   // failsafe
   @AutoLogOutput(key = "Vision/Accept?")
-  public boolean vision_accept = false;
+  private boolean vision_accept = true;
+
+  public Command disableVision() {
+    return Commands.runOnce(() -> vision_accept = false);
+  }
+
+  public Command enableVision() {
+    return Commands.runOnce(() -> vision_accept = true);
+  }
 
   private final Field2d field;
 
@@ -103,11 +112,12 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     PhoenixOdometryThread.getInstance().start();
 
     // TODO: 1. Find out if using this, 2. prevent flicks
-    Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
-    Constants.Drive.CORRECTION_PID.setTolerance(Units.radiansToDegrees(Constants.Drive.ANGLE_TOL));
+    Constants.DriveConstants.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
+    Constants.DriveConstants.CORRECTION_PID.setTolerance(
+        Units.radiansToDegrees(Constants.DriveConstants.ANGLE_TOL));
 
-    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
-    Constants.Drive.ANGLE_PID.setTolerance(Constants.Drive.ANGLE_TOL);
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.DriveConstants.ANGLE_PID.setTolerance(Constants.DriveConstants.ANGLE_TOL);
 
     field = new Field2d();
 
@@ -234,7 +244,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   }
 
   public void trackVelocity(ChassisSpeeds speeds, Supplier<Rotation2d> rotationSupplier) {
-    ProfiledPIDController angleController = Constants.Drive.ANGLE_PID;
+    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     angleController.setTolerance(0.1);
   }
