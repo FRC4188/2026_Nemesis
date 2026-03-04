@@ -643,8 +643,7 @@ public final class NodePathGenerator {
     }
 
     if (path == null) {
-      System.out.println(
-          "No path found - CSPPathing");
+      System.out.println("No path found - CSPPathing");
       List<Translation2d> direct = new ArrayList<>();
       direct.add(start);
       direct.add(goal);

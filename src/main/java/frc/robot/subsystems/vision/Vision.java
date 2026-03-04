@@ -64,7 +64,7 @@ public class Vision extends SubsystemBase {
   }
 
   public Pose2d getCluster(Pose3d robotPose) {
-    return io[2].getCluster(robotPose);
+    return io[inputs.length - 1].getCluster(robotPose);
   }
 
   @Override

@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -177,7 +176,19 @@ public final class PathBuilder {
         new NodePathGenerator.NavNode(
             "center_alliance_shoot",
             new Pose2d(FieldConstants.Hub.hub_align_center, new Rotation2d()),
-            List.of("right_alliance_shoot", "left_alliance_shoot")));
+            List.of("right_alliance_shoot", "left_alliance_shoot")),
+        new NodePathGenerator.NavNode(
+            "right_close_corner",
+            new Pose2d(FieldConstants.FuelField.right_close_corner, new Rotation2d()),
+            List.of("middle_close_line", "right_trench_neutral_preentrance")),
+        new NodePathGenerator.NavNode(
+            "middle_close_line",
+            new Pose2d(FieldConstants.FuelField.middle_close_line, new Rotation2d()),
+            List.of("left_close_corner", "right_close_corner")),
+        new NodePathGenerator.NavNode(
+            "left_close_line",
+            new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d()),
+            List.of("left_trench_neutral_preentrance", "middle_close_line")));
 
     NodePathGenerator.setRobotDimensions(Constants.Robot.B_CROSS / 2);
     // NodePathGenerator.setDisableSplines(true);
@@ -392,7 +403,7 @@ public final class PathBuilder {
         },
         Set.of(drive));
   }
-  
+
   public static Command followNPGPathAccurate(
       @SuppressWarnings("unchecked") List<Waypoint>... paths) {
     Command curr = null;
@@ -579,9 +590,9 @@ public final class PathBuilder {
    * @param endPose Pose2d
    * @return Command
    */
-  public static Command createPath(Pose2d endPose) {
-    return AutoBuilder.pathfindToPose(endPose, constraints, 0.0).finallyDo(() -> drive.stop());
-  }
+  //   public static Command createPath(Pose2d endPose) {
+  //     return AutoBuilder.pathfindToPose(endPose, constraints, 0.0).finallyDo(() -> drive.stop());
+  //   }
 
   /**
    * Creates a path off of several Pose2d using Pathfinding
@@ -589,17 +600,17 @@ public final class PathBuilder {
    * @param poses several Pose2d
    * @return Command
    */
-  public static Command createPath(Pose2d... poses) {
-    return Commands.sequence(
-            IntStream.range(0, poses.length)
-                .mapToObj(
-                    i ->
-                        i == poses.length - 1
-                            ? PathBuilder.createPath(poses[i], 0)
-                            : PathBuilder.createPath(poses[i], 3.0))
-                .toArray(Command[]::new))
-        .finallyDo(() -> drive.stop());
-  }
+  //   public static Command createPath(Pose2d... poses) {
+  //     return Commands.sequence(
+  //             IntStream.range(0, poses.length)
+  //                 .mapToObj(
+  //                     i ->
+  //                         i == poses.length - 1
+  //                             ? PathBuilder.createPath(poses[i], 0)
+  //                             : PathBuilder.createPath(poses[i], 3.0))
+  //                 .toArray(Command[]::new))
+  //         .finallyDo(() -> drive.stop());
+  //   }
 
   /**
    * Creates a path off of several Translation2d using Pathfinding
@@ -607,17 +618,17 @@ public final class PathBuilder {
    * @param translations several Translation2d
    * @return Command
    */
-  public static Command createPath(Translation2d... translations) {
-    return Commands.sequence(
-            IntStream.range(0, translations.length)
-                .mapToObj(
-                    i ->
-                        i == translations.length - 1
-                            ? PathBuilder.createPath(translations[i], 0)
-                            : PathBuilder.createPath(translations[i], 3.0))
-                .toArray(Command[]::new))
-        .finallyDo(() -> drive.stop());
-  }
+  //   public static Command createPath(Translation2d... translations) {
+  //     return Commands.sequence(
+  //             IntStream.range(0, translations.length)
+  //                 .mapToObj(
+  //                     i ->
+  //                         i == translations.length - 1
+  //                             ? PathBuilder.createPath(translations[i], 0)
+  //                             : PathBuilder.createPath(translations[i], 3.0))
+  //                 .toArray(Command[]::new))
+  //         .finallyDo(() -> drive.stop());
+  //   }
 
   /**
    * Creates a path off of a goal Translation2d using Pathfinding
@@ -625,12 +636,13 @@ public final class PathBuilder {
    * @param endTranslation Translation2d
    * @return Command
    */
-  public static Command createPath(Translation2d endTranslation) {
-    return AutoBuilder.pathfindToPose(
-            new Pose2d(endTranslation, new Rotation2d()), constraints, 0.0)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-        .finallyDo(() -> drive.stop());
-  }
+  //   public static Command createPath(Translation2d endTranslation) {
+  //     return AutoBuilder.pathfindToPose(
+  //             new Pose2d(endTranslation, new Rotation2d()), constraints, 0.0)
+  //         .beforeStarting(() ->
+  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
+  //         .finallyDo(() -> drive.stop());
+  //   }
 
   /**
    * Creates a path off of a goal Pose2d and an end velocity using Pathfinding
@@ -639,9 +651,10 @@ public final class PathBuilder {
    * @param endVel double
    * @return Command
    */
-  public static Command createPath(Pose2d endPose, double endVel) {
-    return AutoBuilder.pathfindToPose(endPose, constraints, endVel).finallyDo(() -> drive.stop());
-  }
+  //   public static Command createPath(Pose2d endPose, double endVel) {
+  //     return AutoBuilder.pathfindToPose(endPose, constraints, endVel).finallyDo(() ->
+  // drive.stop());
+  //   }
 
   /**
    * Creates a path off of a goal Translation2d and an end velocity using Pathfinding
@@ -650,13 +663,14 @@ public final class PathBuilder {
    * @param endVel double
    * @return Command
    */
-  public static Command createPath(Translation2d endTranslation, double endVel) {
-    return AutoBuilder.pathfindToPose(
-            new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()));
-    // .finallyDo(() -> drive.stop());
-  }
-  // TODO: uncomment this above line if you want priyanshu
+  //   public static Command createPath(Translation2d endTranslation, double endVel) {
+  //     return AutoBuilder.pathfindToPose(
+  //             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
+  //         .beforeStarting(() ->
+  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()));
+  //     // .finallyDo(() -> drive.stop());
+  //   }
+  //   // TODO: uncomment this above line if you want priyanshu
 
   /**
    * Merges into a path finding using Pathfinding
@@ -664,9 +678,10 @@ public final class PathBuilder {
    * @param knownPath PathPlannerPath
    * @return Command
    */
-  public static Command mergeToPath(PathPlannerPath knownPath) {
-    return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
-        .beforeStarting(() -> Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-        .finallyDo(() -> drive.stop());
-  }
+  //   public static Command mergeToPath(PathPlannerPath knownPath) {
+  //     return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
+  //         .beforeStarting(() ->
+  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
+  //         .finallyDo(() -> drive.stop());
+  //   }
 }

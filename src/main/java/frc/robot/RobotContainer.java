@@ -9,12 +9,12 @@ package frc.robot;
 
 import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -36,6 +36,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -95,6 +96,7 @@ public class RobotContainer {
   private final Drive drive;
   private final PIDTuning pidTuner;
   private final Vision vis;
+  private SimulationVisualizer simvis;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -140,6 +142,13 @@ public class RobotContainer {
 
         vis = new Vision(drive::accept, new VisionIO() {});
 
+        // placeholders since we don't actually have the subsystems
+        double wristThing = 0;
+        double hoodThing = 0;
+        double climberThing = 0;
+        simvis =
+            new SimulationVisualizer(
+                "Models", () -> wristThing, () -> hoodThing, () -> climberThing);
         break;
 
       default:
@@ -218,7 +227,71 @@ public class RobotContainer {
                         + Constants.Robot.B_LENGTH * 2 / 3,
                     FieldConstants.FuelField.right_midline_corner.getY() - 0.25),
                 FieldConstants.field_center,
-                    FieldConstants.Trench.left_trench_alliance_preentrance)));
+                FieldConstants.Trench.left_trench_alliance_preentrance)));
+
+    // autoChooser.addOption(
+    //     "TO THE RIGHT, TO THE LEFT",
+    //     PathBuilder.followNPGPathAccurate(
+    //         NodePathGenerator.generatePath(
+    //             drive.getPose(),
+    //             FieldConstants.Trench.right_trench_alliance_preentrance,
+    //             FieldConstants.Trench.right_trench_neutral_preentrance,
+    //             FieldConstants.FuelField.right_close_corner,
+    //             FieldConstants.FuelField.left_close_corner,
+    //             FieldConstants.Trench.left_trench_neutral_preentrance,
+    //             FieldConstants.Trench.left_trench_alliance_entrance
+    //             )));
+
+    autoChooser.addOption(
+        "i am almost right",
+        PathBuilder.followNPGPathAccurate(
+            NodePathGenerator.generatePath(
+                drive.getPose(),
+                FieldConstants.Trench.right_trench_alliance_preentrance,
+                FieldConstants.Trench.right_trench_neutral_preentrance,
+                FieldConstants.FuelField.right_close_corner,
+                FieldConstants.FuelField.middle_close_line,
+                FieldConstants.FuelField.right_close_corner,
+                FieldConstants.Trench.right_trench_neutral_preentrance,
+                FieldConstants.Trench.right_trench_alliance_entrance,
+                FieldConstants.Trench.right_trench_neutral_preentrance,
+                FieldConstants.FuelField.right_close_corner,
+                FieldConstants.FuelField.middle_close_line,
+                FieldConstants.FuelField.right_close_corner,
+                FieldConstants.Trench.right_trench_neutral_preentrance,
+                FieldConstants.Trench.right_trench_alliance_entrance)));
+
+    autoChooser.addOption(
+        "i am right",
+        Commands.sequence(
+            PathBuilder.followNPGPathAccurate(
+                NodePathGenerator.generatePath(
+                    drive.getPose(),
+                    FieldConstants.right_alliance_shoot)),
+            PathBuilder.followNPGPathAccurate(
+                NodePathGenerator.generatePath(
+                    drive.getPose(), 
+                    FieldConstants.Trench.right_trench_alliance_preentrance,
+                    FieldConstants.Trench.right_trench_neutral_preentrance)),
+            PathBuilder.followNPGPathAccurate(
+                NodePathGenerator.generatePath(
+                    drive.getPose(), 
+                    FieldConstants.FuelField.right_close_corner,
+                    FieldConstants.FuelField.middle_close_line)),
+            PathBuilder.followNPGPathAccurate(
+                NodePathGenerator.generatePath(
+                    drive.getPose(), 
+                    FieldConstants.FuelField.right_close_corner,
+                    FieldConstants.Trench.right_trench_neutral_preentrance)),
+            PathBuilder.followNPGPathAccurate(
+                NodePathGenerator.generatePath(
+                    drive.getPose(), 
+                    FieldConstants.Trench.right_trench_alliance_entrance
+                    )),
+            PathBuilder.followNPGPathAccurate(
+                FieldConstants.Tower.right_approach
+            )
+            ));
 
     autoChooser.addOption(
         "inter",
@@ -249,47 +322,50 @@ public class RobotContainer {
                   }
                 })));
 
-    autoChooser.addOption(
-        "PPP",
-        Commands.runOnce(
-                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 5.0))
-            .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
-            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner, 0.0)));
+    // autoChooser.addOption(
+    //     "PPP",
+    //     Commands.runOnce(
+    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+    //         .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_center, 5.0))
+    //         .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))
+    //         .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner,
+    // 0.0)));
 
-    autoChooser.addOption(
-        "TestChain",
-        Commands.runOnce(
-                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(
-                PathBuilder.createPath(
-                    FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
+    // autoChooser.addOption(
+    //     "TestChain",
+    //     Commands.runOnce(
+    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 FieldConstants.FuelField.right_midline_corner, new Translation2d(1, 1))));
 
-    autoChooser.addOption(
-        "All Together Now",
-        Commands.runOnce(
-                () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
-            .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance))
-            .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
-            .andThen(
-                () -> PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
-            .andThen(
-                PathBuilder.createPath(
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
-            .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
+    // autoChooser.addOption(
+    //     "All Together Now",
+    //     Commands.runOnce(
+    //             () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d))
+    //
+    // .andThen(PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_preentrance))
+    //         .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))
+    //         .andThen(
+    //             () ->
+    // PathBuilder.createPath(FieldConstants.Trench.left_trench_alliance_entrance))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.left_trench_neutral_entrance, new Rotation2d(0))))
+    //         .andThen(PathBuilder.createPath(FieldConstants.FuelField.right_midline_corner)));
 
-    autoChooser.addOption(
-        "i hate life",
-        Commands.runOnce(() -> PathBuilder.targetTranslation(() -> FieldConstants.field_center))
-            .andThen(
-                PathBuilder.createPath(
-                    vis.getCluster(
-                        new Pose3d(
-                            drive.getPose().getX(),
-                            drive.getPose().getY(),
-                            0,
-                            new Rotation3d(drive.getPose().getRotation()))))));
+    // autoChooser.addOption(
+    //     "i hate life",
+    //     Commands.runOnce(() -> PathBuilder.targetTranslation(() -> FieldConstants.field_center))
+    //         .andThen(
+    //             PathBuilder.createPath(
+    //                 vis.getCluster(
+    //                     new Pose3d(
+    //                         drive.getPose().getX(),
+    //                         drive.getPose().getY(),
+    //                         0,
+    //                         new Rotation3d(drive.getPose().getRotation()))))));
 
     // .andThen(
     //     PathBuilder.mergeToKnownPath(
@@ -525,8 +601,39 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
+  // maybe making this easier for different positions in sim?!
+  // idk man - ansh
   public void simReset() {
-    drive.setPose(new Pose2d(new Translation2d(3.54, 2), Rotation2d.kZero));
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            new Pose2d(
+                new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero));
+      }
+    } else if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+      if (DriverStation.getLocation().getAsInt() == 3) {
+        drive.setPose(
+            AllianceFlip.flipDS(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 2) {
+        drive.setPose(
+            AllianceFlip.flipDS(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
+      } else if (DriverStation.getLocation().getAsInt() == 1) {
+        drive.setPose(
+            AllianceFlip.flipDS(
+                new Pose2d(
+                    new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero)));
+      }
+    }
   }
 
   public void periodic() {
@@ -541,5 +648,13 @@ public class RobotContainer {
     } else {
       Constants.Robot.robotMode = Constants.RobotMode.NONE;
     }
+  }
+
+  public void displaySimFieldToAdvantageScope() {
+    if (Constants.Robot.currentMode != Constants.Mode.SIM) return;
+
+    simvis.update();
+
+    Logger.recordOutput("FieldSimulation/RobotPosition", drive.getPose());
   }
 }

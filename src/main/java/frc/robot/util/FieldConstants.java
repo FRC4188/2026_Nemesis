@@ -175,6 +175,14 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(
             Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
             Units.inchesToMeters(67.89) - Constants.Robot.B_CROSS / 2.5);
+
+    public static final Translation2d middle_close_line =
+        new Translation2d(
+            Units.inchesToMeters(289.66), Units.inchesToMeters(67.89) + fuelfield_width / 2);
+    public static final Translation2d middle_far_line =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + fuelfield_length,
+            Units.inchesToMeters(67.89) + fuelfield_width / 2);
   }
 
   public static class Tower {
