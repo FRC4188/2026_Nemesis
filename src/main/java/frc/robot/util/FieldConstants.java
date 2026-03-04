@@ -18,12 +18,12 @@ public final class FieldConstants { // going off of an onshape cad of field
 
   public static final double alliance_zone_x = Units.inchesToMeters(158.6);
 
-  public static final Translation2d left_shooting_pos =
-      new Translation2d(alliance_zone_x / 2, 3 * field_width / 4);
-  public static final Translation2d center_shooting_pos =
-      new Translation2d(alliance_zone_x / 2, field_width / 2);
-  public static final Translation2d right_shooting_pos =
-      new Translation2d(alliance_zone_x / 2, field_width / 4);
+  public static final Translation2d right_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, field_width / 4);
+  public static final Translation2d left_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, 3 * field_width / 4);
+  public static final Translation2d center_alliance_shoot =
+      new Translation2d(Units.inchesToMeters(156.61) / 2, field_width / 2);
   //   public static final Translation2d alliance_area_center =
   //     new Translation2d()
 
@@ -187,6 +187,14 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(
             Units.inchesToMeters(289.66) + Constants.Robot.B_CROSS / 2.5,
             Units.inchesToMeters(67.89) - Constants.Robot.B_CROSS / 2.5);
+
+    public static final Translation2d middle_close_line =
+        new Translation2d(
+            Units.inchesToMeters(289.66), Units.inchesToMeters(67.89) + fuelfield_width / 2);
+    public static final Translation2d middle_far_line =
+        new Translation2d(
+            Units.inchesToMeters(289.66) + fuelfield_length,
+            Units.inchesToMeters(67.89) + fuelfield_width / 2);
   }
 
   public static class Tower {

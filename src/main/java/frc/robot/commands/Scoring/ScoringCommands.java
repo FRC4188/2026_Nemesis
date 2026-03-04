@@ -2,7 +2,6 @@ package frc.robot.commands.Scoring;
 
 import static edu.wpi.first.units.Units.RPM;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -91,16 +90,15 @@ public class ScoringCommands {
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
         wrist.runWrist(() -> 1.0).withTimeout(0.5),
-        new WaitCommand(0.5).until(() -> wrist.getAngle() > Units.degreesToRadians(130))
-    );
-  } 
+        new WaitCommand(0.5).until(() -> wrist.getAngle() > Units.degreesToRadians(130)));
+  }
 
-  //Add the pose for climbing
+  // Add the pose for climbing
   public static Command goToClimb(Drive drive, Climber climber) {
     return Commands.sequence(
-      new DriveToPose(drive, () -> drive.getPose().nearest(null)), //lineup
-      climber.raise(),
-      new DriveToPose(drive, null) //placement
-    );
+        new DriveToPose(drive, () -> drive.getPose().nearest(null)), // lineup
+        climber.raise(),
+        new DriveToPose(drive, null) // placement
+        );
   }
 }

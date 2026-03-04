@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
@@ -22,6 +23,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.generated.TunerConstants;
 
@@ -119,6 +121,11 @@ public final class Constants {
                 TunerConstants.FrontLeft.SlipCurrent,
                 1),
             frc.robot.subsystems.drive.Drive.getModuleTranslations());
+
+    public static final double BLINE_DRIVE_TOL = 0.03;
+    public static final Angle BLINE_ROT_TOL = Degrees.of(0.0349);
+    public static final double BLINE_HANDOFF_RADIUS =
+        0.1; // Increase for smooth motion / more inaccurate
   }
 
   public static class IntakeConstants {
@@ -210,9 +217,9 @@ public final class Constants {
         new Translation3d(-Robot.A_LENGTH / 2, 0, 22.0); // placeholder
     public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
-    public static final double kTolerance = 240.0; 
+    public static final double kTolerance = 240.0;
     public static final double kLowVel = 1800.0;
-    public static final double kMiddleVel = 2400.0; 
+    public static final double kMiddleVel = 2400.0;
     public static final double kHighVel = 4800.0;
     public static final double kGearRatio = 1.0;
     public static final double kDropVel = 600.0; // placeholder

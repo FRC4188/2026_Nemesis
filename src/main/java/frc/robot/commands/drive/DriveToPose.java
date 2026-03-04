@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 
 /** Drives to a specified pose. */
 public class DriveToPose extends Command {

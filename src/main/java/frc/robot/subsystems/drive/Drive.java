@@ -13,11 +13,9 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -229,10 +227,10 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
-  public void trackVelocity(ChassisSpeeds speeds, Supplier<Rotation2d> rotationSupplier) {
-    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-    angleController.setTolerance(0.1);
+  public void setModuleOrientations(Rotation2d angle) {
+    for (int i = 0; i < modules.length; i++) {
+      modules[i].runSetpoint(new SwerveModuleState(0.0, angle));
+    }
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -327,6 +325,25 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   /** Returns the current odometry rotation. */
   public Rotation2d getRotation() {
     return getPose().getRotation();
+  }
+
+  public double getOmega(Supplier<Rotation2d> rotationSupplier) {
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+
+    Logger.recordOutput("Overrides/Target Angle", rotationSupplier.get().getRadians());
+    Logger.recordOutput("Overrides/Current Angle", getPose().getRotation().getRadians());
+
+    double omega =
+        Constants.DriveConstants.ANGLE_PID.calculate(
+                getRotation().getRadians(), rotationSupplier.get().getRadians())
+            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.ANGLE_FF;
+
+    if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
+            < Constants.DriveConstants.ANGLE_TOL
+        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+
+    return omega;
   }
 
   /** Resets the current odometry pose. */
