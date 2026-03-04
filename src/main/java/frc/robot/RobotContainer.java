@@ -22,7 +22,7 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.NodePathGenerator;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.CSPLib.util.ProjMath;
+import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.*;
@@ -211,6 +211,18 @@ public class RobotContainer {
     // Set up auto routines
     PathBuilder.configure(drive); // Add all subsystems as parameters later
 
+    // Set global constraints before creating any paths
+    Path.setDefaultGlobalConstraints(
+        new Path.DefaultGlobalConstraints(
+            Constants.DriveConstants.DRIVE_MAXVEL, // maxVelocityMetersPerSec
+            Constants.DriveConstants.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+            Constants.DriveConstants.ANGLE_MAXVEL * 180 / Math.PI, // maxVelocityDegPerSec
+            Constants.DriveConstants.ANGLE_MAXACC * 180 / Math.PI, // maxAccelerationDegPerSec2
+            0.03, // endTranslationToleranceMeters
+            2.0, // endRotationToleranceDeg
+            0.2 // intermediateHandoffRadiusMeters
+            ));
+
     autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
     // autoChooser.addOption(
@@ -288,32 +300,26 @@ public class RobotContainer {
         Commands.sequence(
             PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.right_alliance_shoot)),
+                    drive.getPose(), FieldConstants.right_alliance_shoot)),
             PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
-                    drive.getPose(), 
+                    drive.getPose(),
                     FieldConstants.Trench.right_trench_alliance_preentrance,
                     FieldConstants.Trench.right_trench_neutral_preentrance)),
             PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
-                    drive.getPose(), 
+                    drive.getPose(),
                     FieldConstants.FuelField.right_close_corner,
                     FieldConstants.FuelField.middle_close_line)),
             PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
-                    drive.getPose(), 
+                    drive.getPose(),
                     FieldConstants.FuelField.right_close_corner,
                     FieldConstants.Trench.right_trench_neutral_preentrance)),
             PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
-                    drive.getPose(), 
-                    FieldConstants.Trench.right_trench_alliance_entrance
-                    )),
-            PathBuilder.followNPGPathAccurate(
-                FieldConstants.Tower.right_approach
-            )
-            ));
+                    drive.getPose(), FieldConstants.Trench.right_trench_alliance_entrance)),
+            PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
 
     autoChooser.addOption(
         "inter",
@@ -388,6 +394,24 @@ public class RobotContainer {
     //                         drive.getPose().getY(),
     //                         0,
     //                         new Rotation3d(drive.getPose().getRotation()))))));
+
+    autoChooser.addOption(
+        "Sigma",
+        PathBuilder.pathBuilder.build(
+            new Path(
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero))));
+
+    autoChooser.addOption(
+        "Sigma",
+        PathBuilder.pathBuilder.build(
+            new Path(
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero),
+                new Path.Waypoint(
+                    FieldConstants.Trench.left_trench_alliance_entrance, Rotation2d.kZero))));
 
     // .andThen(
     //     PathBuilder.mergeToKnownPath(
@@ -472,6 +496,23 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+  }
+
+  // placeholders
+  private Command intakeCommand() {
+    return Commands.none();
+  }
+
+  private Command intakeDown() {
+    return wrist.down();
+  }
+
+  private Command intakeUp() {
+    return wrist.stow();
+  }
+
+  private Command shootCommand() {
+    return Commands.none();
   }
 
   private void configureButtonBindings() {

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
 import frc.robot.lib.BLine.*;
 import frc.robot.lib.BLine.Path.PathElement;
@@ -38,17 +39,17 @@ import org.littletonrobotics.junction.Logger;
  */
 public final class PathBuilder {
   private static Drive drive;
-  public static FollowPath.Builder pathBuilder;
 
   private static Supplier<Rotation2d> trackingSupplier;
+  public static FollowPath.Builder pathBuilder;
 
   // Add Multiplier if too fast
   private static PathConstraints constraints =
       new PathConstraints(
-          Constants.Drive.DRIVE_MAXVEL * 0.8,
-          Constants.Drive.DRIVE_MAXACC * 0.8,
-          Constants.Drive.ANGLE_MAXVEL * 0.8,
-          Constants.Drive.ANGLE_MAXACC * 0.8);
+          Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
+          Constants.DriveConstants.DRIVE_MAXACC * 0.8,
+          Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
+          Constants.DriveConstants.ANGLE_MAXACC * 0.8);
 
   /**
    * A method to configure the PathBuilder class, setting it up with the Drivetrain instance.
@@ -67,13 +68,13 @@ public final class PathBuilder {
                 PathBuilder::getChassisSpeeds,
                 PathBuilder::runVelocity,
                 new PIDController(
-                    Constants.Drive.DRIVE_PID.getP(),
-                    Constants.Drive.DRIVE_PID.getI(),
-                    Constants.Drive.DRIVE_PID.getD()),
+                    Constants.DriveConstants.DRIVE_PID.getP(),
+                    Constants.DriveConstants.DRIVE_PID.getI(),
+                    Constants.DriveConstants.DRIVE_PID.getD()),
                 new PIDController(
-                    Constants.Drive.ANGLE_PID.getP(),
-                    Constants.Drive.ANGLE_PID.getI(),
-                    Constants.Drive.ANGLE_PID.getD()),
+                    Constants.DriveConstants.ANGLE_PID.getP(),
+                    Constants.DriveConstants.ANGLE_PID.getI(),
+                    Constants.DriveConstants.ANGLE_PID.getD()),
                 new PIDController(2, 0, 0))
             .withDefaultShouldFlip()
             .withPoseReset(drive::setPose);
@@ -86,25 +87,25 @@ public final class PathBuilder {
             Units.radiansToDegrees(PathBuilder.getConstraints().maxAngularVelocityRadPerSec()),
             Units.radiansToDegrees(
                 PathBuilder.getConstraints().maxAngularAccelerationRadPerSecSq()),
-            Constants.Drive.BLINE_DRIVE_TOL,
-            Constants.Drive.BLINE_ROT_TOL.magnitude(),
-            Constants.Drive.BLINE_HANDOFF_RADIUS));
+            Constants.DriveConstants.BLINE_DRIVE_TOL,
+            Constants.DriveConstants.BLINE_ROT_TOL.magnitude(),
+            Constants.DriveConstants.BLINE_HANDOFF_RADIUS));
 
     AutoBuilder.configure(
-        PathBuilder::getPose,
+        drive::getPose,
         drive::setPose,
-        PathBuilder::getChassisSpeeds,
-        PathBuilder::runVelocity,
+        drive::getChassisSpeeds,
+        drive::runVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(
-                Constants.Drive.DRIVE_PID.getP(),
-                Constants.Drive.DRIVE_PID.getI(),
-                Constants.Drive.DRIVE_PID.getD()),
+                Constants.DriveConstants.DRIVE_PID.getP(),
+                Constants.DriveConstants.DRIVE_PID.getI(),
+                Constants.DriveConstants.DRIVE_PID.getD()),
             new PIDConstants(
-                Constants.Drive.ANGLE_PID.getP(),
-                Constants.Drive.ANGLE_PID.getI(),
-                Constants.Drive.ANGLE_PID.getD())),
-        Constants.Drive.PP_CONFIG,
+                Constants.DriveConstants.ANGLE_PID.getP(),
+                Constants.DriveConstants.ANGLE_PID.getI(),
+                Constants.DriveConstants.ANGLE_PID.getD())),
+        Constants.DriveConstants.PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
 
@@ -204,7 +205,8 @@ public final class PathBuilder {
                 FieldConstants.field_width - FieldConstants.Trench.trench_width),
             new Rotation2d()));
 
-    NodePathGenerator.configureConstraints(PathBuilder.getConstraints(), Constants.Drive.PP_CONFIG);
+    NodePathGenerator.configureConstraints(
+        PathBuilder.getConstraints(), Constants.DriveConstants.PP_CONFIG);
   }
 
   /**
@@ -214,43 +216,32 @@ public final class PathBuilder {
    * @param speeds ChassisSpeeds
    */
   public static void runVelocity(ChassisSpeeds speeds) {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        drive.runVelocityOffset(
-            new ChassisSpeeds(
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
-                (trackingSupplier != null)
-                    ? drive.getOmega(trackingSupplier)
-                    : speeds.omegaRadiansPerSecond),
-            new Translation2d());
-        break;
-      default:
-        drive.runVelocity(
-            new ChassisSpeeds(
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
-                (trackingSupplier != null)
-                    ? drive.getOmega(trackingSupplier)
-                    : speeds.omegaRadiansPerSecond));
-    }
+
+    drive.runVelocity(
+        new ChassisSpeeds(
+            speeds.vxMetersPerSecond,
+            speeds.vyMetersPerSecond,
+            (trackingSupplier != null)
+                ? drive.getOmega(trackingSupplier)
+                : speeds.omegaRadiansPerSecond));
   }
 
   public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
-    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
 
     Logger.recordOutput("PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
     Logger.recordOutput(
         "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
 
     double omega =
-        Constants.Drive.ANGLE_PID.calculate(
+        Constants.DriveConstants.ANGLE_PID.calculate(
                 drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.ANGLE_FF;
 
     if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.Drive.ANGLE_TOL
-        && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+            < Constants.DriveConstants.ANGLE_TOL
+        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
     return omega;
   }
@@ -259,24 +250,16 @@ public final class PathBuilder {
    * @return The robot chassis speeds, determined by the current robot mode, offsetted.
    */
   public static ChassisSpeeds getChassisSpeeds() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getChassisSpeedsOffset(new Translation2d());
-      default:
-        return drive.getChassisSpeeds();
-    }
+
+    return drive.getChassisSpeeds();
   }
 
   /**
    * @return The robot position, determinedby the current robot mode, offsetted.
    */
   public static Pose2d getPose() {
-    switch (Constants.Robot.robotMode) {
-      case SHOOT:
-        return drive.getPoseOffset(new Translation2d());
-      default:
-        return drive.getPose();
-    }
+
+    return drive.getPose();
   }
 
   /**
@@ -303,7 +286,7 @@ public final class PathBuilder {
     PPHolonomicDriveController.overrideRotationFeedback(
         () -> {
           Supplier<Rotation2d> rotationSupplier = wanted;
-          Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+          Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
 
           Logger.recordOutput(
               "PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
@@ -311,13 +294,14 @@ public final class PathBuilder {
               "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
 
           double omega =
-              Constants.Drive.ANGLE_PID.calculate(
+              Constants.DriveConstants.ANGLE_PID.calculate(
                       drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                  + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+                  + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                      * Constants.DriveConstants.ANGLE_FF;
 
           if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                  < Constants.Drive.ANGLE_TOL
-              && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+                  < Constants.DriveConstants.ANGLE_TOL
+              && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
           return omega;
         });
@@ -385,55 +369,19 @@ public final class PathBuilder {
             new GoalEndState(0, Rotation2d.kZero)));
   }
 
-  public static Command followGen(Supplier<List<Waypoint>> waypoints, Supplier<GoalEndState> ges) {
-    return AutoBuilder.followPath(
-        new PathPlannerPath(waypoints.get(), PathBuilder.getConstraints(), null, ges.get()));
-  }
-
-  public static Command followNPGPath(Pose2d endPose) {
-    return Commands.defer(
-        () -> {
-          List<Waypoint> path = NodePathGenerator.generatePath(drive.getPose(), endPose);
-          return AutoBuilder.followPath(
-              new PathPlannerPath(
-                  path,
-                  PathBuilder.getConstraints(),
-                  null,
-                  NodePathGenerator.guessGoalEndStateFromWaypoints(path)));
-        },
-        Set.of(drive));
-  }
-
-  public static Command followNPGPathAccurate(
-      @SuppressWarnings("unchecked") List<Waypoint>... paths) {
-    Command curr = null;
-    for (List<Waypoint> path : paths) {
-      if (curr == null)
-        curr =
-            AutoBuilder.followPath(
-                new PathPlannerPath(
-                    path,
-                    PathBuilder.getConstraints(),
-                    null,
-                    NodePathGenerator.guessGoalEndStateFromWaypoints(path)));
-      else
-        curr =
-            curr.andThen(
-                AutoBuilder.followPath(
-                    new PathPlannerPath(
-                        path,
-                        PathBuilder.getConstraints(),
-                        null,
-                        NodePathGenerator.guessGoalEndStateFromWaypoints(path))));
-    }
-
-    return curr;
-  }
-
-  public static Command followTimedPath(List<Waypoint> waypoints) {
+  public static Command followPath(List<Waypoint> waypoints) {
     return AutoBuilder.followPath(
         new PathPlannerPath(
             waypoints, PathBuilder.getConstraints(), null, new GoalEndState(0, Rotation2d.kZero)));
+  }
+
+  public static Command followPathEnd180(List<Waypoint> waypoints) {
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            waypoints,
+            PathBuilder.getConstraints(),
+            null,
+            new GoalEndState(0, Rotation2d.k180deg)));
   }
 
   public static Command interpolateTimedPath(Pose2d... poses) {
@@ -494,8 +442,12 @@ public final class PathBuilder {
   public static double getPathTime(PathPlannerPath path) {
     Logger.recordOutput(
         "Auton/Trajectory Time",
-        path.getIdealTrajectory(Constants.Drive.PP_CONFIG).orElse(null).getTotalTimeSeconds());
-    return path.getIdealTrajectory(Constants.Drive.PP_CONFIG).orElse(null).getTotalTimeSeconds();
+        path.getIdealTrajectory(Constants.DriveConstants.PP_CONFIG)
+            .orElse(null)
+            .getTotalTimeSeconds());
+    return path.getIdealTrajectory(Constants.DriveConstants.PP_CONFIG)
+        .orElse(null)
+        .getTotalTimeSeconds();
   }
 
   public static Command interpolateTimedPath(List<Pose2d> poses_) {
@@ -559,12 +511,14 @@ public final class PathBuilder {
 
   public static Command triggerWhenClose(
       Translation2d location, double distance, Command runnable) {
-    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) <= distance)
+    return Commands.waitUntil(
+            () -> drive.getPose().getTranslation().getDistance(location) <= distance)
         .andThen(runnable);
   }
 
   public static Command triggerWhenFar(Translation2d location, double distance, Command runnable) {
-    return Commands.waitUntil(() -> getPose().getTranslation().getDistance(location) > distance)
+    return Commands.waitUntil(
+            () -> drive.getPose().getTranslation().getDistance(location) > distance)
         .andThen(runnable);
   }
 
@@ -574,6 +528,133 @@ public final class PathBuilder {
 
   public static Command triggerWithDelay(double seconds, Command runnable) {
     return Commands.waitSeconds(seconds).andThen(runnable);
+  }
+
+  private static Command shootTemp = Commands.print("Just a ShootCommand placeholder");
+  private static Command intakeTemp = Commands.print("Just a IntakeCommand placeholder");
+  private static Command climbTemp = Commands.print("Just a ClimbCommand placeholder");
+  private static Command idleTemp = Commands.print("Just a IdleCommand placeholder");
+
+  public static Command generalAuton(Pose2d... poses) {
+    return Commands.parallel(
+        PathBuilder.interpolateTimedPath(poses), // Path Command
+        Commands.repeatingSequence(
+                Commands.waitUntil(
+                        () ->
+                            getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.left_trench_alliance_entrance)
+                                    > Constants.Robot.PATH_ERROR
+                                && getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.right_trench_alliance_entrance)
+                                    > Constants.Robot.PATH_ERROR)
+                    .andThen(
+                        shootTemp.alongWith(
+                            Commands.runOnce(
+                                    () ->
+                                        PathBuilder.targetRotation(
+                                            () ->
+                                                new Rotation2d(
+                                                    ProjMath.movingShot(
+                                                            20, // placeholder
+                                                            FieldConstants.Hub.hub_center,
+                                                            new Translation2d(
+                                                                PathBuilder.getChassisSpeeds()
+                                                                    .vxMetersPerSecond,
+                                                                PathBuilder.getChassisSpeeds()
+                                                                    .vyMetersPerSecond))
+                                                        .getZ())))
+                                .until(
+                                    () ->
+                                        getPose()
+                                                    .getTranslation()
+                                                    .getDistance(
+                                                        FieldConstants.Trench
+                                                            .left_trench_alliance_entrance)
+                                                <= Constants.Robot.PATH_ERROR
+                                            || getPose()
+                                                    .getTranslation()
+                                                    .getDistance(
+                                                        FieldConstants.Trench
+                                                            .right_trench_alliance_entrance)
+                                                <= Constants.Robot.PATH_ERROR)
+                                .andThen(
+                                    Commands.parallel(
+                                        Commands.print("Just a IdleCommand placeholder"),
+                                        Commands.runOnce(() -> PathBuilder.stopTarget()))))),
+                Commands.waitUntil(
+                        () ->
+                            getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.left_trench_neutral_entrance)
+                                    > Constants.Robot.PATH_ERROR
+                                && getPose()
+                                        .getTranslation()
+                                        .getDistance(
+                                            FieldConstants.Trench.right_trench_neutral_entrance)
+                                    > Constants.Robot.PATH_ERROR)
+                    .andThen(
+                        intakeTemp
+                            .until(
+                                () ->
+                                    getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .left_trench_neutral_entrance)
+                                            <= Constants.Robot.PATH_ERROR
+                                        || getPose()
+                                                .getTranslation()
+                                                .getDistance(
+                                                    FieldConstants.Trench
+                                                        .right_trench_neutral_entrance)
+                                            <= Constants.Robot.PATH_ERROR)
+                            .andThen(idleTemp)))
+            .andThen(climbTemp));
+  }
+
+  public static Command followNPGPath(Pose2d endPose) {
+    return Commands.defer(
+        () -> {
+          List<Waypoint> path = NodePathGenerator.generatePath(drive.getPose(), endPose);
+          return AutoBuilder.followPath(
+              new PathPlannerPath(
+                  path,
+                  PathBuilder.getConstraints(),
+                  null,
+                  NodePathGenerator.guessGoalEndStateFromWaypoints(path)));
+        },
+        Set.of(drive));
+  }
+
+  public static Command followNPGPathAccurate(
+      @SuppressWarnings("unchecked") List<Waypoint>... paths) {
+    Command curr = null;
+    for (List<Waypoint> path : paths) {
+      if (curr == null)
+        curr =
+            AutoBuilder.followPath(
+                new PathPlannerPath(
+                    path,
+                    PathBuilder.getConstraints(),
+                    null,
+                    NodePathGenerator.guessGoalEndStateFromWaypoints(path)));
+      else
+        curr =
+            curr.andThen(
+                AutoBuilder.followPath(
+                    new PathPlannerPath(
+                        path,
+                        PathBuilder.getConstraints(),
+                        null,
+                        NodePathGenerator.guessGoalEndStateFromWaypoints(path))));
+    }
+
+    return curr;
   }
 
   /*
@@ -678,10 +759,10 @@ public final class PathBuilder {
    * @param knownPath PathPlannerPath
    * @return Command
    */
-  //   public static Command mergeToPath(PathPlannerPath knownPath) {
-  //     return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
-  //         .beforeStarting(() ->
-  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-  //         .finallyDo(() -> drive.stop());
-  //   }
+  public static Command mergeToPath(PathPlannerPath knownPath) {
+    return AutoBuilder.pathfindThenFollowPath(knownPath, constraints)
+        .beforeStarting(
+            () -> Constants.DriveConstants.ANGLE_PID.reset(drive.getRotation().getRadians()))
+        .finallyDo(() -> drive.stop());
+  }
 }
