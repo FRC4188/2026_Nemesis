@@ -229,20 +229,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
-  /**
-   * Runs the drive at the desired velocity centered around a point on the robot
-   *
-   * @param speeds Speeds in meters/sec
-   * @param offset Centered translation relative to the robot
-   */
-  public void runVelocityOffset(ChassisSpeeds speeds, Translation2d offset) {
-    runVelocity(
-        new ChassisSpeeds(
-            speeds.omegaRadiansPerSecond * offset.getY() + speeds.vxMetersPerSecond,
-            -speeds.omegaRadiansPerSecond * offset.getX() + speeds.vyMetersPerSecond,
-            speeds.omegaRadiansPerSecond));
-  }
-
   public void trackVelocity(ChassisSpeeds speeds, Supplier<Rotation2d> rotationSupplier) {
     ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
     angleController.enableContinuousInput(-Math.PI, Math.PI);
@@ -314,16 +300,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
-  /** Returns the measured chassis speeds of the position on the robot. */
-  public ChassisSpeeds getChassisSpeedsOffset(Translation2d offset) {
-    return new ChassisSpeeds(
-        getChassisSpeeds().vxMetersPerSecond
-            - getChassisSpeeds().omegaRadiansPerSecond * offset.getY(),
-        getChassisSpeeds().vyMetersPerSecond
-            + getChassisSpeeds().omegaRadiansPerSecond * offset.getX(),
-        getChassisSpeeds().omegaRadiansPerSecond);
-  }
-
   /** Returns the position of each module in radians. */
   public double[] getWheelRadiusCharacterizationPositions() {
     double[] values = new double[4];
@@ -342,30 +318,10 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     return output;
   }
 
-  /** Updates the PID Slot0 config of all Drive modules */
-  public void updateDrivePID(double kP, double kI, double kD, double kF) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].updateDrivePID(kP, kI, kD);
-    }
-  }
-
-  /** Updates the PID Slot0 config of all Turn modules */
-  public void updateTurnPID(double kP, double kI, double kD, double kF) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].updateTurnPID(kP, kI, kD);
-    }
-  }
-
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return poseEstimator.getEstimatedPosition();
-  }
-
-  /** Returns the current odometry pose of a point on the robot */
-  public Pose2d getPoseOffset(Translation2d offset) {
-    return getPose()
-        .transformBy(new Transform2d(offset.rotateBy(rawGyroRotation), Rotation2d.kZero));
   }
 
   /** Returns the current odometry rotation. */

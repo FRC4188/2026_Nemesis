@@ -523,6 +523,7 @@ public class RobotContainer {
     // pilot.y().onTrue(climber.lower());
 
     pilot.y().toggleOnTrue(climber.raise()).toggleOnFalse(climber.lower());
+    pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
 
     // copilot.a().onTrue(wrist.down());
     // copilot.x().onTrue(wrist.stow());

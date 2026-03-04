@@ -2,6 +2,7 @@ package frc.robot.commands.Scoring;
 
 import static edu.wpi.first.units.Units.RPM;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -13,6 +14,8 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.drive.DriveToPose;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.Shooter;
@@ -90,6 +93,14 @@ public class ScoringCommands {
         wrist.runWrist(() -> 1.0).withTimeout(0.5),
         new WaitCommand(0.5).until(() -> wrist.getAngle() > Units.degreesToRadians(130))
     );
-
   } 
+
+  //Add the pose for climbing
+  public static Command goToClimb(Drive drive, Climber climber) {
+    return Commands.sequence(
+      new DriveToPose(drive, () -> drive.getPose().nearest(null)), //lineup
+      climber.raise(),
+      new DriveToPose(drive, null) //placement
+    );
+  }
 }
