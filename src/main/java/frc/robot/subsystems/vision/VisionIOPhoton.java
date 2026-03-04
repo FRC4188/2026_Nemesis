@@ -202,7 +202,7 @@ public class VisionIOPhoton implements VisionIO {
     if (count > 0) {
       translation = new Translation2d(sumX / count, sumY / count);
     }
-    
+
     Transform3d poseShift =
         new Transform3d(
             Units.inchesToMeters(translation.getX()),
