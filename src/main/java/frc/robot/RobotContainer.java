@@ -528,6 +528,7 @@ public class RobotContainer {
     // copilot.x().onTrue(wrist.stow());
 
     copilot.a().toggleOnTrue(wrist.down()).toggleOnFalse(wrist.stow());
+    copilot.x().onTrue(ScoringCommands.shake(wrist));
 
     copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
     copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));

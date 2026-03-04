@@ -9,12 +9,14 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.Constants;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.function.DoubleSupplier;
@@ -82,4 +84,12 @@ public class ScoringCommands {
             }),
         shooter.setVelocity(RPM));
   }
+
+  public static Command shake(Wrist wrist) {
+    return Commands.repeatingSequence(
+        wrist.runWrist(() -> 1.0).withTimeout(0.5),
+        new WaitCommand(0.5).until(() -> wrist.getAngle() > Units.degreesToRadians(130))
+    );
+
+  } 
 }
