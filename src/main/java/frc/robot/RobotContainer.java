@@ -10,9 +10,7 @@ package frc.robot;
 import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,25 +20,47 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.pidtuning.PIDTuning;
 import frc.robot.CSPLib.ppp.NodePathGenerator;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.CSPLib.util.ProjMath;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveToPose;
 import frc.robot.generated.TunerConstants;
-import frc.robot.lib.BLine.Path;
+import frc.robot.lib.BLine.*;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOReal;
+import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIO;
+import frc.robot.subsystems.hood.HoodIOReal;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOReal;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOReal;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhoton;
+import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.wrist.WristIO;
+import frc.robot.subsystems.wrist.WristIOReal;
+import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
@@ -94,7 +114,12 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final PIDTuning pidTuner;
+  private final Hood hood;
+  private final Shooter shooter;
+  private final Hopper hopper;
+  private final Intake intake;
+  private final Wrist wrist;
+  private final Climber climber;
   private final Vision vis;
   private SimulationVisualizer simvis;
 
@@ -111,8 +136,6 @@ public class RobotContainer {
     switch (Constants.Robot.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
-        // a CANcoder
         drive =
             new Drive(
                 new GyroIOPigeon2(),
@@ -124,14 +147,21 @@ public class RobotContainer {
         vis =
             new Vision(
                 drive::accept,
-                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCamera0),
-                new VisionIOPhoton(VisConstants.objPho, VisConstants.robotToCamera1),
-                new VisionIOPhoton(VisConstants.backPho, VisConstants.robotToCamera2));
+                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+
+        hood = new Hood(new HoodIOReal());
+        shooter = new Shooter(new ShooterIOReal());
+        hopper = new Hopper(new HopperIOReal());
+        intake = new Intake(new IntakeIOReal());
+        wrist = new Wrist(new WristIOReal());
+        climber = new Climber(new ClimberIOReal());
 
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
+
         drive =
             new Drive(
                 new GyroIO() {},
@@ -142,13 +172,19 @@ public class RobotContainer {
 
         vis = new Vision(drive::accept, new VisionIO() {});
 
-        // placeholders since we don't actually have the subsystems
-        double wristThing = 0;
-        double hoodThing = 0;
-        double climberThing = 0;
+        hood = new Hood(new HoodIOSim());
+        shooter = new Shooter(new ShooterIOSim());
+        hopper = new Hopper(new HopperIOSim());
+        intake = new Intake(new IntakeIOSim());
+        wrist = new Wrist(new WristIOSim());
+        climber = new Climber(new ClimberIOSim());
+
         simvis =
             new SimulationVisualizer(
-                "Models", () -> wristThing, () -> hoodThing, () -> climberThing);
+                "Models",
+                () -> wrist.getAngle(),
+                () -> hood.getShotAngle(),
+                () -> climber.getHeightRots());
         break;
 
       default:
@@ -163,27 +199,13 @@ public class RobotContainer {
 
         vis = new Vision(drive::accept, new VisionIO() {});
 
+        hood = new Hood(new HoodIO() {});
+        shooter = new Shooter(new ShooterIO() {});
+        hopper = new Hopper(new HopperIO() {});
+        intake = new Intake(new IntakeIO() {});
+        wrist = new Wrist(new WristIO() {});
+        climber = new Climber(new ClimberIO() {});
         break;
-    }
-
-    switch (Constants.Robot.tuningMode) {
-      case DRIVE_MOD:
-        pidTuner = new PIDTuning("Drive Modules", () -> 0, (set) -> {}, drive::updateDrivePID);
-        break;
-      case TURN_MOD:
-        pidTuner = new PIDTuning("Turn Modules", () -> 0, (set) -> {}, drive::updateTurnPID);
-        break;
-      case ANGLE:
-        pidTuner =
-            new PIDTuning(
-                "Angle Controller",
-                () -> drive.getPose().getRotation().getRadians(),
-                (set) -> {},
-                Constants.Drive::updateAnglePID);
-        break;
-      case NONE:
-      default:
-        pidTuner = new PIDTuning();
     }
 
     // Set up auto routines
@@ -465,70 +487,29 @@ public class RobotContainer {
                 drive,
                 () ->
                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                 () ->
                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                 () ->
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                        * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0)))
-        .onFalse(Commands.runOnce(drive::stop, drive));
-    // should with replace "drive::stop" with "drive::stopWithX" to make it harder for peeps to
-    // defend us
-
-    pilot
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () -> {
-                      Rotation3d result =
-                          ProjMath.movingShot(
-                              7,
-                              new Translation3d(
-                                  FieldConstants.Hub.hub_center_2d.getX()
-                                      - drive.getPose().getTranslation().getX(),
-                                  FieldConstants.Hub.hub_center_2d.getY()
-                                      - drive.getPose().getTranslation().getY(),
-                                  Units.inchesToMeters(72 - 20)),
-                              new Translation2d(
-                                      drive.getChassisSpeeds().vxMetersPerSecond,
-                                      drive.getChassisSpeeds().vyMetersPerSecond)
-                                  .rotateBy(drive.getRotation()));
-                      if (result.getY() == -Math.PI / 2) {
-                        return FieldConstants.Hub.hub_center_2d
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle();
-                      } else {
-                        return Rotation2d.fromRadians(result.getZ());
-                      }
-                    })
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
-
-    // for will, do whatever you want man
-    pilot
-        .b()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
-                    () -> {
-                      return Rotation2d.kZero;
-                    })
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0)));
+    // pilot
+    //     .b()
+    //     .whileTrue(
+    //         DriveCommands.joystickDriveAtAngle(
+    //                 drive,
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+    //                 () ->
+    //                     -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+    //                         * (pilot.rightBumper().getAsBoolean() ? 0.5 : 1.0),
+    //                 () -> {
+    //                   return Rotation2d.kZero;
+    //                 })
+    //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
+    //     .onFalse(Commands.runOnce(drive::stopWithX, drive));
 
     pilot
         .start()
@@ -541,62 +522,53 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     pilot
-        .x()
-        .and(pilot.leftBumper())
-        .onTrue(Commands.runOnce(() -> drive.acceptVision(true), drive));
-
-    pilot
-        .y()
-        .and(pilot.leftBumper())
-        .onTrue(Commands.runOnce(() -> drive.acceptVision(false), drive));
-
-    pilot
-        .b()
+        .rightBumper()
         .whileTrue(
-            new DriveToPose(
+            ScoringCommands.aim(
                     drive,
+                    shooter,
+                    hood,
                     () ->
-                        AllianceFlip.flipDS(
-                            new Pose2d(
-                                FieldConstants.Trench.left_trench_alliance_preentrance,
-                                Rotation2d.kZero)))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () -> Constants.ShooterConstants.kMiddleVel)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .beforeStarting(drive.disableVision()))
+        .onFalse(drive.enableVision());
 
-    // // Default command, normal field-relative drive
-    // drive.setDefaultCommand(
-    //     DriveCommands.joystickDrive(
-    //         drive, () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(), () -> -pilot.getLeftX(),
-    // () -> -pilot.getRightX()));
+    pilot.rightTrigger().onTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
+    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7));
 
-    // // Lock to 0° when A button is held
-    // pilot
-    //     .a()
-    //     .whileTrue(
-    //         DriveCommands.joystickDriveAtAngle(
-    //             drive,
-    //             () -> -pilot.getLeftY(),
-    //             () -> -pilot.getLeftX(),
-    //             () ->
-    //                 FieldConstants.Hub.hub_center_2d
-    //                     .minus(drive.getPose().getTranslation())
-    //                     .getAngle()));
+    pilot
+        .leftBumper()
+        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)));
 
-    // // Switch to X pattern when X button is pressed
-    // pilot.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // pilot.x().onTrue(climber.raise());
+    // pilot.y().onTrue(climber.lower());
 
-    // // Reset gyro to 0° when B button is pressed
-    // pilot
-    //     .b()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     drive.setPose(
-    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-    //                 drive)
-    //             .ignoringDisable(true));
+    pilot.y().toggleOnTrue(climber.raise()).toggleOnFalse(climber.lower());
+
+    // copilot.a().onTrue(wrist.down());
+    // copilot.x().onTrue(wrist.stow());
+
+    copilot.a().toggleOnTrue(wrist.down()).toggleOnFalse(wrist.stow());
+    copilot.x().onTrue(ScoringCommands.shake(wrist));
+
+    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
+    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));
+
+    copilot.getUpButton().onTrue(drive.enableVision());
+    copilot.getDownButton().onTrue(drive.disableVision());
   }
 
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
@@ -620,16 +592,15 @@ public class RobotContainer {
     } else if (DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
       if (DriverStation.getLocation().getAsInt() == 3) {
-        drive.setPose(
-            AllianceFlip.flipDS(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero)));
+        drive.setPose(AllianceFlip.apply(new Pose2d(new Translation2d(3.57, 2), Rotation2d.kZero)));
       } else if (DriverStation.getLocation().getAsInt() == 2) {
         drive.setPose(
-            AllianceFlip.flipDS(
+            AllianceFlip.apply(
                 new Pose2d(
                     new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
       } else if (DriverStation.getLocation().getAsInt() == 1) {
         drive.setPose(
-            AllianceFlip.flipDS(
+            AllianceFlip.apply(
                 new Pose2d(
                     new Translation2d(3.57, Units.inchesToMeters(317.69) - 2), Rotation2d.kZero)));
       }
@@ -637,17 +608,18 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    if (Constants.Robot.tuningMode != Constants.PIDTuning.NONE) pidTuner.updateLoop();
 
-    Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
+    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.DriveConstants.ANGLE_PID.atGoal());
+
+    // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
 
     // testing placeholder
-    if (AllianceFlip.flipX(drive.getPose().getX())
-        < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
-      Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
-    } else {
-      Constants.Robot.robotMode = Constants.RobotMode.NONE;
-    }
+    // if (AllianceFlip.flipX(drive.getPose().getX())
+    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
+    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
+    // } else {
+    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
+    // }
   }
 
   public void displaySimFieldToAdvantageScope() {

@@ -65,6 +65,20 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d left_trench_neutral_preentrance =
         new Translation2d(
             Units.inchesToMeters(204.18) + 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
+
+    // just further out than preentrance
+    public static final Translation2d left_trench_alliance_approach =
+        new Translation2d(
+            Units.inchesToMeters(156.61) - Constants.Robot.B_CROSS,
+            Units.inchesToMeters(267.34) + trench_width / 2);
+    public static final Translation2d right_trench_alliance_approach =
+        new Translation2d(Units.inchesToMeters(156.61) - Constants.Robot.B_CROSS, trench_width / 2);
+    public static final Translation2d left_trench_neutral_approach =
+        new Translation2d(
+            Units.inchesToMeters(204.18) + Constants.Robot.B_CROSS,
+            Units.inchesToMeters(267.34 + trench_width / 2));
+    public static final Translation2d right_trench_neutral_approach =
+        new Translation2d(Units.inchesToMeters(204.18) + Constants.Robot.B_CROSS, trench_width / 2);
   }
 
   public static class Bump {
@@ -200,16 +214,24 @@ public final class FieldConstants { // going off of an onshape cad of field
             Units.inchesToMeters(45.1) + Constants.Robot.B_CROSS,
             Units.inchesToMeters((128.04 + 166.89) / 2));
 
+    public static final Translation2d left_approach_pos = new Translation2d(1.589, 5);
+
+    public static final Translation2d center_approach_pos = new Translation2d(1.75, 3.75);
+
+    public static final Translation2d right_approach_pos = new Translation2d(1.589, 2.2);
+
     public static final List<Waypoint> left_approach =
         PathPlannerPath.waypointsFromPoses(
-            new Pose2d(1.589, 4.535, Rotation2d.k180deg), // placeholder
-            new Pose2d(1.589, 4.277, Rotation2d.k180deg) // placeholder
+            new Pose2d(1.589, 5, Rotation2d.k180deg), // placeholder
+            new Pose2d(1, 4.9, Rotation2d.k180deg),
+            new Pose2d(1, 4.562, Rotation2d.k180deg) // placeholder
             );
 
     public static final List<Waypoint> right_approach =
         PathPlannerPath.waypointsFromPoses(
-            new Pose2d(1.589, 3.094, Rotation2d.k180deg), // placeholder
-            new Pose2d(1.589, 3.223, Rotation2d.k180deg) // placeholder
+            new Pose2d(1.589, 2.2, Rotation2d.k180deg), // placeholder
+            new Pose2d(1.112, 2.5, Rotation2d.k180deg),
+            new Pose2d(1.112, 2.924, Rotation2d.k180deg) // placeholder
             );
 
     public static final List<Waypoint> middle_approach =
@@ -240,5 +262,21 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(13.5), Units.inchesToMeters(234.84));
     public static final Translation2d far_middle_edge =
         new Translation2d(Units.inchesToMeters(27), Units.inchesToMeters(234.84));
+
+    // weird name i know. positions the robot such that its diagonal is right at the depot corner
+    public static final Translation2d left_far_corner_bot_diag_offset =
+        new Translation2d(
+            Units.inchesToMeters(27) + Constants.Robot.B_CROSS / 2,
+            Units.inchesToMeters(255.84) + Constants.Robot.B_CROSS / 2);
+    public static final Translation2d right_far_corner_bot_diag_offset =
+        new Translation2d(
+            Units.inchesToMeters(27) + Constants.Robot.B_CROSS / 2,
+            Units.inchesToMeters(213.84) - Constants.Robot.B_CROSS / 2);
+    public static final Translation2d left_far_corner_bot_side_offset =
+        new Translation2d(
+            Units.inchesToMeters(27) + Constants.Robot.B_CROSS / 2, Units.inchesToMeters(255.84));
+    public static final Translation2d right_far_corner_bot_side_offset =
+        new Translation2d(
+            Units.inchesToMeters(27) + Constants.Robot.B_CROSS / 2, Units.inchesToMeters(213.84));
   }
 }

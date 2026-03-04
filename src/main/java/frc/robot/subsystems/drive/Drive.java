@@ -14,6 +14,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,12 +27,14 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -48,11 +51,19 @@ import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase implements VisionConsumer {
 
-  // failsafe for now
+  // failsafe
   @AutoLogOutput(key = "Vision/Accept?")
-  public boolean vision_accept = true;
+  private boolean vision_accept = true;
 
-  private Field2d field;
+  public Command disableVision() {
+    return Commands.runOnce(() -> vision_accept = false);
+  }
+
+  public Command enableVision() {
+    return Commands.runOnce(() -> vision_accept = true);
+  }
+
+  private final Field2d field;
 
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
@@ -103,8 +114,14 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    Constants.Drive.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
-    Constants.Drive.CORRECTION_PID.setTolerance(1.0);
+    // TODO: 1. Find out if using this, 2. prevent flicks
+    Constants.DriveConstants.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
+    Constants.DriveConstants.CORRECTION_PID.setTolerance(
+        Units.radiansToDegrees(Constants.DriveConstants.ANGLE_TOL));
+
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.DriveConstants.ANGLE_PID.setTolerance(Constants.DriveConstants.ANGLE_TOL);
+
     field = new Field2d();
 
     // Configure SysId
@@ -187,15 +204,15 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
-    if (Constants.Robot.currentMode != Mode.SIM) {
-      if (speeds.omegaRadiansPerSecond != 0.0) {
-        Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
-      } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
-        double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
-        speeds.omegaRadiansPerSecond =
-            Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
-      }
-    }
+    // if (Constants.Robot.currentMode != Mode.SIM) {
+    //   if (speeds.omegaRadiansPerSecond != 0.0) {
+    //     Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
+    //   } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
+    //     double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
+    //     speeds.omegaRadiansPerSecond =
+    //         Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
+    //   }
+    // }
 
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
@@ -222,19 +239,20 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   }
 
   public double getOmega(Supplier<Rotation2d> rotationSupplier) {
-    Constants.Drive.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
+    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
 
     Logger.recordOutput("Overrides/Target Angle", rotationSupplier.get().getRadians());
     Logger.recordOutput("Overrides/Current Angle", getPose().getRotation().getRadians());
 
     double omega =
-        Constants.Drive.ANGLE_PID.calculate(
+        Constants.DriveConstants.ANGLE_PID.calculate(
                 getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + Constants.Drive.ANGLE_PID.getSetpoint().velocity * Constants.Drive.ANGLE_FF;
+            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.ANGLE_FF;
 
     if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.Drive.ANGLE_TOL
-        && Constants.Drive.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
+            < Constants.DriveConstants.ANGLE_TOL
+        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
     return omega;
   }
@@ -244,11 +262,12 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     Logger.recordOutput("Overrides/Current X", getPose().getX());
 
     double xSpeed =
-        Constants.Drive.DRIVE_PID.calculate(getPose().getX(), xSupplier.getAsDouble())
-            + Constants.Drive.DRIVE_PID.getSetpoint().velocity * Constants.Drive.DRIVE_FF;
+        Constants.DriveConstants.DRIVE_PID.calculate(getPose().getX(), xSupplier.getAsDouble())
+            + Constants.DriveConstants.DRIVE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.DRIVE_FF;
 
-    if (Math.abs(getPose().getX() - xSupplier.getAsDouble()) < Constants.Drive.DRIVE_TOL
-        && Constants.Drive.DRIVE_PID.getSetpoint().velocity == 0.0) xSpeed = 0.0;
+    if (Math.abs(getPose().getX() - xSupplier.getAsDouble()) < Constants.DriveConstants.DRIVE_TOL
+        && Constants.DriveConstants.DRIVE_PID.getSetpoint().velocity == 0.0) xSpeed = 0.0;
 
     return xSpeed;
   }
@@ -258,18 +277,19 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     Logger.recordOutput("Overrides/Current Y", getPose().getY());
 
     double ySpeed =
-        Constants.Drive.DRIVE_PID.calculate(getPose().getY(), ySupplier.getAsDouble())
-            + Constants.Drive.DRIVE_PID.getSetpoint().velocity * Constants.Drive.DRIVE_FF;
+        Constants.DriveConstants.DRIVE_PID.calculate(getPose().getY(), ySupplier.getAsDouble())
+            + Constants.DriveConstants.DRIVE_PID.getSetpoint().velocity
+                * Constants.DriveConstants.DRIVE_FF;
 
-    if (Math.abs(getPose().getY() - ySupplier.getAsDouble()) < Constants.Drive.DRIVE_TOL
-        && Constants.Drive.DRIVE_PID.getSetpoint().velocity == 0.0) ySpeed = 0.0;
+    if (Math.abs(getPose().getY() - ySupplier.getAsDouble()) < Constants.DriveConstants.DRIVE_TOL
+        && Constants.DriveConstants.DRIVE_PID.getSetpoint().velocity == 0.0) ySpeed = 0.0;
 
     return ySpeed;
   }
 
   public void runVelocityWithSafety(ChassisSpeeds speeds) {
     if (getPose().getTranslation().getDistance(FieldConstants.Trench.right_trench_center)
-        < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+        < Constants.DriveConstants.TRENCH_SAFETY_RADIUS) {
 
       runVelocity(
           new ChassisSpeeds(
@@ -285,7 +305,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
       return;
     } else if (getPose().getTranslation().getDistance(FieldConstants.Trench.left_trench_center)
-        < Constants.Drive.TRENCH_SAFETY_RADIUS) {
+        < Constants.DriveConstants.TRENCH_SAFETY_RADIUS) {
       runVelocity(
           new ChassisSpeeds(
               speeds.vxMetersPerSecond,
@@ -318,6 +338,12 @@ public class Drive extends SubsystemBase implements VisionConsumer {
             speeds.omegaRadiansPerSecond));
   }
 
+  public void trackVelocity(ChassisSpeeds speeds, Supplier<Rotation2d> rotationSupplier) {
+    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(0.1);
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -327,7 +353,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
   /** Stops the drive. */
   public void stop() {
-    // runVelocity(new ChassisSpeeds());
+    runVelocity(new ChassisSpeeds());
     for (Module module : modules) {
       module.stop();
     }
@@ -414,14 +440,14 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   /** Updates the PID Slot0 config of all Drive modules */
   public void updateDrivePID(double kP, double kI, double kD, double kF) {
     for (int i = 0; i < 4; i++) {
-      modules[i].updateDrivePID(kP, kI, kD, kF);
+      modules[i].updateDrivePID(kP, kI, kD);
     }
   }
 
   /** Updates the PID Slot0 config of all Turn modules */
   public void updateTurnPID(double kP, double kI, double kD, double kF) {
     for (int i = 0; i < 4; i++) {
-      modules[i].updateTurnPID(kP, kI, kD, kF);
+      modules[i].updateTurnPID(kP, kI, kD);
     }
   }
 

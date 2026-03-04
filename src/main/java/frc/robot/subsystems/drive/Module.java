@@ -140,12 +140,12 @@ public class Module {
   }
 
   /** set the PID of the Drive Module */
-  public void updateDrivePID(double kP, double kI, double kD, double kF) {
-    io.setDrivePID(kP, kI, kD, kF);
+  public void updateDrivePID(double kP, double kI, double kD) {
+    io.setDrivePID(kP, kI, kD);
   }
 
   /** set the PID of the Turn Module */
-  public void updateTurnPID(double kP, double kI, double kD, double kF) {
-    io.setTurnPID(kP, kI, kD, kF);
+  public void updateTurnPID(double kP, double kI, double kD) {
+    io.setTurnPID(kP, kI, kD);
   }
 }
