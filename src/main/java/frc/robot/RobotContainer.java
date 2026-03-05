@@ -237,7 +237,7 @@ public class RobotContainer {
     //             new GoalEndState(0.0, Rotation2d.k180deg)))));
 
     autoChooser.addOption(
-        "i am almost right",
+        "i am right",
         PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
                     drive.getPose(),
@@ -254,37 +254,51 @@ public class RobotContainer {
                     // FieldConstants.FuelField.right_close_corner,
                     // FieldConstants.Trench.right_trench_neutral_preentrance,
                     FieldConstants.Trench.right_trench_alliance_entrance,
-                    FieldConstants.Tower.right_approach_pos
-                    ))
+                    FieldConstants.Tower.right_approach_pos))
             .andThen(PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
 
     autoChooser.addOption(
-        "i am right",
-        Commands.sequence(
-            PathBuilder.followNPGPathAccurate(
+        "i am left",
+        PathBuilder.followNPGPathAccurate(
                 NodePathGenerator.generatePath(
                     drive.getPose(),
-                    FieldConstants.right_alliance_shoot,
-                    FieldConstants.Trench.right_trench_neutral_approach)),
-            // PathBuilder.followNPGPathAccurate(
-            //     NodePathGenerator.generatePath(
-            //         drive.getPose(),
-            //         FieldConstants.Trench.right_trench_alliance_preentrance,
-            //         FieldConstants.Trench.right_trench_neutral_preentrance)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.FuelField.middle_close_line)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.Trench.right_trench_neutral_preentrance)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(), FieldConstants.Trench.right_trench_alliance_entrance)),
-            PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
+                    FieldConstants.Trench.left_trench_neutral_approach,
+                    FieldConstants.FuelField.left_close_corner,
+                    FieldConstants.FuelField.middle_close_line,
+                    FieldConstants.FuelField.left_close_corner,
+                    FieldConstants.Trench.left_trench_neutral_preentrance,
+                    FieldConstants.Trench.left_trench_alliance_entrance,
+                    FieldConstants.Tower.left_approach_pos))
+            // .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.k180deg))
+            .andThen(PathBuilder.followNPGPathAccurate(FieldConstants.Tower.left_approach)));
+
+    // autoChooser.addOption(
+    //     "i am right",
+    //     Commands.sequence(
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.right_alliance_shoot,
+    //                 FieldConstants.Trench.right_trench_neutral_approach)),
+    //         // PathBuilder.followNPGPathAccurate(
+    //         //     NodePathGenerator.generatePath(
+    //         //         drive.getPose(),
+    //         //         FieldConstants.Trench.right_trench_alliance_preentrance,
+    //         //         FieldConstants.Trench.right_trench_neutral_preentrance)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.FuelField.right_close_corner,
+    //                 FieldConstants.FuelField.middle_close_line)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.FuelField.right_close_corner,
+    //                 FieldConstants.Trench.right_trench_neutral_preentrance)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(), FieldConstants.Trench.right_trench_alliance_entrance)),
+    //         PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
 
     // Set up SysId routines
     autoChooser.addOption(
