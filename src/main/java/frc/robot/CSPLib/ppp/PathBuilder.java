@@ -169,11 +169,11 @@ public final class PathBuilder {
         new NodePathGenerator.NavNode(
             "right_alliance_shoot",
             new Pose2d(FieldConstants.right_alliance_shoot, new Rotation2d()),
-            List.of("center_alliance_shoot", "right_trench_alliance_preentrance")),
+            List.of("center_alliance_shoot", "right_trench_alliance_approach")),
         new NodePathGenerator.NavNode(
             "left_alliance_shoot",
             new Pose2d(FieldConstants.left_alliance_shoot, new Rotation2d()),
-            List.of("center_alliance_shoot", "left_trench_alliance_preentrance")),
+            List.of("center_alliance_shoot", "left_trench_alliance_approach")),
         new NodePathGenerator.NavNode(
             "center_alliance_shoot",
             new Pose2d(FieldConstants.Hub.hub_align_center, new Rotation2d()),
@@ -181,15 +181,31 @@ public final class PathBuilder {
         new NodePathGenerator.NavNode(
             "right_close_corner",
             new Pose2d(FieldConstants.FuelField.right_close_corner, new Rotation2d()),
-            List.of("middle_close_line", "right_trench_neutral_preentrance")),
+            List.of("middle_close_line", "right_trench_neutral_approach")),
         new NodePathGenerator.NavNode(
             "middle_close_line",
             new Pose2d(FieldConstants.FuelField.middle_close_line, new Rotation2d()),
             List.of("left_close_corner", "right_close_corner")),
         new NodePathGenerator.NavNode(
-            "left_close_line",
+            "left_close_corner",
             new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d()),
-            List.of("left_trench_neutral_preentrance", "middle_close_line")));
+            List.of("left_trench_neutral_approach", "middle_close_line")),
+        new NodePathGenerator.NavNode(
+            "left_trench_alliance_approach",
+            new Pose2d(FieldConstants.Trench.left_trench_alliance_approach, new Rotation2d()),
+            List.of("left_trench_alliance_preentrance", "left_alliance_shoot")),
+        new NodePathGenerator.NavNode(
+            "right_trench_alliance_approach",
+            new Pose2d(FieldConstants.Trench.right_trench_alliance_approach, new Rotation2d()),
+            List.of("right_trench_alliance_preentrance", "right_alliance_shoot")),
+        new NodePathGenerator.NavNode(
+            "left_trench_neutral_approach",
+            new Pose2d(FieldConstants.Trench.left_trench_neutral_approach, new Rotation2d()),
+            List.of("left_trench_neutral_preentrance", "left_close_corner")),
+        new NodePathGenerator.NavNode(
+            "right_trench_neutral_approach",
+            new Pose2d(FieldConstants.Trench.right_trench_neutral_approach, new Rotation2d()),
+            List.of("right_trench_neutral_preentrance", "right_alliance_shoot")));
 
     NodePathGenerator.setRobotDimensions(Constants.Robot.B_CROSS / 2);
     // NodePathGenerator.setDisableSplines(true);
