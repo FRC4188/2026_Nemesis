@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.ppp.NodePathGenerator;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
@@ -61,7 +60,6 @@ import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIOReal;
 import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
-import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -186,86 +184,50 @@ public class RobotContainer {
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
 
-     autoChooser.addOption(
-        "i am almost right",
-        PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    // FieldConstants.Trench.right_trench_neutral_entrance,
-                    FieldConstants.Trench.right_trench_neutral_approach,
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.FuelField.middle_close_line,
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.Trench.right_trench_neutral_preentrance,
-                    // FieldConstants.Trench.right_trench_alliance_entrance,
-                    // FieldConstants.Trench.right_trench_neutral_preentrance,
-                    // FieldConstants.FuelField.right_close_corner,
-                    // FieldConstants.FuelField.middle_close_line,
-                    // FieldConstants.FuelField.right_close_corner,
-                    // FieldConstants.Trench.right_trench_neutral_preentrance,
-                    FieldConstants.Trench.right_trench_alliance_entrance,
-                    FieldConstants.Tower.right_approach_pos))
-            .andThen(PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
+    // autoChooser.addOption(
+    //     "i am almost right",
+    //     PathBuilder.followNPGPathAccurate(
+    //         NodePathGenerator.generatePath(
+    //             drive.getPose(),
+    //             FieldConstants.Trench.right_trench_alliance_preentrance,
+    //             FieldConstants.Trench.right_trench_neutral_preentrance,
+    //             FieldConstants.FuelField.right_close_corner,
+    //             FieldConstants.FuelField.middle_close_line,
+    //             FieldConstants.FuelField.right_close_corner,
+    //             FieldConstants.Trench.right_trench_neutral_preentrance,
+    //             FieldConstants.Trench.right_trench_alliance_entrance,
+    //             FieldConstants.Trench.right_trench_neutral_preentrance,
+    //             FieldConstants.FuelField.right_close_corner,
+    //             FieldConstants.FuelField.middle_close_line,
+    //             FieldConstants.FuelField.right_close_corner,
+    //             FieldConstants.Trench.right_trench_neutral_preentrance,
+    //             FieldConstants.Trench.right_trench_alliance_entrance)));
 
-    autoChooser.addOption(
-        "i am almost left",
-        PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.Trench.left_trench_neutral_approach,
-                    FieldConstants.FuelField.left_close_corner,
-                    FieldConstants.FuelField.middle_close_line,
-                    FieldConstants.FuelField.left_close_corner,
-                    FieldConstants.Trench.left_trench_neutral_preentrance,
-                    FieldConstants.Trench.left_trench_alliance_entrance,
-                    FieldConstants.Tower.left_approach_pos))
-            // .andThen(() -> PathBuilder.targetRotation(() -> Rotation2d.k180deg))
-            .andThen(PathBuilder.followNPGPathAccurate(FieldConstants.Tower.left_approach)));
-
-    autoChooser.addOption(
-        "righter disruptor",
-        PathBuilder.followNPGPathAccurate(
-            NodePathGenerator.generatePath(
-                drive.getPose(), 
-                FieldConstants.Trench.right_trench_neutral_approach,
-                FieldConstants.FuelField.right_close_corner,
-                FieldConstants.field_center,
-                FieldConstants.FuelField.right_close_corner,
-                // FieldConstants.Trench.right_trench_neutral_approach,
-                FieldConstants.Trench.right_trench_alliance_approach,
-                FieldConstants.Tower.right_approach_pos
-                )
-        )
-        .andThen(PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach))
-        );
-
-    autoChooser.addOption(
-        "i am right",
-        Commands.sequence(
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.right_alliance_shoot,
-                    FieldConstants.Trench.right_trench_neutral_approach)),
-            // PathBuilder.followNPGPathAccurate(
-            //     NodePathGenerator.generatePath(
-            //         drive.getPose(),
-            //         FieldConstants.Trench.right_trench_alliance_preentrance,
-            //         FieldConstants.Trench.right_trench_neutral_preentrance)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.FuelField.middle_close_line)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(),
-                    FieldConstants.FuelField.right_close_corner,
-                    FieldConstants.Trench.right_trench_neutral_preentrance)),
-            PathBuilder.followNPGPathAccurate(
-                NodePathGenerator.generatePath(
-                    drive.getPose(), FieldConstants.Trench.right_trench_alliance_preentrance)),
-            PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
+    // autoChooser.addOption(
+    //     "i am right",
+    //     Commands.sequence(
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(), FieldConstants.right_alliance_shoot)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.Trench.right_trench_alliance_preentrance,
+    //                 FieldConstants.Trench.right_trench_neutral_preentrance)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.FuelField.right_close_corner,
+    //                 FieldConstants.FuelField.middle_close_line)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(),
+    //                 FieldConstants.FuelField.right_close_corner,
+    //                 FieldConstants.Trench.right_trench_neutral_preentrance)),
+    //         PathBuilder.followNPGPathAccurate(
+    //             NodePathGenerator.generatePath(
+    //                 drive.getPose(), FieldConstants.Trench.right_trench_alliance_entrance)),
+    //         PathBuilder.followNPGPathAccurate(FieldConstants.Tower.right_approach)));
 
     autoChooser.addOption(
         "i am left", 
@@ -341,11 +303,11 @@ public class RobotContainer {
         new Trigger(
             () ->
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
-                    || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0));
+                        || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0)
+                    && !pilot.getRightBumperButton().getAsBoolean());
 
-    driveInput
-        .whileTrue(
-            DriveCommands.joystickDrive(
+    driveInput.whileTrue(
+        DriveCommands.joystickDrive(
                 drive,
                 () ->
                     -pilot.getCorrectedLeft(Scale.SQUARED).getY()
@@ -355,9 +317,8 @@ public class RobotContainer {
                         * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                 () ->
                     -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0)))
-        .onFalse(Commands.runOnce(drive::stopWithX, drive));
-
+                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     pilot
         .start()
         .onTrue(
@@ -386,30 +347,47 @@ public class RobotContainer {
                 .beforeStarting(drive.disableVision()))
         .onFalse(drive.enableVision());
 
-    pilot.rightTrigger().onTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
-    pilot.leftTrigger().onTrue(intake.intake(() -> 0.7));
+    pilot.rightTrigger().whileTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
+    pilot.leftTrigger().whileTrue(intake.intake(() -> 0.7));
 
     pilot
         .leftBumper()
-        .onTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)));
+        .whileTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)));
 
-    // pilot.x().onTrue(climber.raise());
-    // pilot.y().onTrue(climber.lower());
-
-    pilot.y().toggleOnTrue(climber.raise()).toggleOnFalse(climber.lower());
-    pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
+    pilot.y().onTrue(climber.raise());
+    pilot.x().onTrue(climber.lower());
+    // pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
+    pilot
+        .a()
+        .whileTrue(
+            ScoringCommands.passing(
+                    drive,
+                    shooter,
+                    hood,
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () -> Constants.ShooterConstants.kMiddleVel)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .beforeStarting(drive.disableVision()))
+        .onFalse(drive.enableVision());
 
     // copilot.a().onTrue(wrist.down());
     // copilot.x().onTrue(wrist.stow());
 
-    copilot.a().toggleOnTrue(wrist.down()).toggleOnFalse(wrist.stow());
-    copilot.x().onTrue(ScoringCommands.shake(wrist));
+    copilot.a().onTrue(wrist.down());
+    copilot.getLeftButton().onTrue(wrist.stow());
+    copilot.x().whileTrue(ScoringCommands.shake(wrist));
 
     copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
     copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));
 
     copilot.getUpButton().onTrue(drive.enableVision());
     copilot.getDownButton().onTrue(drive.disableVision());
+    copilot.getRightButton().onTrue(wrist.zero());
   }
 
   /**

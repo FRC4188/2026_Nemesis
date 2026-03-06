@@ -36,6 +36,10 @@ public class Wrist extends SubsystemBase {
         () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this);
   }
 
+  public Command zero() {
+    return Commands.runOnce(() -> io.zero());
+  }
+
   /**
    * @return Wrist position in radians
    */

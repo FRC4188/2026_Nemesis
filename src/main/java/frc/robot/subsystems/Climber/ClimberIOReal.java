@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Climber;
+package frc.robot.subsystems.climber;
 
 import static edu.wpi.first.units.Units.Hertz;
 
@@ -49,7 +49,7 @@ public class ClimberIOReal implements ClimberIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.ClimberConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.ClimberConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.ClimberConstants.kSupplyCurrent)
                     .withStatorCurrentLimitEnable(true))
             .withMotorOutput(
                 new MotorOutputConfigs()
@@ -62,6 +62,8 @@ public class ClimberIOReal implements ClimberIO {
                     .withMotionMagicAcceleration(1000.0)
                     .withMotionMagicExpo_kV(0.12)
                     .withMotionMagicExpo_kA(0.1));
+
+    motor.getConfigurator().apply(motorConfig);
 
     posRots = motor.getPosition();
     appliedVolts = motor.getMotorVoltage();

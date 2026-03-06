@@ -27,4 +27,6 @@ public interface WristIO {
   default boolean isStalled() {
     return false;
   }
+
+  default void zero() {}
 }
