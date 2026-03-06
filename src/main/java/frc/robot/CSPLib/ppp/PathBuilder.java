@@ -205,7 +205,10 @@ public final class PathBuilder {
         new NodePathGenerator.NavNode(
             "right_trench_neutral_approach",
             new Pose2d(FieldConstants.Trench.right_trench_neutral_approach, new Rotation2d()),
-            List.of("right_trench_neutral_preentrance", "right_alliance_shoot")));
+            List.of("right_trench_neutral_preentrance", "right_alliance_shoot")),
+        new NodePathGenerator.NavNode(
+            "", getPose(), null)
+            );
 
     NodePathGenerator.setRobotDimensions(Constants.Robot.B_CROSS / 2);
     // NodePathGenerator.setDisableSplines(true);
