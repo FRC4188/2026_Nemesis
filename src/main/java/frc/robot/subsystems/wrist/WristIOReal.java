@@ -72,6 +72,7 @@ public class WristIOReal implements WristIO {
                     .withMotionMagicAcceleration(1000.0 / Constants.WristConstants.kGearRatio)
                     .withMotionMagicExpo_kV(0.12 * Constants.WristConstants.kGearRatio)
                     .withMotionMagicExpo_kA(0.1));
+
     motor.getConfigurator().apply(motorConfig);
 
     posRots = motor.getPosition();
@@ -101,6 +102,10 @@ public class WristIOReal implements WristIO {
     return Math.abs(motor.getStatorCurrent().getValueAsDouble())
             > Constants.WristConstants.kStallCurrent
         && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.5;
+  }
+
+  public void zero() {
+    motor.setPosition(0.0);
   }
 
   @Override

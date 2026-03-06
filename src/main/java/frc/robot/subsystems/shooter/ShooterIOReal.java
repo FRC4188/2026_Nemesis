@@ -24,8 +24,7 @@ public class ShooterIOReal implements ShooterIO {
   private final TalonFX motorLeft;
   private final TalonFX motorRight;
 
-  private final TalonFXConfiguration leftMotorConfigs;
-  private final TalonFXConfiguration rightMotorConfigs;
+  private final TalonFXConfiguration motorConfigs;
 
   private final StatusSignal<Voltage> leftAppliedVolts;
   private final StatusSignal<Voltage> rightAppliedVolts;
@@ -51,7 +50,7 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
     motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    rightMotorConfigs =
+    motorConfigs =
         new TalonFXConfiguration()
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
@@ -64,25 +63,7 @@ public class ShooterIOReal implements ShooterIO {
                     .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
             .withMotorOutput(
                 new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
-            .withSlot0(Constants.ShooterConstants.rightShooterGains)
-            .withFeedback(
-                new FeedbackConfigs()
-                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
-
-    leftMotorConfigs =
-        new TalonFXConfiguration()
-            .withCurrentLimits(
-                new CurrentLimitsConfigs()
-                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
-            .withMotorOutput(
-                new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
-            .withSlot0(Constants.ShooterConstants.leftShooterGains)
+            .withSlot0(Constants.ShooterConstants.shooterGains)
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
@@ -90,13 +71,11 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft
         .getConfigurator()
         .apply(
-            leftMotorConfigs.MotorOutput.withInverted(
-                Constants.ShooterConstants.kLeftInvertedValue));
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
     motorRight
         .getConfigurator()
         .apply(
-            rightMotorConfigs.MotorOutput.withInverted(
-                Constants.ShooterConstants.kRightInvertedValue));
+            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
 
     leftAppliedVolts = motorLeft.getMotorVoltage();
     rightAppliedVolts = motorRight.getMotorVoltage();

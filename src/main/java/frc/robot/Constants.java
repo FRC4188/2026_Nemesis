@@ -74,8 +74,8 @@ public final class Constants {
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
-    private static final double ROBOT_MASS_KG = 130; // placeholder
-    private static final double ROBOT_MOI = ROBOT_MASS_KG * B_CROSS * B_CROSS; // placeholer
+    private static final double ROBOT_MASS_KG = Units.lbsToKilograms(130);
+    private static final double ROBOT_MOI = 6.5062;
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
   }
 
@@ -87,7 +87,7 @@ public final class Constants {
   }
 
   public static class DriveConstants {
-    public static final double DRIVE_MAXVEL = 4.8;
+    public static final double DRIVE_MAXVEL = 4.5;
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
         new ProfiledPIDController(
@@ -165,7 +165,7 @@ public final class Constants {
   }
 
   public static class ClimberConstants {
-    public static final double kTolerance = 5.0;
+    public static final double kTolerance = 3.0;
     public static final double Max_R = 85.0;
     public static final double Min_R = 0.0;
 
@@ -214,7 +214,7 @@ public final class Constants {
 
   public static class ShooterConstants {
     public static final Translation3d location =
-        new Translation3d(-Robot.A_LENGTH / 2, 0, 22.0); // placeholder
+        new Translation3d(-Robot.A_LENGTH / 2, 0, Units.inchesToMeters(22.0)); // placeholder
     public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
     public static final double kTolerance = 240.0;
@@ -234,10 +234,7 @@ public final class Constants {
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
-    public static final Slot0Configs rightShooterGains =
-        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
-
-    public static final Slot0Configs leftShooterGains =
+    public static final Slot0Configs shooterGains =
         new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
 
     public static final ClosedLoopOutputType motorClosedLoopOutput =

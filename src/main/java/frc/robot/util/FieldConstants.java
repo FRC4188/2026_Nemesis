@@ -200,6 +200,7 @@ public final class FieldConstants { // going off of an onshape cad of field
   public static class Tower {
     public static final Translation2d right_close_corner =
         new Translation2d(0, Units.inchesToMeters(128.04));
+
     public static final Translation2d left_close_corner =
         new Translation2d(0, Units.inchesToMeters(166.89));
     public static final Translation2d right_far_corner =
@@ -207,16 +208,10 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d left_far_corner =
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(166.89));
 
-    public static final Translation2d align_center =
-        new Translation2d(
-            Units.inchesToMeters(45.1) + Constants.Robot.B_CROSS,
-            Units.inchesToMeters((128.04 + 166.89) / 2));
-
     public static final Translation2d left_approach_pos = new Translation2d(1.589, 5);
-
-    public static final Translation2d center_approach_pos = new Translation2d(1.75, 3.75);
-
     public static final Translation2d right_approach_pos = new Translation2d(1.589, 2.2);
+    public static final Translation2d left_align_pos = new Translation2d(1.589, 5);
+    public static final Translation2d right_align_pos = new Translation2d(1.589, 2.2);
 
     public static final List<Waypoint> left_approach =
         PathPlannerPath.waypointsFromPoses(
@@ -230,12 +225,6 @@ public final class FieldConstants { // going off of an onshape cad of field
             new Pose2d(1.589, 2.2, Rotation2d.k180deg), // placeholder
             new Pose2d(1.112, 2.5, Rotation2d.k180deg),
             new Pose2d(1.112, 2.924, Rotation2d.k180deg) // placeholder
-            );
-
-    public static final List<Waypoint> middle_approach =
-        PathPlannerPath.waypointsFromPoses(
-            new Pose2d(1.75, 3.75, Rotation2d.k180deg), // plecholder
-            new Pose2d(1.589, 3.75, Rotation2d.k180deg) // plaqueholder
             );
   }
 

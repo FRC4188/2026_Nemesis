@@ -13,7 +13,7 @@ public class ProjMath {
   public static Rotation2d staticShot(double velocity, Translation2d goal) {
     // goal is vertical so shoot vertical
     if (goal.getX() == 0) {
-      return Rotation2d.kCCW_90deg;
+      return Rotation2d.kCW_90deg;
     }
 
     double boundary =
