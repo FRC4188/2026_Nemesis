@@ -19,7 +19,7 @@ public class ProjMath {
     double boundary =
         Math.pow(velocity, 4)
             - 2 * Math.pow(velocity, 2) * goal.getY() * grav
-            + Math.pow(grav, 2) * Math.pow(goal.getX(), 2);
+            - Math.pow(grav, 2) * Math.pow(goal.getX(), 2);
 
     if (boundary < 0) return Rotation2d.kCCW_90deg;
 

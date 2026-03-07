@@ -101,7 +101,7 @@ public class WristIOReal implements WristIO {
   public boolean isStalled() {
     return Math.abs(motor.getStatorCurrent().getValueAsDouble())
             > Constants.WristConstants.kStallCurrent
-        && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.5;
+        && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.2;
   }
 
   public void zero() {

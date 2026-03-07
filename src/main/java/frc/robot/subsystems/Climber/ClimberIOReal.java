@@ -104,6 +104,11 @@ public class ClimberIOReal implements ClimberIO {
         });
   }
 
+  @Override
+  public void zero() {
+    motor.setPosition(0.0);
+  }
+
   public double getSetpoint() {
     return motor.getClosedLoopReference().getValueAsDouble();
   }

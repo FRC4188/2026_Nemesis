@@ -22,4 +22,6 @@ public interface ClimberIO {
   public default double getSetpoint() {
     return 0;
   }
+
+  public default void zero() {}
 }

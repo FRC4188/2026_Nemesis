@@ -84,6 +84,11 @@ public class HoodIOReal implements HoodIO {
   }
 
   @Override
+  public void zero() {
+    motor.setPosition(0.0);
+  }
+
+  @Override
   public void updateInputs(HoodIOInputs inputs) {
     inputs.motorConnected =
         motorDebouncer.calculate(

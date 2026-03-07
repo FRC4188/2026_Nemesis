@@ -1,11 +1,13 @@
 package frc.robot.subsystems.wrist;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -26,6 +28,12 @@ public class Wrist extends SubsystemBase {
     return Commands.runEnd(() -> io.runVolts(inputs.getAsDouble()), () -> io.runVolts(0.0), this);
   }
 
+  public Command shake() {
+    return Commands.repeatingSequence(
+            runWrist(() -> 2.0).until(() -> io.isStalled()), new WaitCommand(0.4))
+        .until(() -> getAngle() > Units.degreesToRadians(110));
+  }
+
   public Command stow() {
     return Commands.runOnce(
         () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)), this);
@@ -34,6 +42,13 @@ public class Wrist extends SubsystemBase {
   public Command down() {
     return Commands.runOnce(
         () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this);
+  }
+
+  public Command toggle() {
+    return Commands.runEnd(
+        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)),
+        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)),
+        this);
   }
 
   public Command zero() {

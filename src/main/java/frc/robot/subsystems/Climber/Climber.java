@@ -39,6 +39,17 @@ public class Climber extends SubsystemBase {
         () -> io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Min_R)), this);
   }
 
+  public Command zero() {
+    return Commands.runOnce(() -> io.zero());
+  }
+
+  public Command toggle() {
+    return Commands.runEnd(
+        () -> io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Max_R)),
+        () -> io.setPosition(Rotation2d.fromRotations(Constants.ClimberConstants.Min_R)),
+        this);
+  }
+
   @AutoLogOutput(key = "Climber/At Goal?")
   public boolean atGoal() {
     return Math.abs(inputs.posRots - io.getSetpoint()) < Constants.ClimberConstants.kTolerance;

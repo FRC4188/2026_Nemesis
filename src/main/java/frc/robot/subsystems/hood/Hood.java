@@ -2,6 +2,7 @@ package frc.robot.subsystems.hood;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,6 +46,10 @@ public class Hood extends SubsystemBase {
         this);
   }
 
+  public Command zero() {
+    return Commands.runOnce(() -> io.zero());
+  }
+
   public Command setPosition(Rotation2d angle) {
     return Commands.runOnce(
         () ->
@@ -70,9 +75,9 @@ public class Hood extends SubsystemBase {
   /**
    * @return Hood angle in radians
    */
-  @AutoLogOutput(key = "Hood/Shooting Angle Rads")
+  @AutoLogOutput(key = "Hood/Shooting Angle Degrees")
   public double getShotAngle() {
-    return Math.PI / 2.0 - inputs.posRads;
+    return Units.radiansToDegrees((Math.PI / 2.0 - inputs.posRads));
   }
 
   public void periodic() {

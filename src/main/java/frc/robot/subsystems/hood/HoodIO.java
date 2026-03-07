@@ -23,4 +23,6 @@ public interface HoodIO {
   public default double getSetpoint() {
     return 0.0;
   }
+
+  public default void zero() {}
 }
