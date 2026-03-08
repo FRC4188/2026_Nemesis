@@ -52,19 +52,9 @@ public class Shooter extends SubsystemBase {
     return Commands.runOnce(() -> io.runVolts(0.0), this);
   }
 
-  @AutoLogOutput(key = "Shooter/Right Velocity RPM")
+  @AutoLogOutput(key = "Shooter/Average Velocity RPM")
   public double getAverageVelocity() {
     return (inputs.rightVelocityRPM + inputs.leftVelocityRPM) / 2.0;
-  }
-
-  @AutoLogOutput(key = "Shooter/Right Velocity RPM")
-  public double getRightVelocity() {
-    return inputs.rightVelocityRPM;
-  }
-
-  @AutoLogOutput(key = "Shooter/Left Velocity RPM")
-  public double getLeftVelocity() {
-    return inputs.leftVelocityRPM;
   }
 
   public void periodic() {

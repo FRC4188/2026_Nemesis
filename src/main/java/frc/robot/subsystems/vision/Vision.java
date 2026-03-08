@@ -84,9 +84,9 @@ public class Vision extends SubsystemBase {
     // Loop over cameras
     for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
       // Skip secondary cameras if main camera has tags
-      if (cameraIndex != 0 && usingMainCamera) {
-        continue;
-      }
+      // if (cameraIndex != 0 && usingMainCamera) {
+      //   continue;
+      // }
 
       // Update disconnected alert
       disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].frontConnected);

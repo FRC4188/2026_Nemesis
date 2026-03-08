@@ -37,6 +37,7 @@ public class WristIOReal implements WristIO {
   private final Debouncer motorConnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
 
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
@@ -98,10 +99,15 @@ public class WristIOReal implements WristIO {
   }
 
   @Override
+  public void runTorqueCurrent(double amps) {
+    motor.setControl(torqueCurrentRequest.withOutput(amps));
+  }
+
+  @Override
   public boolean isStalled() {
     return Math.abs(motor.getStatorCurrent().getValueAsDouble())
             > Constants.WristConstants.kStallCurrent
-        && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.2;
+        && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.05;
   }
 
   public void zero() {

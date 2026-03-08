@@ -18,6 +18,8 @@ public interface WristIO {
 
   default void runVolts(double volts) {}
 
+  default void runTorqueCurrent(double amps) {}
+
   default void setPosition(Rotation2d rotation) {}
 
   default double getSetpoint() {

@@ -42,7 +42,7 @@ public class Hood extends SubsystemBase {
                             angle.get().getRadians(),
                             Constants.HoodConstants.Min_A,
                             Constants.HoodConstants.Max_A))),
-        () -> io.setPosition(Rotation2d.kZero),
+        () -> io.setPosition(Rotation2d.fromDegrees(10.0)),
         this);
   }
 

@@ -60,7 +60,6 @@ import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIOReal;
 import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
-import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -217,41 +216,42 @@ public class RobotContainer {
     // currently running into issues with drive being used in conflicting parallel commands (in the
     // deadline)
 
-    autoChooser.addOption(
-        "Auto 3/6",
-        Commands.sequence(
-            PathBuilder.interpolateTimedPath(
-                AllianceFlip.apply(
-                    new Pose2d(FieldConstants.right_alliance_shoot, new Rotation2d())),
-                AllianceFlip.apply(
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_preentrance,
-                        new Rotation2d()))),
-            ScoringCommands.shootFor(
-                5.0, drive, shooter, hood, hopper, () -> Constants.ShooterConstants.kMiddleVel),
-            Commands.parallel(hood.stow(), shooter.stop())
-                .beforeStarting(
-                    Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
-            Commands.parallel(
-                wrist.down(),
-                intake.intake(() -> 0.7),
-                Commands.sequence(
-                    PathBuilder.interpolateTimedPath(
-                            AllianceFlip.apply(
-                                new Pose2d(
-                                    FieldConstants.Trench.right_trench_center, new Rotation2d())),
-                            AllianceFlip.apply(
-                                new Pose2d(
-                                    FieldConstants.Trench.right_trench_neutral_preentrance,
-                                    new Rotation2d())))
-                        .andThen(Commands.runOnce(() -> PathBuilder.stopTarget())),
-                    PathBuilder.interpolateTimedPath(
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.FuelField.right_midline_corner,
-                                Rotation2d.kCCW_90deg)),
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)))))));
+    // autoChooser.addOption(
+    //     "Auto 3/6",
+    //     Commands.sequence(
+    //         PathBuilder.interpolateTimedPath(
+    //             AllianceFlip.apply(
+    //                 new Pose2d(FieldConstants.right_alliance_shoot, new Rotation2d())),
+    //             AllianceFlip.apply(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.right_trench_alliance_preentrance,
+    //                     new Rotation2d()))),
+    //         ScoringCommands.shootFor(
+    //             5.0, drive, shooter, hood, hopper, () -> Constants.ShooterConstants.kMiddleVel),
+    //         Commands.parallel(hood.stow(), shooter.stop())
+    //             .beforeStarting(
+    //                 Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
+    //         Commands.parallel(
+    //             wrist.down(),
+    //             intake.intake(() -> 0.7),
+    //             Commands.sequence(
+    //                 PathBuilder.interpolateTimedPath(
+    //                         AllianceFlip.apply(
+    //                             new Pose2d(
+    //                                 FieldConstants.Trench.right_trench_center, new
+    // Rotation2d())),
+    //                         AllianceFlip.apply(
+    //                             new Pose2d(
+    //                                 FieldConstants.Trench.right_trench_neutral_preentrance,
+    //                                 new Rotation2d())))
+    //                     .andThen(Commands.runOnce(() -> PathBuilder.stopTarget())),
+    //                 PathBuilder.interpolateTimedPath(
+    //                     AllianceFlip.apply(
+    //                         new Pose2d(
+    //                             FieldConstants.FuelField.right_midline_corner,
+    //                             Rotation2d.kCCW_90deg)),
+    //                     AllianceFlip.apply(
+    //                         new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)))))));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -283,17 +283,16 @@ public class RobotContainer {
 
     driveInput.whileTrue(
         DriveCommands.joystickDrive(
-                drive,
-                () ->
-                    -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                () ->
-                    -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                () ->
-                    -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                        * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
-            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+            drive,
+            () ->
+                -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                -pilot.getCorrectedRight(Scale.SQUARED).getX()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0)));
     pilot
         .start()
         .onTrue(
@@ -316,11 +315,8 @@ public class RobotContainer {
                             * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                    () -> 1500)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .beforeStarting(drive.disableVision()))
-        .onFalse(drive.enableVision());
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
     pilot.rightTrigger().whileTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
     pilot.leftTrigger().whileTrue(intake.intake(() -> 0.7));
@@ -343,8 +339,7 @@ public class RobotContainer {
                             * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                    () -> Constants.ShooterConstants.kMiddleVel)
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                 .beforeStarting(drive.disableVision()))
         .onFalse(drive.enableVision());
@@ -354,11 +349,30 @@ public class RobotContainer {
 
     copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
     copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));
+    copilot.rightBumper().whileTrue(hood.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
 
     copilot.getUpButton().onTrue(drive.enableVision());
     copilot.getDownButton().onTrue(drive.disableVision());
     copilot.getLeftButton().onTrue(climber.zero());
     copilot.getRightButton().onTrue(wrist.zero());
+    copilot.getLeftBumperButton().onTrue(hood.zero());
+
+    pilot
+        .rightTrigger()
+        .whileTrue(
+            ScoringCommands.data(
+                    drive,
+                    shooter,
+                    hood,
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+                    () ->
+                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .beforeStarting(drive.disableVision()))
+        .onFalse(drive.enableVision());
   }
 
   /**

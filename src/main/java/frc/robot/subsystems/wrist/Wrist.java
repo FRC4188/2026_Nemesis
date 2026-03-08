@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -25,13 +26,18 @@ public class Wrist extends SubsystemBase {
   }
 
   public Command runWrist(DoubleSupplier inputs) {
-    return Commands.runEnd(() -> io.runVolts(inputs.getAsDouble()), () -> io.runVolts(0.0), this);
+    return Commands.runEnd(
+        () -> io.runVolts(2 * inputs.getAsDouble()), () -> io.runVolts(0.0), this);
   }
 
   public Command shake() {
     return Commands.repeatingSequence(
-            runWrist(() -> 2.0).until(() -> io.isStalled()), new WaitCommand(0.4))
-        .until(() -> getAngle() > Units.degreesToRadians(110));
+            Commands.runOnce(() -> io.runTorqueCurrent(25.0)),
+            new WaitUntilCommand(() -> io.isStalled()),
+            Commands.runOnce(() -> io.runVolts(0.0)),
+            new WaitCommand(0.4))
+        .until(() -> getAngle() > Units.degreesToRadians(120))
+        .finallyDo(() -> io.runVolts(0.0));
   }
 
   public Command stow() {
@@ -40,14 +46,16 @@ public class Wrist extends SubsystemBase {
   }
 
   public Command down() {
-    return Commands.runOnce(
-        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this);
+    return Commands.run(
+            () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this)
+        .until(() -> atGoal())
+        .finallyDo(() -> io.runVolts(0.0));
   }
 
   public Command toggle() {
     return Commands.runEnd(
-        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)),
         () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)),
+        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)),
         this);
   }
 
@@ -58,9 +66,9 @@ public class Wrist extends SubsystemBase {
   /**
    * @return Wrist position in radians
    */
-  @AutoLogOutput(key = "Wrist/Angle Radians")
+  @AutoLogOutput(key = "Wrist/Angle Degrees")
   public double getAngle() {
-    return inputs.posRads;
+    return Units.radiansToDegrees(inputs.posRads);
   }
 
   @AutoLogOutput(key = "Wrist/At Setpoint?")

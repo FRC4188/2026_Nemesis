@@ -19,7 +19,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -59,7 +58,7 @@ public final class Constants {
     public static final double A_WIDTH = Units.inchesToMeters(27);
     public static final double A_CROSS = Math.hypot(A_WIDTH, A_LENGTH);
 
-    public static final double BUMPER = Units.inchesToMeters(3); // placeholder
+    public static final double BUMPER = Units.inchesToMeters(3.5);
 
     public static final double B_LENGTH = A_LENGTH + 2 * BUMPER;
     public static final double B_WIDTH = A_WIDTH + 2 * BUMPER;
@@ -147,7 +146,7 @@ public final class Constants {
 
     public static final double kStatorCurrent = 100; // placeholder
     public static final double kSupplyCurrent = 80; // placeholder
-    public static final double kStallCurrent = 50; // placeholder
+    public static final double kStallCurrent = 20; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
@@ -189,7 +188,7 @@ public final class Constants {
 
   public static class HoodConstants {
     public static final double kGearRatio = 40.0;
-    public static final double kTolerance = 0.08;
+    public static final double kTolerance = 0.05;
     public static final double Max_A = Units.degreesToRadians(90.0);
     public static final double Min_A = Units.degreesToRadians(8.0);
 
@@ -202,7 +201,7 @@ public final class Constants {
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(25.0)
+            .withKP(50.0)
             .withKI(5.0)
             .withKD(0.0)
             .withKS(0.0)
@@ -213,19 +212,11 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final Translation3d location =
-        new Translation3d(
-            -Units.inchesToMeters(8.092171 / 2.0 + 4.145811),
-            0,
-            Units.inchesToMeters(18.0)); // placeholder
-    public static final double kWheelDiam = Units.inchesToMeters(4.0);
 
-    public static final double kTolerance = 240.0;
-    public static final double kLowVel = 1800.0;
-    public static final double kMiddleVel = 2400.0;
-    public static final double kHighVel = 4800.0;
+    public static final double kTolerance = 100.0;
+    public static final double kLowVel = 1500.0;
+    public static final double kMaxVel = 4800.0;
     public static final double kGearRatio = 1.0;
-    public static final double kDropVel = 600.0; // placeholder
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder
