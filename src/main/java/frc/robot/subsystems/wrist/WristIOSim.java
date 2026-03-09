@@ -1,43 +1,45 @@
 package frc.robot.subsystems.wrist;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.Constants;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public class WristIOSim implements WristIO {
-
-  private final SingleJointedArmSim wSim;
+  // private final SingleJointedArmSim wSim;
+  private double applidVolts;
+  private double currentAmps;
+  private Rotation2d position;
 
   public WristIOSim() {
-    wSim =
-        new SingleJointedArmSim(
-            DCMotor.getKrakenX60(1),
-            Constants.WristConstants.kGearRatio,
-            0.1,
-            1,
-            0.0,
-            Units.degreesToRadians(144),
-            true,
-            Units.degreesToRadians(144));
+    // wSim =
+    //     new SingleJointedArmSim(
+    //         DCMotor.getKrakenX60(1),
+    //         Constants.WristConstants.kGearRatio,
+    //         0.1,
+    //         1,
+    //         Constants.WristConstants.Min_A.getRadians(),
+    //         Constants.WristConstants.Max_A.getRadians(),
+    //         true,
+    //         Constants.WristConstants.Max_A.getRadians());
   }
 
-  @Override
-  public void runVolts(double volts) {
-
-    wSim.setInputVoltage(MathUtil.clamp(volts, -12, 12));
-  }
-
-  @Override
   public void updateInputs(WristIOInputs inputs) {
+    inputs.connected = true;
 
-    wSim.update(0.02);
-    // inputs.appliedVolts = wSim.get;
-    inputs.posRads = wSim.getAngleRads();
+    inputs.appliedVolts = applidVolts;
+    inputs.tempC = 0.0;
+    inputs.currentAmps = currentAmps;
+    inputs.position = position;
+    inputs.velocity = Rotation2d.fromDegrees(10);
   }
 
-  public double getAngle() {
-    return wSim.getAngleRads() - Math.PI / 2;
+  public void setVolts(double volts) {
+    applidVolts = volts;
+  }
+
+  public void setTorqueCurrent(double amps) {
+    currentAmps = amps;
+  }
+
+  public void setPosition(Rotation2d rotation) {
+    position = rotation;
   }
 }

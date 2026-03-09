@@ -1,16 +1,10 @@
 package frc.robot.subsystems.wrist;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -19,61 +13,62 @@ public class Wrist extends SubsystemBase {
   private final WristIOInputsAutoLogged inputs;
   private final Alert wristDisconnectedAlert;
 
+  @AutoLogOutput(key = "Wrist/Setpoint Degrees")
+  private double setpoint = 0.0;
+
   public Wrist(WristIO io) {
     this.io = io;
     inputs = new WristIOInputsAutoLogged();
     wristDisconnectedAlert = new Alert("Wrist motor disconnected.", AlertType.kError);
   }
 
-  public Command runWrist(DoubleSupplier inputs) {
-    return Commands.runEnd(
-        () -> io.runVolts(2 * inputs.getAsDouble()), () -> io.runVolts(0.0), this);
+  public void runWristVolts(double volts) {
+    setpoint = 180;
+    io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
 
-  public Command shake() {
-    return Commands.repeatingSequence(
-            Commands.runOnce(() -> io.runTorqueCurrent(25.0)),
-            new WaitUntilCommand(() -> io.isStalled()),
-            Commands.runOnce(() -> io.runVolts(0.0)),
-            new WaitCommand(0.4))
-        .until(() -> getAngle() > Units.degreesToRadians(120))
-        .finallyDo(() -> io.runVolts(0.0));
+  public void runWristTC(double amps) {
+    setpoint = 180;
+    io.setTorqueCurrent(
+        MathUtil.clamp(
+            amps,
+            -Constants.WristConstants.kPeakReverseTC,
+            Constants.WristConstants.kPeakForwardTC));
   }
 
-  public Command stow() {
-    return Commands.runOnce(
-        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)), this);
+  public void stop() {
+    io.setVolts(0.0);
   }
 
-  public Command down() {
-    return Commands.run(
-            () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)), this)
-        .until(() -> atGoal())
-        .finallyDo(() -> io.runVolts(0.0));
+  public void stow() {
+    setpoint = 144;
+    io.setPosition(Constants.WristConstants.Max_A);
   }
 
-  public Command toggle() {
-    return Commands.runEnd(
-        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Max_A)),
-        () -> io.setPosition(Rotation2d.fromRadians(Constants.WristConstants.Min_A)),
-        this);
+  public void down() {
+    setpoint = 0;
+    io.setPosition(Constants.WristConstants.Min_A);
   }
 
-  public Command zero() {
-    return Commands.runOnce(() -> io.zero());
+  public void zero() {
+    io.setZero();
   }
 
-  /**
-   * @return Wrist position in radians
-   */
+  @AutoLogOutput(key = "Wrist/is Stalling?")
+  public boolean isStalled() {
+    return Math.abs(inputs.currentAmps) > Constants.WristConstants.kStallCurrent
+        && inputs.velocity.getDegrees() < 2.0;
+  }
+
   @AutoLogOutput(key = "Wrist/Angle Degrees")
   public double getAngle() {
-    return Units.radiansToDegrees(inputs.posRads);
+    return inputs.position.getDegrees();
   }
 
-  @AutoLogOutput(key = "Wrist/At Setpoint?")
+  @AutoLogOutput(key = "Wrist/At Goal?")
   public boolean atGoal() {
-    return Math.abs(inputs.posRads - io.getSetpoint()) < Constants.WristConstants.kTolerance;
+    return Math.abs(inputs.position.getDegrees() - setpoint)
+        < Constants.WristConstants.kTolerance.getDegrees();
   }
 
   public void periodic() {

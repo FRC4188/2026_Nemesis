@@ -24,14 +24,12 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -40,7 +38,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -49,14 +46,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   // failsafe
   @AutoLogOutput(key = "Vision/Accept?")
   private boolean vision_accept = true;
-
-  public Command disableVision() {
-    return Commands.runOnce(() -> vision_accept = false);
-  }
-
-  public Command enableVision() {
-    return Commands.runOnce(() -> vision_accept = true);
-  }
 
   private final Field2d field;
 
@@ -109,13 +98,9 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    // TODO: 1. Find out if using this, 2. prevent flicks
-    Constants.DriveConstants.CORRECTION_PID.enableContinuousInput(-180, 180); // degrees
-    Constants.DriveConstants.CORRECTION_PID.setTolerance(
-        Units.radiansToDegrees(Constants.DriveConstants.ANGLE_TOL));
-
     Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
-    Constants.DriveConstants.ANGLE_PID.setTolerance(Constants.DriveConstants.ANGLE_TOL);
+    Constants.DriveConstants.ANGLE_PID.setTolerance(
+        Constants.DriveConstants.ANGLE_TOL.getRadians());
 
     field = new Field2d();
 
@@ -199,16 +184,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
-    // if (Constants.Robot.currentMode != Mode.SIM) {
-    //   if (speeds.omegaRadiansPerSecond != 0.0) {
-    //     Constants.Drive.CORRECTION_PID.setSetpoint(getRotation().getDegrees());
-    //   } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
-    //     double correction = Constants.Drive.CORRECTION_PID.calculate(getRotation().getDegrees());
-    //     speeds.omegaRadiansPerSecond =
-    //         Constants.Drive.CORRECTION_PID.atSetpoint() ? 0.0 : correction;
-    //   }
-    // }
-
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
@@ -327,25 +302,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     return getPose().getRotation();
   }
 
-  public double getOmega(Supplier<Rotation2d> rotationSupplier) {
-    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
-
-    Logger.recordOutput("Overrides/Target Angle", rotationSupplier.get().getRadians());
-    Logger.recordOutput("Overrides/Current Angle", getPose().getRotation().getRadians());
-
-    double omega =
-        Constants.DriveConstants.ANGLE_PID.calculate(
-                getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
-                * Constants.DriveConstants.ANGLE_FF;
-
-    if (Math.abs(getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.DriveConstants.ANGLE_TOL
-        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
-
-    return omega;
-  }
-
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
@@ -365,10 +321,7 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
     if (vision_accept) {
       poseEstimator.addVisionMeasurement(
-          visionRobotPoseMeters,
-          // new Pose2d(visionRobotPoseMeters.getTranslation(), getRotation()),
-          timestampSeconds,
-          visionMeasurementStdDevs);
+          visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     }
   }
 

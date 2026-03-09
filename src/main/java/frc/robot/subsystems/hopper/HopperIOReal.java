@@ -93,12 +93,12 @@ public class HopperIOReal implements HopperIO {
   }
 
   @Override
-  public void runAggitateVolts(double volts) {
+  public void setAggitateVolts(double volts) {
     aggitateMotor.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override
-  public void runIndexerVolts(double volts) {
+  public void setIndexerVolts(double volts) {
     indexerMotor.setControl(voltageRequest.withOutput(volts));
   }
 

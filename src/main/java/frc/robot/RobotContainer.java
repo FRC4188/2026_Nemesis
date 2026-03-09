@@ -135,12 +135,12 @@ public class RobotContainer {
         wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        simvis =
-            new SimulationVisualizer(
-                "Models",
-                () -> wrist.getAngle(),
-                () -> hood.getShotAngle(),
-                () -> climber.getHeightRots());
+        // simvis =
+        //     new SimulationVisualizer(
+        //         "Models",
+        //         () -> wrist.getAngle(),
+        //         () -> hood.getShotAngle(),
+        //         () -> climber.getHeightRots());
         break;
 
       default:
@@ -316,16 +316,24 @@ public class RobotContainer {
                     () ->
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
                             * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .alongWith(ScoringCommands.shake(wrist)));
 
-    pilot.rightTrigger().whileTrue(hopper.runVolts(() -> 0.5, () -> 0.5));
-    pilot.leftTrigger().whileTrue(intake.intake(() -> 0.7));
+    pilot
+        .rightTrigger()
+        .whileTrue(Commands.runEnd(() -> hopper.runHopperVolts(0.7), hopper::stop, hopper));
+    pilot
+        .leftTrigger()
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(0.7), intake::stop, intake));
 
     pilot
         .leftBumper()
-        .whileTrue(intake.intake(() -> -0.7).alongWith(hopper.runVolts(() -> -1.0, () -> -1.0)));
+        .whileTrue(
+            Commands.parallel(
+                Commands.runEnd(() -> hopper.runHopperVolts(-0.7), hopper::stop, hopper),
+                Commands.runEnd(() -> intake.ejectVolts(0.7), intake::stop, intake)));
 
-    pilot.y().toggleOnTrue(climber.toggle());
+    pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
     // pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
     pilot
         .a()
@@ -341,38 +349,34 @@ public class RobotContainer {
                         -pilot.getCorrectedLeft(Scale.SQUARED).getX()
                             * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .beforeStarting(drive.disableVision()))
-        .onFalse(drive.enableVision());
+                .alongWith(ScoringCommands.shake(wrist)));
 
-    copilot.a().toggleOnTrue(wrist.toggle());
-    copilot.x().whileTrue(wrist.shake());
-
-    copilot.b().whileTrue(climber.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
-    copilot.y().whileTrue(wrist.runWrist(() -> -copilot.getLeftY(Scale.LINEAR)));
-    copilot.rightBumper().whileTrue(hood.runVolts(() -> -copilot.getLeftY(Scale.LINEAR)));
-
-    copilot.getUpButton().onTrue(drive.enableVision());
-    copilot.getDownButton().onTrue(drive.disableVision());
-    copilot.getLeftButton().onTrue(climber.zero());
-    copilot.getRightButton().onTrue(wrist.zero());
-    copilot.getLeftBumperButton().onTrue(hood.zero());
-
-    pilot
-        .rightTrigger()
+    copilot.a().onTrue(ScoringCommands.downWoStall(wrist));
+    copilot
+        .y()
         .whileTrue(
-            ScoringCommands.data(
-                    drive,
-                    shooter,
-                    hood,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .beforeStarting(drive.disableVision()))
-        .onFalse(drive.enableVision());
+            Commands.runEnd(
+                () -> wrist.runWristVolts(-copilot.getLeftY(Scale.LINEAR)), wrist::stop, wrist));
+    copilot.x().whileTrue(ScoringCommands.shake(wrist));
+
+    copilot
+        .b()
+        .whileTrue(
+            Commands.runEnd(
+                () -> climber.runClimberVolts(-copilot.getLeftY(Scale.LINEAR)),
+                climber::stop,
+                climber));
+
+    copilot
+        .rightBumper()
+        .whileTrue(
+            Commands.runEnd(
+                () -> hood.runHoodVolts(-copilot.getLeftY(Scale.LINEAR)), hood::stop, hood));
+
+    copilot.getUpButton().onTrue(Commands.runOnce(wrist::stow));
+    copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
+    copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
+    copilot.getLeftBumperButton().onTrue(Commands.runOnce(hood::zero));
   }
 
   /**
@@ -382,10 +386,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
-  }
-
-  public void teleInit() {
-    wrist.runWrist(() -> 0.0).schedule();
   }
 
   // maybe making this easier for different positions in sim?!

@@ -2,15 +2,10 @@ package frc.robot.subsystems.hood;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -20,6 +15,9 @@ public class Hood extends SubsystemBase {
 
   private final Alert hoodDisconnectedAlert;
 
+  @AutoLogOutput(key = "Hood/Setpoint Degrees")
+  private double setpoint = 0.0;
+
   public Hood(HoodIO io) {
     this.io = io;
     inputs = new HoodIOInputsAutoLogged();
@@ -27,57 +25,49 @@ public class Hood extends SubsystemBase {
     hoodDisconnectedAlert = new Alert("Hood motor disconnected.", AlertType.kError);
   }
 
-  public Command runVolts(DoubleSupplier input) {
-    return Commands.runEnd(
-        () -> io.runVolts(3 * input.getAsDouble()), () -> io.runVolts(0.0), this);
+  public void runHoodVolts(double volts) {
+    setpoint = 0.0;
+    io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
 
-  public Command setPosition(Supplier<Rotation2d> angle) {
-    return Commands.runEnd(
-        () ->
-            io.setPosition(
-                Rotation2d.fromRadians(
-                    Math.PI / 2.0
-                        - MathUtil.clamp(
-                            angle.get().getRadians(),
-                            Constants.HoodConstants.Min_A,
-                            Constants.HoodConstants.Max_A))),
-        () -> io.setPosition(Rotation2d.fromDegrees(10.0)),
-        this);
+  public void stop() {
+    io.setVolts(0.0);
   }
 
-  public Command zero() {
-    return Commands.runOnce(() -> io.zero());
+  public void setShotAngle(Rotation2d angle) {
+    setpoint = angle.getDegrees();
+    io.setPosition(
+        Rotation2d.fromDegrees(
+            MathUtil.clamp(
+                Rotation2d.kCW_90deg.minus(angle).getDegrees(),
+                Constants.WristConstants.Min_A.getDegrees(),
+                Constants.WristConstants.Max_A.getDegrees())));
   }
 
-  public Command setPosition(Rotation2d angle) {
-    return Commands.runOnce(
-        () ->
-            io.setPosition(
-                Rotation2d.fromRadians(
-                    Math.PI / 2.0
-                        - MathUtil.clamp(
-                            angle.getRadians(),
-                            Constants.HoodConstants.Min_A,
-                            Constants.HoodConstants.Max_A))),
-        this);
+  public void stow() {
+    setpoint = 90.0;
+    io.setPosition(Rotation2d.kZero);
   }
 
-  public Command stow() {
-    return Commands.runOnce(() -> io.setPosition(Rotation2d.kZero), this);
+  public void zero() {
+    io.setZero();
+  }
+
+  @AutoLogOutput(key = "Hood/Is Stalled?")
+  public boolean isStalled() {
+    return Math.abs(inputs.currentAmps) > Constants.HoodConstants.kStallCurrent
+        && inputs.velocity.getDegrees() < 2.0;
   }
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(inputs.posRads - io.getSetpoint()) < Constants.HoodConstants.kTolerance;
+    return Math.abs(Rotation2d.kCW_90deg.minus(inputs.position).getDegrees() - setpoint)
+        < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
-  /**
-   * @return Hood angle in radians
-   */
-  @AutoLogOutput(key = "Hood/Shooting Angle Degrees")
+  @AutoLogOutput(key = "Hood/Shooting Degrees")
   public double getShotAngle() {
-    return Units.radiansToDegrees((Math.PI / 2.0 - inputs.posRads));
+    return Rotation2d.kCW_90deg.minus(inputs.position).getDegrees();
   }
 
   public void periodic() {

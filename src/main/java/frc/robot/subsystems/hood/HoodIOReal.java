@@ -8,15 +8,14 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -30,16 +29,14 @@ public class HoodIOReal implements HoodIO {
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
   private final StatusSignal<Angle> positionRots;
+  private final StatusSignal<AngularVelocity> velocityRots;
   private final StatusSignal<Temperature> tempC;
 
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-
   private final PositionVoltage positionVoltageRequest =
       new PositionVoltage(0.0).withEnableFOC(true);
-  private final PositionTorqueCurrentFOC positionTorqueCurrentFOC =
-      new PositionTorqueCurrentFOC(0.0);
 
   public HoodIOReal() {
     motor = new TalonFX(Constants.Id.kHood, Constants.Robot.rio);
@@ -76,15 +73,16 @@ public class HoodIOReal implements HoodIO {
     currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
     positionRots = motor.getPosition();
+    velocityRots = motor.getVelocity();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC);
+    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC, velocityRots);
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, positionRots);
 
     motor.optimizeBusUtilization();
   }
 
   @Override
-  public void zero() {
+  public void setZero() {
     motor.setPosition(0.0);
   }
 
@@ -97,25 +95,17 @@ public class HoodIOReal implements HoodIO {
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
-    inputs.posRads = positionRots.getValueAsDouble() * 2 * Math.PI;
+    inputs.position = Rotation2d.fromRotations(positionRots.getValueAsDouble());
+    inputs.velocity = Rotation2d.fromRotations(velocityRots.getValueAsDouble());
   }
 
   @Override
-  public void runVolts(double output) {
+  public void setVolts(double output) {
     motor.setControl(voltageRequest.withOutput(output));
   }
 
   @Override
-  public void setPosition(Rotation2d radians) {
-    motor.setControl(
-        switch (Constants.HoodConstants.motorClosedLoopOutput) {
-          case Voltage -> positionVoltageRequest.withPosition(radians.getRotations());
-          case TorqueCurrentFOC -> positionTorqueCurrentFOC.withPosition(radians.getRotations());
-        });
-  }
-
-  @Override
-  public double getSetpoint() {
-    return motor.getClosedLoopReference().getValueAsDouble();
+  public void setPosition(Rotation2d position) {
+    motor.setControl(positionVoltageRequest.withPosition(position.getRotations()));
   }
 }

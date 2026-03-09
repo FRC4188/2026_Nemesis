@@ -1,12 +1,9 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -20,22 +17,16 @@ public class Intake extends SubsystemBase {
     intakeDisconnectedAlert = new Alert("Intake motor disconnected.", AlertType.kError);
   }
 
-  public Command intake(DoubleSupplier inputs) {
-    return Commands.runEnd(
-        () -> io.runVolts(12 * inputs.getAsDouble()), () -> io.runVolts(0.0), this);
+  public void intakeVolts(double volts) {
+    io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
 
-  public Command intake(double voltage) {
-    return Commands.runOnce(() -> io.runVolts(voltage), this);
+  public void ejectVolts(double volts) {
+    intakeVolts(-volts);
   }
 
-  public Command stop() {
-    return Commands.runOnce(() -> io.runVolts(0.0), this);
-  }
-
-  @AutoLogOutput(key = "Intake/Is Stalled?")
-  public boolean isStalled() {
-    return io.isStalled();
+  public void stop() {
+    io.setVolts(0.0);
   }
 
   public void periodic() {

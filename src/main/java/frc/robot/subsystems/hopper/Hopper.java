@@ -1,11 +1,9 @@
 package frc.robot.subsystems.hopper;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Hopper extends SubsystemBase {
@@ -22,35 +20,14 @@ public class Hopper extends SubsystemBase {
     indexerDisconnectedAlert = new Alert("Indexer motor disconnected.", AlertType.kError);
   }
 
-  public Command runVolts(DoubleSupplier a_input, DoubleSupplier i_input) {
-    return Commands.runEnd(
-        () -> {
-          io.runAggitateVolts(12 * a_input.getAsDouble());
-          io.runIndexerVolts(12 * i_input.getAsDouble());
-        },
-        () -> {
-          io.runAggitateVolts(0.0);
-          io.runIndexerVolts(0.0);
-        },
-        this);
+  public void runHopperVolts(double volts) {
+    io.setAggitateVolts(MathUtil.clamp(volts, -12, 12));
+    io.setIndexerVolts(MathUtil.clamp(volts, -12, 12));
   }
 
-  public Command runVolts(double a_volts, double i_volts) {
-    return Commands.runOnce(
-        () -> {
-          io.runAggitateVolts(a_volts);
-          io.runIndexerVolts(i_volts);
-        },
-        this);
-  }
-
-  public Command stop() {
-    return Commands.runOnce(
-        () -> {
-          io.runAggitateVolts(0.0);
-          io.runIndexerVolts(0.0);
-        },
-        this);
+  public void stop() {
+    io.setAggitateVolts(0.0);
+    io.setIndexerVolts(0.0);
   }
 
   public void periodic() {

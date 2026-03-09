@@ -7,9 +7,7 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
@@ -39,10 +37,6 @@ public class ShooterIOReal implements ShooterIO {
   private final Debouncer rightDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-
-  private final VelocityVoltage velocityVoltageRequest =
-      new VelocityVoltage(0.0).withEnableFOC(true);
-
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0);
 
@@ -106,6 +100,7 @@ public class ShooterIOReal implements ShooterIO {
         leftDebouncer.calculate(
             BaseStatusSignal.refreshAll(leftAppliedVolts, leftCurrentAmps, leftVelocity, leftTempC)
                 .isOK());
+
     inputs.rightConnected =
         rightDebouncer.calculate(
             BaseStatusSignal.refreshAll(
@@ -123,7 +118,7 @@ public class ShooterIOReal implements ShooterIO {
   }
 
   @Override
-  public void runVolts(double volts) {
+  public void setVolts(double volts) {
     motorRight.setControl(voltageRequest.withOutput(volts));
     motorLeft.setControl(voltageRequest.withOutput(volts));
   }
@@ -131,25 +126,11 @@ public class ShooterIOReal implements ShooterIO {
   @Override
   public void setVelocity(double rpm) {
     if (rpm == 0.0) {
-      runVolts(0.0);
+      setVolts(0.0);
       return;
     }
 
-    motorRight.setControl(
-        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> velocityVoltageRequest.withVelocity(rpm / 60.0);
-          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(rpm / 60.0);
-        });
-
-    motorLeft.setControl(
-        switch (Constants.ShooterConstants.motorClosedLoopOutput) {
-          case Voltage -> velocityVoltageRequest.withVelocity(rpm / 60.0);
-          case TorqueCurrentFOC -> velocityTorqueCurrentFOC.withVelocity(rpm / 60.0);
-        });
-  }
-
-  @Override
-  public double getSetpoint() {
-    return motorLeft.getClosedLoopReference().getValueAsDouble();
+    motorRight.setControl(velocityTorqueCurrentFOC.withVelocity(rpm / 60.0));
+    motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(rpm / 60.0));
   }
 }

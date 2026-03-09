@@ -248,10 +248,6 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   @Override
   public void setDriveVelocity(double velocityRadPerSec) {
-    if (velocityRadPerSec == 0) {
-      setDriveOpenLoop(0.0);
-    }
-
     double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {

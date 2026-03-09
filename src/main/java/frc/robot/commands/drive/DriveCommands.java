@@ -41,24 +41,20 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
     return Commands.runEnd(
-            () -> {
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      omegaSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXACC);
+        () -> {
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  omegaSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXACC);
 
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())));
-            },
-            drive::stopWithX,
-            drive)
-        .beforeStarting(
-            () ->
-                Constants.DriveConstants.CORRECTION_PID.setSetpoint(
-                    drive.getRotation().getDegrees()));
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds, AllianceFlip.apply(drive.getRotation())));
+        },
+        drive::stopWithX,
+        drive);
   }
 
   /**

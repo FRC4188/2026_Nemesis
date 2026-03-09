@@ -14,7 +14,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.Constants.IntakeConstants;
 
 public class IntakeIOReal implements IntakeIO {
   private final TalonFX motor;
@@ -59,14 +58,8 @@ public class IntakeIOReal implements IntakeIO {
   }
 
   @Override
-  public void runVolts(double volts) {
+  public void setVolts(double volts) {
     motor.setControl(voltageRequest.withOutput(volts));
-  }
-
-  @Override
-  public boolean isStalled() {
-    return Math.abs(currentAmps.getValueAsDouble()) > IntakeConstants.kStatorCurrent
-        && Math.abs(motor.getVelocity().getValueAsDouble()) < 0.2;
   }
 
   @Override

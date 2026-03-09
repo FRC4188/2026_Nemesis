@@ -1,13 +1,13 @@
 package frc.robot.subsystems.climber;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ClimberIO {
   @AutoLog
   public static class ClimberIOInputs {
     public boolean connected = true;
-    public double posRots = 0.0;
+    public double posMeters = 0.0;
+    public double velMeters = 0.0;
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;
     public double tempC = 0.0;
@@ -15,13 +15,9 @@ public interface ClimberIO {
 
   public default void updateInputs(ClimberIOInputs inputs) {}
 
-  public default void runVolts(double output) {}
+  public default void setVolts(double output) {}
 
-  public default void setPosition(Rotation2d rotations) {}
+  public default void setPosition(double position) {}
 
-  public default double getSetpoint() {
-    return 0;
-  }
-
-  public default void zero() {}
+  public default void setZero() {}
 }

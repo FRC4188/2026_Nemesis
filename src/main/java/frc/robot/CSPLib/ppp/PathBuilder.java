@@ -101,13 +101,15 @@ public final class PathBuilder {
    */
   public static void runVelocity(ChassisSpeeds speeds) {
 
-    drive.runVelocity(
-        new ChassisSpeeds(
-            speeds.vxMetersPerSecond,
-            speeds.vyMetersPerSecond,
-            (trackingSupplier != null)
-                ? drive.getOmega(trackingSupplier)
-                : speeds.omegaRadiansPerSecond));
+    // drive.runVelocity(
+    //     new ChassisSpeeds(
+    //         speeds.vxMetersPerSecond,
+    //         speeds.vyMetersPerSecond,
+    //         (trackingSupplier != null)
+    //             ? drive.getOmega(trackingSupplier)
+    //             : speeds.omegaRadiansPerSecond));
+
+    // put "getOmega" somehwere else, not in drive
   }
 
   public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
@@ -124,7 +126,7 @@ public final class PathBuilder {
                 * Constants.DriveConstants.ANGLE_FF;
 
     if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.DriveConstants.ANGLE_TOL
+            < Constants.DriveConstants.ANGLE_TOL.getRadians()
         && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
     return omega;
@@ -184,7 +186,7 @@ public final class PathBuilder {
                       * Constants.DriveConstants.ANGLE_FF;
 
           if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-                  < Constants.DriveConstants.ANGLE_TOL
+                  < Constants.DriveConstants.ANGLE_TOL.getRadians()
               && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
 
           return omega;

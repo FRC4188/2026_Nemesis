@@ -31,7 +31,7 @@ public class HoodIOSim implements HoodIO {
     inputs.motorConnected = true;
     inputs.appliedVolts = applied_volts;
     inputs.tempC = 0;
-    inputs.posRads = getAngle();
+    // inputs.posRads = getAngle();
     hoodSim.update(Robot.loopPeriodSecs);
   }
 
