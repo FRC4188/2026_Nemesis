@@ -1,17 +1,21 @@
 package frc.robot.subsystems.hopper;
 
 public class HopperIOSim implements HopperIO {
-  private double appliedVolts;
+  private double aAppliedVolts;
+  private double iAppliedVolts;
 
   public HopperIOSim() {}
 
-  // @Override
-  // public void runVolts(double volts) {
-  //   appliedVolts = volts;
-  // }
+  public void updateInputs(HopperIOInputs inputs) {
+    inputs.aggitateAppliedVolts = aAppliedVolts;
+    inputs.indexerAppliedVolts = iAppliedVolts;
+  }
 
-  // @Override
-  // public void updateInputs(HopperIOInputs inputs) {
-  //   inputs.appliedVolts = appliedVolts;
-  // }
+  public void setAggitateVolts(double volts) {
+    aAppliedVolts = volts;
+  }
+
+  public void setIndexerVolts(double volts) {
+    iAppliedVolts = volts;
+  }
 }

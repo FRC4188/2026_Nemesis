@@ -25,6 +25,7 @@ public class Climber extends SubsystemBase {
   }
 
   public void runClimberVolts(double volts) {
+    setpoint = -1;
     io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
 

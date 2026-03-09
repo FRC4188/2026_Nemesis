@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 
 public class WristIOSim implements WristIO {
   // private final SingleJointedArmSim wSim;
-  private double applidVolts;
+  private double appliedVolts;
   private double currentAmps;
   private Rotation2d position;
 
@@ -24,22 +24,26 @@ public class WristIOSim implements WristIO {
   public void updateInputs(WristIOInputs inputs) {
     inputs.connected = true;
 
-    inputs.appliedVolts = applidVolts;
-    inputs.tempC = 0.0;
+    inputs.appliedVolts = appliedVolts;
     inputs.currentAmps = currentAmps;
     inputs.position = position;
-    inputs.velocity = Rotation2d.fromDegrees(10);
   }
 
   public void setVolts(double volts) {
-    applidVolts = volts;
+    currentAmps = 0.0;
+    appliedVolts = volts;
+    position = Rotation2d.k180deg;
   }
 
   public void setTorqueCurrent(double amps) {
     currentAmps = amps;
+    appliedVolts = 0.0;
+    position = Rotation2d.k180deg;
   }
 
   public void setPosition(Rotation2d rotation) {
     position = rotation;
+    appliedVolts = 0.0;
+    currentAmps = 0.0;
   }
 }

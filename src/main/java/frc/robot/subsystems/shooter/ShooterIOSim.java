@@ -2,35 +2,30 @@ package frc.robot.subsystems.shooter;
 
 public class ShooterIOSim implements ShooterIO {
 
-  // private double leftTC = 0.0;
-  // private double rightTC = 0.0;
-  // private double leftVelocity = 0.0;
-  // private double rightVelocity = 0.0;
+  private double appliedVolts = 0.0;
+  private double RPM = 0.0;
 
-  // public ShooterIOSim() {}
+  public ShooterIOSim() {}
 
-  // @Override
-  // public void runVolts(double output) {
-  //   leftTC = output;
-  //   rightTC = output;
-  // }
 
-  // @Override
-  // public void setVelocity(double RPM) {
-  //   leftVelocity = RPM;
-  //   rightVelocity = RPM;
-  // }
+  @Override
+  public void updateInputs(ShooterIOInputs inputs) {
+    inputs.leftVelocityRPM = RPM;
+    inputs.rightVelocityRPM = RPM;
 
-  // @Override
-  // public void updateInputs(ShooterIOInputs inputs) {
-  //   inputs.leftCurrentAmps = leftTC;
-  //   inputs.rightAppliedVolts = rightTC;
-  //   inputs.leftVelocityRPM = leftVelocity;
-  //   inputs.rightVelocityRPM = rightVelocity;
-  // }
+    inputs.leftAppliedVolts = appliedVolts;
+    inputs.rightAppliedVolts = appliedVolts;
+  }
 
-  // @Override
-  // public double getSetpoint() {
-  //   return leftVelocity;
-  // }
+  @Override
+  public void setVolts(double volts) {
+    RPM = -100;
+    appliedVolts = volts;
+  }
+
+  @Override
+  public void setVelocity(double rpm) {
+    appliedVolts = 0.0;
+    RPM = rpm;
+  }
 }

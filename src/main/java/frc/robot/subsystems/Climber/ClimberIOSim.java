@@ -3,6 +3,9 @@ package frc.robot.subsystems.climber;
 public class ClimberIOSim implements ClimberIO {
   // private final DCMotorSim sim;
 
+  private double appliedVolts = 0.0;
+  private double position = 0.0;
+
   public ClimberIOSim() {
     // sim =
     //     new DCMotorSim(
@@ -11,15 +14,22 @@ public class ClimberIOSim implements ClimberIO {
     //         DCMotor.getKrakenX60(1));
   }
 
-  // public void updateInputs(ClimberIOInputs inputs) {}
+  @Override
+  public void updateInputs(ClimberIOInputs inputs) {
+    inputs.appliedVolts = appliedVolts;
+    inputs.posMeters = position;
+  }
 
-  // public void runVolts(double output) {}
+  @Override
+  public void setVolts(double output) {
+    appliedVolts = output;
+    position = -1;
+  }
 
-  // public void setPosition(Rotation2d rotations) {}
+  @Override
+  public void setPosition(double position) {
+    this.position = position;
+    appliedVolts = 0.0;
+  }
 
-  // public default double getSetpoint() {
-  //   return 0;
-  // }
-
-  // public default void zero() {}
 }

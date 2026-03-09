@@ -1,5 +1,6 @@
 package frc.robot.commands.Scoring;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -11,12 +12,14 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+import frc.robot.commands.drive.DriveToPose;
 
 public class ScoringCommands {
   public static LoggedNetworkNumber _Angle =
@@ -55,7 +58,7 @@ public class ScoringCommands {
             shooter));
   }
 
-  public static Command aim(
+  public static Command staticAim(
       Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
     return Commands.parallel(
             DriveCommands.joystickDriveAtAngle(
@@ -170,5 +173,14 @@ public class ScoringCommands {
             Commands.runOnce(wrist::down, wrist),
             new WaitUntilCommand(() -> wrist.getAngle() < 45.0 || wrist.isStalled()))
         .finallyDo(wrist::stop);
+  }
+
+  public static Command goToClimb(Drive drive, Climber climb) {
+    return Commands.sequence(
+        Commands.runOnce(climb::lower),
+        new DriveToPose(drive, () -> drive.getPose().nearest(List.of(AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))),
+        Commands.runOnce(climb::raise),
+        new DriveToPose(drive, () -> drive.getPose().nearest(List.of(AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero))))
+    );
   }
 }

@@ -1,3 +1,7 @@
 package frc.robot.commands.Scoring;
 
-public class AutoCommands {}
+public class AutoCommands {
+
+    
+
+}

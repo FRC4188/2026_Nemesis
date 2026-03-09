@@ -135,12 +135,12 @@ public class RobotContainer {
         wrist = new Wrist(new WristIOSim());
         climber = new Climber(new ClimberIOSim());
 
-        // simvis =
-        //     new SimulationVisualizer(
-        //         "Models",
-        //         () -> wrist.getAngle(),
-        //         () -> hood.getShotAngle(),
-        //         () -> climber.getHeightRots());
+        simvis =
+            new SimulationVisualizer(
+                "Models",
+                () -> Units.degreesToRadians(wrist.getAngle()),
+                () -> Units.degreesToRadians(hood.getShotAngle()),
+                () -> climber.getHeight());
         break;
 
       default:
@@ -306,7 +306,7 @@ public class RobotContainer {
     pilot
         .rightBumper()
         .whileTrue(
-            ScoringCommands.aim(
+            ScoringCommands.staticAim(
                     drive,
                     shooter,
                     hood,
@@ -334,7 +334,8 @@ public class RobotContainer {
                 Commands.runEnd(() -> intake.ejectVolts(0.7), intake::stop, intake)));
 
     pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
-    // pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
+    pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
+
     pilot
         .a()
         .whileTrue(

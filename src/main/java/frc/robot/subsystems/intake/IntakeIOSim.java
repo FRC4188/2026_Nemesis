@@ -1,22 +1,19 @@
 package frc.robot.subsystems.intake;
 
 public class IntakeIOSim implements IntakeIO {
-  private double applied_volts = 0;
+  private double appliedVolts = 0.0;
 
   public IntakeIOSim() {
-    applied_volts = 0;
-  }
-
-  public void runVolts(double volts) {
-    applied_volts = volts;
-  }
-
-  public void stop() {
-    applied_volts = 0;
+    appliedVolts = 0;
   }
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.appliedVolts = applied_volts;
+    inputs.appliedVolts = appliedVolts;
+  }
+
+  @Override
+  public void setVolts(double volts) {
+    appliedVolts = volts;
   }
 }
