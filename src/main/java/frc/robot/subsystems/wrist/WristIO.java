@@ -11,6 +11,7 @@ public interface WristIO {
     public double appliedVolts = 0.0;
     public double tempC = 0.0;
     public double currentAmps = 0.0;
+
     public Rotation2d position = Rotation2d.kZero;
     public Rotation2d velocity = Rotation2d.kZero;
   }

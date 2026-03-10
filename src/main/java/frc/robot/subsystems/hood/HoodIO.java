@@ -8,10 +8,10 @@ public interface HoodIO {
   public static class HoodIOInputs {
     public boolean motorConnected = true;
 
-    public Rotation2d position = Rotation2d.kZero;
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;
     public double tempC = 0.0;
+    public Rotation2d position = Rotation2d.kZero;
     public Rotation2d velocity = Rotation2d.kZero;
   }
 

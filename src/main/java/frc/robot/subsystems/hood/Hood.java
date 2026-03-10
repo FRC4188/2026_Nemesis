@@ -34,18 +34,13 @@ public class Hood extends SubsystemBase {
     io.setVolts(0.0);
   }
 
-  public void setShotAngle(Rotation2d angle) {
+  public void setAngle(Rotation2d angle) {
     setpoint = angle.getDegrees();
-    io.setPosition(
-        Rotation2d.fromDegrees(
-            MathUtil.clamp(
-                Rotation2d.kCW_90deg.minus(angle).getDegrees(),
-                Constants.WristConstants.Min_A.getDegrees(),
-                Constants.WristConstants.Max_A.getDegrees())));
+    io.setPosition(angle);
   }
 
   public void stow() {
-    setpoint = 90.0;
+    setpoint = 0.0;
     io.setPosition(Rotation2d.kZero);
   }
 
@@ -61,13 +56,13 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(Rotation2d.kCW_90deg.minus(inputs.position).getDegrees() - setpoint)
+    return Math.abs(inputs.position.getDegrees() - setpoint)
         < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
-  @AutoLogOutput(key = "Hood/Shooting Degrees")
-  public double getShotAngle() {
-    return Rotation2d.kCW_90deg.minus(inputs.position).getDegrees();
+  @AutoLogOutput(key = "Hood/Angle Degrees")
+  public double getAngle() {
+    return inputs.position.getDegrees();
   }
 
   public void periodic() {

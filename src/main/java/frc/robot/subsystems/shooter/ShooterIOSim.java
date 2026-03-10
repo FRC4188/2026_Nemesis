@@ -7,7 +7,6 @@ public class ShooterIOSim implements ShooterIO {
 
   public ShooterIOSim() {}
 
-
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
     inputs.leftVelocityRPM = RPM;

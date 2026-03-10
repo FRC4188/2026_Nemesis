@@ -37,7 +37,7 @@ public class SimulationConfig {
       new Pose3d(
           Units.inchesToMeters(-4.145811),
           0,
-          Units.inchesToMeters(3.128070 + 11.37750),
+          Units.inchesToMeters(4.375 + 11.37750),
           new Rotation3d());
 
   public static Pose3d climberAxis =

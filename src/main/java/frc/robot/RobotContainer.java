@@ -139,7 +139,7 @@ public class RobotContainer {
             new SimulationVisualizer(
                 "Models",
                 () -> Units.degreesToRadians(wrist.getAngle()),
-                () -> Units.degreesToRadians(hood.getShotAngle()),
+                () -> Units.degreesToRadians(hood.getAngle()),
                 () -> climber.getHeight());
         break;
 
@@ -424,18 +424,10 @@ public class RobotContainer {
   }
 
   public void periodic() {
-
-    Logger.recordOutput("Drive/Angle At Setpoint?", Constants.DriveConstants.ANGLE_PID.atGoal());
-
-    // Logger.recordOutput("State/Robot Mode", Constants.Robot.robotMode);
-
-    // testing placeholder
-    // if (AllianceFlip.flipX(drive.getPose().getX())
-    //     < FieldConstants.alliance_zone_x - Constants.Robot.B_LENGTH) {
-    //   Constants.Robot.robotMode = Constants.RobotMode.SHOOT;
-    // } else {
-    //   Constants.Robot.robotMode = Constants.RobotMode.NONE;
-    // }
+    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    Logger.recordOutput(
+        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
   }
 
   public void displaySimFieldToAdvantageScope() {

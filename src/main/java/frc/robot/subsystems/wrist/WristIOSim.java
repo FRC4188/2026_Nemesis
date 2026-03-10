@@ -4,9 +4,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 
 public class WristIOSim implements WristIO {
   // private final SingleJointedArmSim wSim;
-  private double appliedVolts;
-  private double currentAmps;
-  private Rotation2d position;
+  private double appliedVolts = 0.0;
+  private double currentAmps = 0.0;
+  private Rotation2d position = Rotation2d.fromDegrees(144);
 
   public WristIOSim() {
     // wSim =

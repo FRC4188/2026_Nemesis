@@ -31,5 +31,4 @@ public class ClimberIOSim implements ClimberIO {
     this.position = position;
     appliedVolts = 0.0;
   }
-
 }

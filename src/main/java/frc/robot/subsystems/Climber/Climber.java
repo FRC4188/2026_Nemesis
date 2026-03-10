@@ -14,7 +14,7 @@ public class Climber extends SubsystemBase {
 
   private final Alert climberDisconnectedAlert;
 
-  @AutoLogOutput(key = "Climber/Height Meters")
+  @AutoLogOutput(key = "Climber/Setpoint Meters")
   private double setpoint = 0.0;
 
   public Climber(ClimberIO io) {

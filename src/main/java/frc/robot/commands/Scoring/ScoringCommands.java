@@ -8,22 +8,22 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.drive.DriveToPose;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-import frc.robot.commands.drive.DriveToPose;
 
 public class ScoringCommands {
   public static LoggedNetworkNumber _Angle =
-      new LoggedNetworkNumber("Aim Tuning/Hood Degrees", 55.0);
+      new LoggedNetworkNumber("Aim Tuning/Hood Degrees", 35.0);
 
   public static Command data(
       Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
@@ -44,9 +44,7 @@ public class ScoringCommands {
                     .minus(drive.getPose().getTranslation())
                     .getAngle()),
         Commands.runEnd(
-            () -> hood.setShotAngle(Rotation2d.fromDegrees(_Angle.getAsDouble())),
-            hood::stow,
-            hood),
+            () -> hood.setAngle(Rotation2d.fromDegrees(_Angle.getAsDouble())), hood::stow, hood),
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
@@ -71,7 +69,7 @@ public class ScoringCommands {
                         .getAngle()),
             Commands.runEnd(
                 () ->
-                    hood.setShotAngle(
+                    hood.setAngle(
                         inclineRegress(
                             AllianceFlip.apply(FieldConstants.Hub.hub_aim)
                                 .minus(drive.getPose().getTranslation())
@@ -92,7 +90,7 @@ public class ScoringCommands {
   }
 
   public static Rotation2d inclineRegress(double distance) {
-    return Rotation2d.fromDegrees(-0.121715 * Math.exp(distance) + 67.74133);
+    return Rotation2d.fromDegrees(90 - (-0.121715 * Math.exp(distance) + 67.74133));
   }
 
   public static double RPMHuersitic(double distance) {
@@ -122,7 +120,7 @@ public class ScoringCommands {
             DriveCommands.joystickDriveAtAngle(
                 drive, xSupplier, ySupplier, () -> calcDis.getAngle()),
             Commands.runEnd(
-                () -> hood.setShotAngle(inclineRegress(calcDis.getNorm())), hood::stow, hood),
+                () -> hood.setAngle(inclineRegress(calcDis.getNorm())), hood::stow, hood),
             Commands.runEnd(
                 () -> shooter.setVelocityRPM(RPMHuersitic(calcDis.getNorm())),
                 shooter::stop,
@@ -151,8 +149,7 @@ public class ScoringCommands {
                       .minus(drive.getPose().getTranslation())
                       .getAngle();
                 }),
-            Commands.runEnd(
-                () -> hood.setShotAngle(Rotation2d.fromDegrees(35.0)), hood::stow, hood),
+            Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(55.0)), hood::stow, hood),
             Commands.runEnd(() -> shooter.setVelocityRPM(3000), shooter::stop, shooter))
         .beforeStarting(Commands.runOnce(() -> drive.acceptVision(false)))
         .finallyDo(() -> drive.acceptVision(true));
@@ -178,9 +175,22 @@ public class ScoringCommands {
   public static Command goToClimb(Drive drive, Climber climb) {
     return Commands.sequence(
         Commands.runOnce(climb::lower),
-        new DriveToPose(drive, () -> drive.getPose().nearest(List.of(AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))),
+        new DriveToPose(
+            drive,
+            () ->
+                drive
+                    .getPose()
+                    .nearest(
+                        List.of(
+                            AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))),
         Commands.runOnce(climb::raise),
-        new DriveToPose(drive, () -> drive.getPose().nearest(List.of(AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero))))
-    );
+        new DriveToPose(
+            drive,
+            () ->
+                drive
+                    .getPose()
+                    .nearest(
+                        List.of(
+                            AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))));
   }
 }

@@ -25,27 +25,24 @@ public class SimulationVisualizer {
 
   public void update() {
     Pose3d wristPos =
-        SimulationConfig.wristAxis.transformBy(
-            new Transform3d(
-                new Translation3d(0, 0, 0),
-                new Rotation3d(0, 0.0, 0)));
+        new Pose3d(
+            SimulationConfig.wristAxis.getTranslation(),
+            new Rotation3d(0, -wristpos.getAsDouble(), 0));
 
     Pose3d hopperPos = SimulationConfig.hopper;
 
     Pose3d hoodPos =
-        SimulationConfig.hoodAxis.transformBy(
-            new Transform3d(
-                new Translation3d(0, 0, 0),
-                new Rotation3d(0, 0.0, 0)));
+        new Pose3d(
+            SimulationConfig.hoodAxis.getTranslation(),
+            new Rotation3d(0, hoodpos.getAsDouble()-0.35, 0));
 
     Pose3d climberPos =
         SimulationConfig.climberAxis.transformBy(
-            new Transform3d(
-                new Translation3d(0, 0, 0.0), new Rotation3d(0, 0, 0)));
+            new Transform3d(new Translation3d(0, climberpos.getAsDouble(), 0), Rotation3d.kZero));
 
     Pose3d agitatorPos = SimulationConfig.agitator;
 
-    Pose3d indexerPos =SimulationConfig.indexer;
+    Pose3d indexerPos = SimulationConfig.indexer;
 
     Logger.recordOutput(
         "Mechanism3d/" + key, wristPos, hopperPos, hoodPos, climberPos, agitatorPos, indexerPos);
