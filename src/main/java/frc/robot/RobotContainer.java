@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -60,6 +59,8 @@ import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIOReal;
 import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
+import frc.robot.util.FieldConstants;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -269,20 +270,85 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    autoChooser.addOption(
+        "i hate code",
+        Commands.sequence(
+            Commands.runOnce(() -> wrist.stow()),
+            Commands.parallel(
+                Commands.runOnce(
+                    () -> PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d)),
+                PathBuilder.triggerWhenClose(
+                    FieldConstants.Trench.right_trench_center,
+                    2.5,
+                    Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
+                PathBuilder.interpolateTimedPath(
+                        AllianceFlip.apply(
+                            new Pose2d(FieldConstants.right_alliance_shoot, new Rotation2d())),
+                        AllianceFlip.apply(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_alliance_preentrance,
+                                new Rotation2d())),
+                        AllianceFlip.apply(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_neutral_preentrance,
+                                new Rotation2d())))
+                    .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))),
+            Commands.runOnce(() -> wrist.down()),
+            Commands.deadline(
+                PathBuilder.interpolateTimedPath(
+                    AllianceFlip.apply(
+                        new Pose2d(
+                            FieldConstants.FuelField.right_midline_corner, new Rotation2d())),
+                    AllianceFlip.apply(
+                        new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg))),
+                Commands.run(() -> intake.intakeVolts(0.7))),
+            Commands.parallel(
+                PathBuilder.triggerWhenClose(
+                    FieldConstants.Trench.right_trench_center,
+                    2.5,
+                    Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
+                PathBuilder.interpolateTimedPath(
+                        AllianceFlip.apply(
+                            new Pose2d(
+                                FieldConstants.FuelField.right_midline_corner, new Rotation2d())),
+                        AllianceFlip.apply(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_neutral_preentrance,
+                                new Rotation2d())),
+                        AllianceFlip.apply(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_alliance_preentrance,
+                                new Rotation2d())))
+                    .andThen(Commands.runOnce(() -> PathBuilder.stopTarget()))),
+            Commands.deadline(Commands.waitSeconds(4.0))));
+
     // Configure the button bindings
     configureButtonBindings();
   }
 
   private void configureButtonBindings() {
+    pilot
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(
+                                drive.getPose().getTranslation(),
+                                AllianceFlip.apply(Rotation2d.kZero))),
+                    drive)
+                .ignoringDisable(true));
+
     Trigger driveInput =
         new Trigger(
             () ->
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
-                        || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0)
-                    && !pilot.getRightBumperButton().getAsBoolean());
+                    || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
+                    || pilot.getRightButton().getAsBoolean()
+                    || pilot.a().getAsBoolean()));
 
     driveInput.whileTrue(
-        DriveCommands.joystickDrive(
+        DriveCommands.joystickCombined(
             drive,
             () ->
                 -pilot.getCorrectedLeft(Scale.SQUARED).getY()
@@ -292,92 +358,79 @@ public class RobotContainer {
                     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0)));
-    pilot
-        .start()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                (pilot.a().getAsBoolean()
+                    ? drive
+                        .getPose()
+                        .getTranslation()
+                        .nearest(
+                            List.of(
+                                AllianceFlip.apply(FieldConstants.Bump.left_bump_alliance_entrance),
+                                AllianceFlip.apply(
+                                    FieldConstants.Bump.right_bump_alliance_entrance)))
+                        .getAngle()
+                    : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()),
+            () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
+
+    pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
+
+    pilot.a().whileTrue(ScoringCommands.passAim(hood));
 
     pilot
-        .rightBumper()
+        .rightTrigger(0.3)
         .whileTrue(
-            ScoringCommands.staticAim(
-                    drive,
-                    shooter,
-                    hood,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .alongWith(ScoringCommands.shake(wrist)));
+            Commands.either(
+                ScoringCommands.passShoot(shooter),
+                ScoringCommands.staticShoot(drive, shooter, hopper),
+                () -> pilot.a().getAsBoolean()));
 
     pilot
-        .rightTrigger()
-        .whileTrue(Commands.runEnd(() -> hopper.runHopperVolts(0.7), hopper::stop, hopper));
-    pilot
-        .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(0.7), intake::stop, intake));
+        .leftTrigger(0.3)
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake));
 
     pilot
         .leftBumper()
         .whileTrue(
             Commands.parallel(
-                Commands.runEnd(() -> hopper.runHopperVolts(-0.7), hopper::stop, hopper),
-                Commands.runEnd(() -> intake.ejectVolts(0.7), intake::stop, intake)));
+                Commands.runEnd(() -> hopper.runHopperVolts(-8.5), hopper::stop, hopper),
+                Commands.runEnd(() -> intake.ejectVolts(8.5), intake::stop, intake)));
 
     pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
-    pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
-
-    pilot
-        .a()
-        .whileTrue(
-            ScoringCommands.passing(
-                    drive,
-                    shooter,
-                    hood,
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-                    () ->
-                        -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                            * (pilot.b().getAsBoolean() ? 0.5 : 1.0))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .alongWith(ScoringCommands.shake(wrist)));
-
-    copilot.a().onTrue(ScoringCommands.downWoStall(wrist));
-    copilot
-        .y()
-        .whileTrue(
-            Commands.runEnd(
-                () -> wrist.runWristVolts(-copilot.getLeftY(Scale.LINEAR)), wrist::stop, wrist));
-    copilot.x().whileTrue(ScoringCommands.shake(wrist));
-
+    //pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
+    
     copilot
         .b()
         .whileTrue(
             Commands.runEnd(
-                () -> climber.runClimberVolts(-copilot.getLeftY(Scale.LINEAR)),
+                () -> climber.runClimberVolts(8 * -copilot.getLeftY(Scale.LINEAR)),
                 climber::stop,
                 climber));
-
+    
     copilot
-        .rightBumper()
+        .x()
         .whileTrue(
             Commands.runEnd(
                 () -> hood.runHoodVolts(-copilot.getLeftY(Scale.LINEAR)), hood::stop, hood));
+    copilot
+        .y()
+        .whileTrue(
+            Commands.runEnd(
+                () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
+                wrist::stop,
+                wrist));
 
-    copilot.getUpButton().onTrue(Commands.runOnce(wrist::stow));
+
+    copilot.a().whileTrue(ScoringCommands.shake(wrist));
+
+    copilot.getLeftBumperButton().onTrue(ScoringCommands.downWoStall(wrist));
+    copilot.getRightBumperButton().onTrue(Commands.runOnce(wrist::stow, wrist));
+
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
-    copilot.getLeftBumperButton().onTrue(Commands.runOnce(hood::zero));
+    copilot.getUpButton().onTrue(Commands.runOnce(hood::zero));
   }
 
   /**

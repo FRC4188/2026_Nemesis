@@ -96,7 +96,7 @@ public final class Constants {
     public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(3.0);
 
     public static final double ANGLE_MAXVEL = DRIVE_MAXVEL / Drive.DRIVE_BASE_RADIUS;
-    public static final double ANGLE_MAXACC = 40.0;
+    public static final double ANGLE_MAXACC = 20.0;
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
@@ -174,9 +174,9 @@ public final class Constants {
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final Slot0Configs climberGains =
         new Slot0Configs()
-            .withKP(0.0) // 1.0
+            .withKP(1.0) // 1.0
             .withKI(0.0)
-            .withKD(0.0) // 0.3
+            .withKD(0.3) // 0.3
             .withKG(0.0)
             .withGravityType(GravityTypeValue.Elevator_Static);
   }
@@ -184,8 +184,8 @@ public final class Constants {
   public static class HoodConstants {
     public static final double kGearRatio = 40.0;
     public static final Rotation2d kTolerance = Rotation2d.fromDegrees(1.0);
-    public static final Rotation2d Max_A = Rotation2d.fromDegrees(0.0);
-    public static final Rotation2d Min_A = Rotation2d.fromDegrees(88.0);
+    public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
+    public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
     public static final double kStatorCurrent = 100.0; // placeholder
     public static final double kSupplyCurrent = 80.0; // placeholder

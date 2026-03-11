@@ -144,7 +144,7 @@ public final class FieldConstants { // going off of an onshape cad of field
 
     public static final Translation2d hub_center_2d =
         new Translation2d(
-            Units.inchesToMeters(158.61 + hub_length / 2),
+            Units.inchesToMeters(158.61) + hub_length / 2,
             Units.inchesToMeters(135.34) + hub_width / 2);
 
     public static final double small_opening_radius = Units.inchesToMeters(27.62 / 2);
@@ -152,7 +152,8 @@ public final class FieldConstants { // going off of an onshape cad of field
 
     public static final Translation2d hub_aim =
         new Translation2d(
-            Units.inchesToMeters(158.61), Units.inchesToMeters(135.34 + hub_width / 2));
+            Units.inchesToMeters(158.61) + hub_length / 2,
+            Units.inchesToMeters(135.34) + hub_width / 2);
   }
 
   public static class FuelField {

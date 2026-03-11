@@ -2,165 +2,87 @@ package frc.robot.commands.Scoring;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveToPose;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
-import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
-  public static LoggedNetworkNumber _Angle =
-      new LoggedNetworkNumber("Aim Tuning/Hood Degrees", 35.0);
+  public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
-  public static Command data(
-      Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+  public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.run(
-            () ->
-                Logger.recordOutput(
-                    "Aim Tuning/Distance",
+        Commands.runEnd(() -> shooter.setVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
+        new WaitCommand(0.1)
+            .andThen(
+                new WaitUntilCommand(() -> shooter.atGoal())
+                    .andThen(
+                        Commands.runEnd(() -> hopper.runHopperVolts(8.5), hopper::stop, hopper))));
+  }
+
+  public static Command staticAim(Drive drive, Hood hood) {
+    return Commands.runEnd(
+        () ->
+            hood.setAngle(
+                inclineHueristic(
                     AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                         .minus(drive.getPose().getTranslation())
                         .getNorm())),
-        DriveCommands.joystickDriveAtAngle(
-            drive,
-            xSupplier,
-            ySupplier,
-            () ->
-                AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                    .minus(drive.getPose().getTranslation())
-                    .getAngle()),
-        Commands.runEnd(
-            () -> hood.setAngle(Rotation2d.fromDegrees(_Angle.getAsDouble())), hood::stow, hood),
+        hood::stow,
+        hood);
+  }
+
+  public static Command staticShoot(Drive drive, Shooter shooter, Hopper hopper) {
+    return Commands.parallel(
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    RPMHuersitic(
+                    RPMRegress(
                         AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                             .minus(drive.getPose().getTranslation())
                             .getNorm())),
             shooter::stop,
-            shooter));
+            shooter),
+        new WaitCommand(0.1)
+            .andThen(
+                new WaitUntilCommand(() -> shooter.atGoal())
+                    .andThen(
+                        Commands.runEnd(() -> hopper.runHopperVolts(8.5), hopper::stop, hopper))));
   }
 
-  public static Command staticAim(
-      Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-    return Commands.parallel(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                xSupplier,
-                ySupplier,
-                () ->
-                    AllianceFlip.apply(FieldConstants.Hub.hub_aim)
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()),
-            Commands.runEnd(
-                () ->
-                    hood.setAngle(
-                        inclineRegress(
-                            AllianceFlip.apply(FieldConstants.Hub.hub_aim)
-                                .minus(drive.getPose().getTranslation())
-                                .getNorm())),
-                hood::stow,
-                hood),
-            Commands.runEnd(
-                () ->
-                    shooter.setVelocityRPM(
-                        RPMHuersitic(
-                            AllianceFlip.apply(FieldConstants.Hub.hub_aim)
-                                .minus(drive.getPose().getTranslation())
-                                .getNorm())),
-                shooter::stop,
-                shooter))
-        .beforeStarting(Commands.runOnce(() -> drive.acceptVision(false)))
-        .finallyDo(() -> drive.acceptVision(true));
+  public static double RPMRegress(double distance) {
+    return 233.2242 * distance + 1523.17052;
   }
 
-  public static Rotation2d inclineRegress(double distance) {
-    return Rotation2d.fromDegrees(90 - (-0.121715 * Math.exp(distance) + 67.74133));
+  public static Rotation2d inclineHueristic(double distance) {
+    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7 / distance));
   }
 
-  public static double RPMHuersitic(double distance) {
-    return 1500 * (distance / 5.0) + 1500;
+  public static Command passAim(Hood hood) {
+    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(60)), hood::stow, hood);
   }
 
-  private static Translation2d calcDis = new Translation2d();
-  private static double timeAvg = 2.0;
-
-  public static Command shootOnMove(
-      Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-    return Commands.parallel(
-            Commands.run(
-                () -> {
-                  calcDis =
-                      AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                          .minus(drive.getPose().getTranslation())
-                          .minus(
-                              new Translation2d(
-                                  xSupplier.getAsDouble()
-                                      * drive.getMaxLinearSpeedMetersPerSec()
-                                      * timeAvg,
-                                  ySupplier.getAsDouble()
-                                      * drive.getMaxLinearSpeedMetersPerSec()
-                                      * timeAvg));
-                }),
-            DriveCommands.joystickDriveAtAngle(
-                drive, xSupplier, ySupplier, () -> calcDis.getAngle()),
-            Commands.runEnd(
-                () -> hood.setAngle(inclineRegress(calcDis.getNorm())), hood::stow, hood),
-            Commands.runEnd(
-                () -> shooter.setVelocityRPM(RPMHuersitic(calcDis.getNorm())),
-                shooter::stop,
-                shooter))
-        .beforeStarting(Commands.runOnce(() -> drive.acceptVision(false)))
-        .finallyDo(() -> drive.acceptVision(true));
-  }
-
-  public static Command passing(
-      Drive drive, Shooter shooter, Hood hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-    return Commands.parallel(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                xSupplier,
-                ySupplier,
-                () -> {
-                  return (drive
-                          .getPose()
-                          .getTranslation()
-                          .nearest(
-                              List.of(
-                                  AllianceFlip.apply(
-                                      FieldConstants.Bump.left_bump_alliance_entrance),
-                                  AllianceFlip.apply(
-                                      FieldConstants.Bump.right_bump_alliance_entrance))))
-                      .minus(drive.getPose().getTranslation())
-                      .getAngle();
-                }),
-            Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(55.0)), hood::stow, hood),
-            Commands.runEnd(() -> shooter.setVelocityRPM(3000), shooter::stop, shooter))
-        .beforeStarting(Commands.runOnce(() -> drive.acceptVision(false)))
-        .finallyDo(() -> drive.acceptVision(true));
+  public static Command passShoot(Shooter shooter) {
+    return Commands.runEnd(() -> shooter.setVelocityRPM(2500), shooter::stop, shooter);
   }
 
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
-            Commands.runOnce(() -> wrist.runWristTC(20.0)),
+            Commands.runOnce(() -> wrist.runWristVolts(1.5)),
             new WaitUntilCommand(() -> wrist.isStalled()),
             Commands.runOnce(wrist::stop),
-            new WaitCommand(0.3))
+            new WaitCommand(0.5))
         .until(() -> wrist.getAngle() > 120.0)
         .finallyDo(() -> wrist.stow());
   }
@@ -168,10 +90,11 @@ public class ScoringCommands {
   public static Command downWoStall(Wrist wrist) {
     return Commands.sequence(
             Commands.runOnce(wrist::down, wrist),
-            new WaitUntilCommand(() -> wrist.getAngle() < 45.0 || wrist.isStalled()))
+            new WaitUntilCommand(() -> wrist.getAngle() < 30.0 || wrist.isStalled()))
         .finallyDo(wrist::stop);
   }
 
+  // TODO: add poses
   public static Command goToClimb(Drive drive, Climber climb) {
     return Commands.sequence(
         Commands.runOnce(climb::lower),

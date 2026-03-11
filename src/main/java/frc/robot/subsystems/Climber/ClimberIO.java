@@ -6,8 +6,8 @@ public interface ClimberIO {
   @AutoLog
   public static class ClimberIOInputs {
     public boolean connected = true;
-    public double posMeters = 0.0;
-    public double velMeters = 0.0;
+    public double posRots = 0.0;
+    public double velRots = 0.0;
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;
     public double tempC = 0.0;

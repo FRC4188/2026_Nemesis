@@ -34,7 +34,7 @@ public class SimulationVisualizer {
     Pose3d hoodPos =
         new Pose3d(
             SimulationConfig.hoodAxis.getTranslation(),
-            new Rotation3d(0, hoodpos.getAsDouble()-0.35, 0));
+            new Rotation3d(0, hoodpos.getAsDouble() - 0.35, 0));
 
     Pose3d climberPos =
         SimulationConfig.climberAxis.transformBy(

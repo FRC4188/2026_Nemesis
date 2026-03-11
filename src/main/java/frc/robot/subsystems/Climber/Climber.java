@@ -1,6 +1,7 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,7 +15,7 @@ public class Climber extends SubsystemBase {
 
   private final Alert climberDisconnectedAlert;
 
-  @AutoLogOutput(key = "Climber/Setpoint Meters")
+  @AutoLogOutput(key = "Climber/Setpoint Inches")
   private double setpoint = 0.0;
 
   public Climber(ClimberIO io) {
@@ -35,28 +36,29 @@ public class Climber extends SubsystemBase {
 
   public void raise() {
     setpoint = 7.5;
-    io.setPosition(Constants.ClimberConstants.Max_H);
+    io.setPosition(Constants.ClimberConstants.Max_H * Constants.ClimberConstants.kConversion);
   }
 
   public void lower() {
     setpoint = 0.0;
-    io.setPosition(Constants.ClimberConstants.Min_H);
+    io.setPosition(Constants.ClimberConstants.Min_H * Constants.ClimberConstants.kConversion);
   }
 
   @AutoLogOutput(key = "Climber/At Goal?")
   public boolean atGoal() {
-    return Math.abs(inputs.posMeters - setpoint) < Constants.ClimberConstants.kTolerance;
+    return Math.abs(getHeight() - setpoint)
+        < Units.metersToInches(Constants.ClimberConstants.kTolerance);
   }
 
   @AutoLogOutput(key = "Climber/Is Stalled?")
   public boolean isStalled() {
     return Math.abs(inputs.currentAmps) > Constants.ClimberConstants.kStallCurrent
-        && inputs.velMeters < 0.05;
+        && inputs.velRots < 0.1;
   }
 
-  @AutoLogOutput(key = "Climber/Height Meters")
+  @AutoLogOutput(key = "Climber/Height Inches")
   public double getHeight() {
-    return inputs.posMeters;
+    return Units.metersToInches(inputs.posRots / Constants.ClimberConstants.kConversion);
   }
 
   public void zero() {

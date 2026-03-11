@@ -40,6 +40,14 @@ public class Shooter extends SubsystemBase {
     io.setVolts(0.0);
   }
 
+  public double getVelocityRPM() {
+    return inputs.leftVelocityRPM;
+  }
+
+  public boolean atGoal() {
+    return Math.abs(inputs.leftVelocityRPM - setRPM) < Constants.ShooterConstants.kTolerance;
+  }
+
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);

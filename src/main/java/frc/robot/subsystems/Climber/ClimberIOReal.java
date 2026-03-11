@@ -5,11 +5,10 @@ import static edu.wpi.first.units.Units.Hertz;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
@@ -33,8 +32,8 @@ public class ClimberIOReal implements ClimberIO {
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 
-  private final PositionTorqueCurrentFOC positionTorqueCurrentRequest =
-      new PositionTorqueCurrentFOC(0.0);
+  private final PositionVoltage positionVoltageRequest =
+      new PositionVoltage(0.0).withEnableFOC(true);
 
   private final Debouncer debouncer = new Debouncer(0.5, DebounceType.kFalling);
 
@@ -53,14 +52,11 @@ public class ClimberIOReal implements ClimberIO {
                     .withNeutralMode(Constants.ClimberConstants.kNuetralMode)
                     .withInverted(Constants.ClimberConstants.kInvertedValue))
             .withSlot0(Constants.ClimberConstants.climberGains)
-            .withFeedback(
-                new FeedbackConfigs()
-                    .withSensorToMechanismRatio(Constants.ClimberConstants.kConversion))
             .withMotionMagic(
                 new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity(100.0 / Constants.ClimberConstants.kConversion)
-                    .withMotionMagicAcceleration(1000.0 / Constants.ClimberConstants.kConversion)
-                    .withMotionMagicExpo_kV(0.12 / Constants.ClimberConstants.kConversion)
+                    .withMotionMagicCruiseVelocity(100.0)
+                    .withMotionMagicAcceleration(1000.0)
+                    .withMotionMagicExpo_kV(0.12)
                     .withMotionMagicExpo_kA(0.1));
 
     motor.getConfigurator().apply(motorConfig);
@@ -81,12 +77,12 @@ public class ClimberIOReal implements ClimberIO {
   }
 
   public void updateInputs(ClimberIOInputs inputs) {
-    var status = BaseStatusSignal.refreshAll(posRots, appliedVolts, tempC, velRots);
+    var status = BaseStatusSignal.refreshAll(posRots, appliedVolts, tempC, velRots, currentAmps);
 
     inputs.connected = debouncer.calculate(status.isOK());
 
-    inputs.posMeters = posRots.getValueAsDouble();
-    inputs.velMeters = velRots.getValueAsDouble();
+    inputs.posRots = posRots.getValueAsDouble();
+    inputs.velRots = velRots.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
@@ -99,7 +95,7 @@ public class ClimberIOReal implements ClimberIO {
 
   @Override
   public void setPosition(double position) {
-    motor.setControl(positionTorqueCurrentRequest.withPosition(position));
+    motor.setControl(positionVoltageRequest.withPosition(position));
   }
 
   @Override
