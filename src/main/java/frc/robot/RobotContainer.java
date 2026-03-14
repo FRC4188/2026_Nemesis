@@ -495,7 +495,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
-                ScoringCommands.staticShoot(drive, shooter, hopper),
+                ScoringCommands.dataShoot(shooter, hopper),
+                // ScoringCommands.staticShoot(drive, shooter, hopper),
                 () -> pilot.a().getAsBoolean()));
 
     pilot

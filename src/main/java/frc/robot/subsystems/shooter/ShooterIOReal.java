@@ -124,6 +124,16 @@ public class ShooterIOReal implements ShooterIO {
   }
 
   @Override
+  public void setRightVolts(double volts) {
+    motorRight.setControl(voltageRequest.withOutput(volts));
+  }
+
+  @Override
+  public void setLeftVolts(double volts) {
+    motorLeft.setControl(voltageRequest.withOutput(volts));
+  }
+
+  @Override
   public void setVelocity(double rpm) {
     if (rpm == 0.0) {
       setVolts(0.0);
@@ -132,5 +142,25 @@ public class ShooterIOReal implements ShooterIO {
 
     motorRight.setControl(velocityTorqueCurrentFOC.withVelocity(rpm / 60.0));
     motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(rpm / 60.0));
+  }
+
+  @Override
+  public void setRightVelocity(double rpm) {
+    if(rpm == 0.0) {
+      setRightVolts(0.0);
+      return;
+    }
+
+    motorRight.setControl(velocityTorqueCurrentFOC.withVelocity(rpm/60.0));
+  }
+
+  @Override
+  public void setLeftVelocity(double rpm) {
+    if(rpm == 0.0) {
+      setLeftVolts(0.0);
+      return;
+    }
+
+    motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(rpm/60.0));
   }
 }

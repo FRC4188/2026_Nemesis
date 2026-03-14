@@ -23,10 +23,11 @@ public class ScoringCommands {
 
   public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
+        //starting with right shooter first
+        Commands.runEnd(() -> shooter.setRightVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
-                new WaitUntilCommand(() -> shooter.atGoal())
+                new WaitUntilCommand(() -> shooter.rightAtGoal())
                     .andThen(
                         Commands.runEnd(() -> hopper.runHopperVolts(8.5), hopper::stop, hopper))));
   }
@@ -63,6 +64,14 @@ public class ScoringCommands {
 
   public static double RPMRegress(double distance) {
     return 233.2242 * distance + 1523.17052;
+  }
+
+  public static double leftRPMRegress(double distance) {
+    return 0;
+  }
+
+  public static double rightRPMRegress(double distance) {
+    return 0;
   }
 
   public static Rotation2d inclineHueristic(double distance) {

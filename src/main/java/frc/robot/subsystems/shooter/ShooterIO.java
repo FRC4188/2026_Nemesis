@@ -22,5 +22,13 @@ public interface ShooterIO {
 
   public default void setVolts(double volts) {}
 
+  public default void setRightVolts(double volts) {}
+
+  public default void setLeftVolts(double volts) {}
+
   public default void setVelocity(double rpm) {}
+
+  public default void setRightVelocity(double rpm) {}
+
+  public default void setLeftVelocity(double rpm) {}
 }
