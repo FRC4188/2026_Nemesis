@@ -321,8 +321,6 @@ public class Drive extends SubsystemBase implements VisionConsumer {
 
     if (vision_accept) {
       poseEstimator.addVisionMeasurement(
-          // (DriverStation.isAutonomousEnabled() || DriverStation.isTeleopEnabled())?
-          //   new Pose2d(visionRobotPoseMeters.getTranslation(), getRotation()) :
           visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     }
   }

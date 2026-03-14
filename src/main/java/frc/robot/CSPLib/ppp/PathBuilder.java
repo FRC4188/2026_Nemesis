@@ -45,7 +45,7 @@ public final class PathBuilder {
   private static PathConstraints constraints =
       new PathConstraints(
           Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
-          Constants.DriveConstants.DRIVE_MAXACC * 0.8,
+          Constants.DriveConstants.DRIVE_MAXACC * 0.4,
           Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
           Constants.DriveConstants.ANGLE_MAXACC * 0.8);
 
@@ -294,6 +294,70 @@ public final class PathBuilder {
         new PathPlannerPath(
             waypoints,
             PathBuilder.getConstraints(),
+            null,
+            new GoalEndState(
+                0.0,
+                poses[poses.length - 1]
+                    .getRotation()))); // use real values instead of arbitrary values
+  }
+
+  public static PathConstraints scaleSpeeds(double scale) {
+    PathConstraints temp = getConstraints();
+    return new PathConstraints(
+        temp.maxVelocityMPS() * scale,
+        temp.maxAccelerationMPSSq() * scale,
+        temp.maxAngularVelocityRadPerSec(),
+        temp.maxAngularAccelerationRadPerSecSq());
+  }
+
+  public static Command interpolateTimedPath(PathConstraints pathConstraints, Pose2d... poses) {
+    if (poses.length < 2) {
+      return Commands.none();
+    }
+
+    List<Waypoint> waypoints = new ArrayList<>();
+    Translation2d prevTangent = null;
+
+    for (int i = 0; i < poses.length; i++) {
+      Translation2d anchor = poses[i].getTranslation();
+      Translation2d nextAnchor = (i == poses.length - 1) ? null : poses[i + 1].getTranslation();
+      Translation2d geomectricTangent =
+          (nextAnchor != null) ? nextAnchor.minus(anchor) : prevTangent;
+
+      // basically just uses the past and the future to find an spline translation
+      if (geomectricTangent == null || geomectricTangent.getNorm() < 0.000001)
+        geomectricTangent =
+            new Translation2d(1.0, poses[i].getRotation()); // RAHH TRANSLATION2D HAS POLAR
+      else geomectricTangent = geomectricTangent.div(geomectricTangent.getNorm());
+
+      // combine incoming and outgoing tangents, making it one smooth path,
+      // if there's a past, use the past, if not, use geo
+      Translation2d tangent =
+          (prevTangent == null)
+              ? geomectricTangent
+              : prevTangent
+                  .plus(geomectricTangent)
+                  .div(2.0)
+                  .div(prevTangent.plus(geomectricTangent).getNorm());
+
+      double distance =
+          (nextAnchor != null)
+              ? anchor.getDistance(nextAnchor) * 0.5
+              : anchor.getDistance(poses[i - 1].getTranslation()) * 0.5;
+
+      // Finds the translation2d for the controls
+      Translation2d prevControl =
+          (prevTangent == null) ? null : anchor.minus(prevTangent.times(distance));
+      Translation2d nextControl =
+          (nextAnchor == null) ? null : anchor.plus(tangent.times(distance));
+      waypoints.add(new Waypoint(prevControl, anchor, nextControl));
+      prevTangent = tangent;
+    }
+
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            waypoints,
+            pathConstraints,
             null,
             new GoalEndState(
                 0.0,

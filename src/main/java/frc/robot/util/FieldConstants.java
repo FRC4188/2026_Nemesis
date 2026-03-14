@@ -53,16 +53,16 @@ public final class FieldConstants { // going off of an onshape cad of field
             Units.inchesToMeters(204.18), Units.inchesToMeters(267.34) + trench_width / 2);
 
     public static final Translation2d right_trench_alliance_preentrance =
-        new Translation2d(Units.inchesToMeters(156.61) - 0.5, trench_width / 2);
+        new Translation2d(Units.inchesToMeters(156.61) - 1, trench_width / 2);
     public static final Translation2d left_trench_alliance_preentrance =
         new Translation2d(
-            Units.inchesToMeters(156.61) - 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
+            Units.inchesToMeters(156.61) - 1, Units.inchesToMeters(267.34) + trench_width / 2);
 
     public static final Translation2d right_trench_neutral_preentrance =
-        new Translation2d(Units.inchesToMeters(204.18) + 0.5, trench_width / 2);
+        new Translation2d(Units.inchesToMeters(204.18) + 1, trench_width / 2);
     public static final Translation2d left_trench_neutral_preentrance =
         new Translation2d(
-            Units.inchesToMeters(204.18) + 0.5, Units.inchesToMeters(267.34) + trench_width / 2);
+            Units.inchesToMeters(204.18) + 1, Units.inchesToMeters(267.34) + trench_width / 2);
 
     // just further out than preentrance
     public static final Translation2d left_trench_alliance_approach =

@@ -86,6 +86,11 @@ public final class Constants {
   }
 
   public static class DriveConstants {
+    public static final double kTurnStatorCurrent = 60.0;
+    public static final double kTurnSupplyCurrent = 40.0;
+    public static final double kDriveStatorCurrent = 80.0;
+    public static final double kDriveSupplyCurrent = 60.0;
+
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
@@ -93,7 +98,7 @@ public final class Constants {
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
-    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(3.0);
+    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(2.0);
 
     public static final double ANGLE_MAXVEL = DRIVE_MAXVEL / Drive.DRIVE_BASE_RADIUS;
     public static final double ANGLE_MAXACC = 20.0;
@@ -126,8 +131,8 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStatorCurrent = 50.0; // placeholder
+    public static final double kSupplyCurrent = 30.0; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
@@ -140,8 +145,8 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(144.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 100; // placeholder
-    public static final double kSupplyCurrent = 80; // placeholder
+    public static final double kStatorCurrent = 50; // placeholder
+    public static final double kSupplyCurrent = 30; // placeholder
     public static final double kStallCurrent = 20; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
@@ -165,8 +170,8 @@ public final class Constants {
     public static final double kSproketDiameter = Units.inchesToMeters(0.75);
     public static final double kConversion = kGearBox / (kSproketDiameter * Math.PI);
 
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // paceholder
+    public static final double kStatorCurrent = 60.0; // placeholder
+    public static final double kSupplyCurrent = 40.0; // paceholder
     public static final double kStallCurrent = 50.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -187,8 +192,8 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStatorCurrent = 50.0; // placeholder
+    public static final double kSupplyCurrent = 30.0; // placeholder
     public static final double kStallCurrent = 20.0; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
@@ -196,9 +201,9 @@ public final class Constants {
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(50.0)
-            .withKI(5.0)
-            .withKD(0.0)
+            .withKP(75.0)
+            .withKI(0.0)
+            .withKD(1.0)
             .withKS(0.0)
             .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
@@ -210,8 +215,8 @@ public final class Constants {
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStatorCurrent = 60.0; // placeholder
+    public static final double kSupplyCurrent = 40.0; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
 
@@ -224,8 +229,8 @@ public final class Constants {
   }
 
   public static class IndexerConstants {
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStatorCurrent = 40.0; // placeholder
+    public static final double kSupplyCurrent = 20.0; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
@@ -233,8 +238,8 @@ public final class Constants {
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 100.0; // placeholder
-    public static final double kSupplyCurrent = 80.0; // placeholder
+    public static final double kStatorCurrent = 40.0; // placeholder
+    public static final double kSupplyCurrent = 20.0; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;

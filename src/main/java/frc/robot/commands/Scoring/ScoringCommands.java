@@ -58,7 +58,7 @@ public class ScoringCommands {
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopperVolts(8.5), hopper::stop, hopper))));
+                        Commands.runEnd(() -> hopper.runHopperVolts(6.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
@@ -73,8 +73,14 @@ public class ScoringCommands {
     return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(60)), hood::stow, hood);
   }
 
-  public static Command passShoot(Shooter shooter) {
-    return Commands.runEnd(() -> shooter.setVelocityRPM(2500), shooter::stop, shooter);
+  public static Command passShoot(Shooter shooter, Hopper hopper) {
+    return Commands.parallel(
+        Commands.runEnd(() -> shooter.setVelocityRPM(2500), shooter::stop, shooter),
+        new WaitCommand(0.1)
+            .andThen(
+                new WaitUntilCommand(() -> shooter.atGoal())
+                    .andThen(
+                        Commands.runEnd(() -> hopper.runHopperVolts(6.0), hopper::stop, hopper))));
   }
 
   public static Command shake(Wrist wrist) {

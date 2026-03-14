@@ -73,37 +73,36 @@ public class DriveCommands {
 
     // Construct command
     return Commands.runEnd(
-            () -> {
-              double omega =
-                  angleController.calculate(
-                          drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                      + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
+        () -> {
+          double omega =
+              angleController.calculate(
+                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
+                  + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
-              if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
-                if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
-                  drive.stopWithX();
-                  return;
-                } else {
-                  omega = 0.0;
-                }
-              }
+          if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+            if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
+              drive.stopWithX();
+              return;
+            } else {
+              omega = 0.0;
+            }
+          }
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                      ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                  ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
+                  omega);
 
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())));
-            },
-            drive::stop,
-            drive)
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds, AllianceFlip.apply(drive.getRotation())));
+        },
+        drive::stop,
+        drive);
 
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+    // Reset PID controller when command starts
   }
 
   // making is seamless
@@ -118,48 +117,73 @@ public class DriveCommands {
     ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
 
     return Commands.runEnd(
-            () -> {
-              double omega = 0.0;
-              if (!lock.getAsBoolean()) {
-                omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
-                angleController.reset(
-                    drive.getRotation().getRadians(),
-                    drive.getChassisSpeeds().omegaRadiansPerSecond);
-                drive.acceptVision(true);
+        () -> {
+          double omega = 0.0;
+          if (!lock.getAsBoolean()) {
+            omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
+            drive.acceptVision(true);
+          } else {
+            omega =
+                angleController.calculate(
+                        drive.getRotation().getRadians(), rotSupplier.get().getRadians())
+                    + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
+
+            if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+              if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
+                drive.stopWithX();
+                return;
               } else {
-                omega =
-                    angleController.calculate(
-                            drive.getRotation().getRadians(), rotSupplier.get().getRadians())
-                        + angleController.getSetpoint().velocity
-                            * Constants.DriveConstants.ANGLE_FF;
-
-                if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
-                  if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
-                    drive.stopWithX();
-                    return;
-                  } else {
-                    omega = 0.0;
-                  }
-                }
-                drive.acceptVision(false);
+                omega = 0.0;
               }
+            }
+            drive.acceptVision(false);
+          }
 
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      omega);
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  omega);
 
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())));
-            },
-            () -> {
-              drive.stopWithX();
-              drive.acceptVision(true);
-            },
-            drive)
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds, AllianceFlip.apply(drive.getRotation())));
+        },
+        () -> {
+          drive.stopWithX();
+          drive.acceptVision(true);
+        },
+        drive);
+  }
+
+  public static Command autonAtAngle(Drive drive, Supplier<Rotation2d> rotSupplier) {
+    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
+
+    return Commands.runEnd(
+        () -> {
+          double omega = 0.0;
+          omega =
+              angleController.calculate(
+                      drive.getRotation().getRadians(), rotSupplier.get().getRadians())
+                  + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
+
+          if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+            drive.stopWithX();
+            return;
+          }
+          drive.acceptVision(false);
+
+          ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
+
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds, AllianceFlip.apply(drive.getRotation())));
+        },
+        () -> {
+          drive.stopWithX();
+          drive.acceptVision(true);
+        },
+        drive);
   }
 
   /**
