@@ -41,11 +41,18 @@ public final class PathBuilder {
   private static Supplier<Rotation2d> trackingSupplier;
   public static FollowPath.Builder pathBuilder;
 
-  // Add Multiplier if too fast
-  private static PathConstraints constraints =
+  // // Add Multiplier if too fast
+  // private static PathConstraints constraints =
+  //     new PathConstraints(
+  //         Constants.DriveConstants.DRIVE_MAXVEL * 0.6,
+  //         Constants.DriveConstants.DRIVE_MAXACC * 0.4,
+  //         Constants.DriveConstants.ANGLE_MAXVEL * 0.4,
+  //         Constants.DriveConstants.ANGLE_MAXACC * 0.4);
+
+private static PathConstraints constraints =
       new PathConstraints(
           Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
-          Constants.DriveConstants.DRIVE_MAXACC * 0.4,
+          Constants.DriveConstants.DRIVE_MAXACC * 0.8,
           Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
           Constants.DriveConstants.ANGLE_MAXACC * 0.8);
 
@@ -305,7 +312,7 @@ public final class PathBuilder {
     PathConstraints temp = getConstraints();
     return new PathConstraints(
         temp.maxVelocityMPS() * scale,
-        temp.maxAccelerationMPSSq() * scale,
+        temp.maxAccelerationMPSSq() * scale * 0.5,
         temp.maxAngularVelocityRadPerSec(),
         temp.maxAngularAccelerationRadPerSecSq());
   }

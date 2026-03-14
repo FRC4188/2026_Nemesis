@@ -22,6 +22,7 @@ public class Wrist extends SubsystemBase {
     wristDisconnectedAlert = new Alert("Wrist motor disconnected.", AlertType.kError);
   }
 
+  // negative is up, positive is down
   public void runWristVolts(double volts) {
     setpoint = 180;
     io.setVolts(MathUtil.clamp(volts, -12, 12));

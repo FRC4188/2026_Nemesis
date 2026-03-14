@@ -177,6 +177,7 @@ public class RobotContainer {
     autoChooser.addOption(
         "BEGONE WITCHES",
         Commands.sequence(
+            Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kCCW_90deg)),
             Commands.deadline(
                 PathBuilder.interpolateTimedPath(
                         AllianceFlip.apply(
@@ -188,21 +189,19 @@ public class RobotContainer {
                                 new Rotation2d())))
                     .andThen(
                         PathBuilder.interpolateTimedPath(
-                            PathBuilder.scaleSpeeds(0.3),
+                            PathBuilder.scaleSpeeds(0.15),
                             AllianceFlip.apply(
                                 new Pose2d(
-                                    FieldConstants.FuelField.right_close_corner, new Rotation2d())),
+                                    FieldConstants.FuelField.right_midline_corner,
+                                    new Rotation2d())),
                             AllianceFlip.apply(
                                 new Pose2d(FieldConstants.field_center, new Rotation2d())))),
-                PathBuilder.triggerWhenClose(
+                PathBuilder.triggerWhenFar(
                     AllianceFlip.apply(FieldConstants.Trench.right_trench_center),
-                    2.5,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(() -> AllianceFlip.apply(Rotation2d.kZero));
-                        })),
+                    1.5,
+                    ScoringCommands.forceDown(wrist)),
                 PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(FieldConstants.FuelField.right_close_corner),
+                    AllianceFlip.apply(FieldConstants.FuelField.right_midline_corner),
                     1,
                     Commands.runOnce(
                             () -> {
@@ -255,91 +254,97 @@ public class RobotContainer {
                     ScoringCommands.staticAim(drive, hood),
                     new WaitCommand(0.1)
                         .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)))
-                .withTimeout(4.0)));
+                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
+                    new WaitCommand(2.5).andThen(ScoringCommands.goodStow(wrist)))
+                .withTimeout(6.0)));
 
-    autoChooser.addOption(
-        "witches gone",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.Trench.left_trench_center, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.left_trench_neutral_preentrance,
-                                new Rotation2d())))
-                    .andThen(
-                        PathBuilder.interpolateTimedPath(
-                            PathBuilder.scaleSpeeds(0.5),
-                            AllianceFlip.apply(
-                                new Pose2d(
-                                    FieldConstants.FuelField.left_close_corner, new Rotation2d())),
-                            AllianceFlip.apply(
-                                new Pose2d(
-                                    FieldConstants.field_center, Rotation2d.fromDegrees(120))))),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.left_trench_center,
-                    2.5,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(() -> Rotation2d.kZero);
-                        })),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.left_close_corner,
-                    1,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.stopTarget();
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(10.0))))),
-            Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                    AllianceFlip.apply(new Pose2d(FieldConstants.field_center, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_alliance_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(new Translation2d(2.975, 1.545), new Rotation2d()))),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.left_midline_corner,
-                    1.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetRotation(() -> Rotation2d.kZero);
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, 1.545),
-                    0.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetTranslation(() -> FieldConstants.Hub.hub_center_2d);
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0))))),
-            Commands.runOnce(() -> PathBuilder.stopTarget()),
-            Commands.parallel(
-                    DriveCommands.autonAtAngle(
-                        drive,
-                        () ->
-                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(drive.getPose().getTranslation())
-                                .getAngle()
-                                .minus(Rotation2d.fromDegrees(-6))),
-                    Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop())
-                        .withTimeout(1),
-                    ScoringCommands.staticAim(drive, hood),
-                    new WaitCommand(0.1)
-                        // .andThen(new WaitUntilCommand(() -> hood.atGoal()))
-                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)))
-                .withTimeout(4.0)));
+    // autoChooser.addOption(
+    //     "witches gone",
+    //     Commands.sequence(
+    //         Commands.deadline(
+    //             PathBuilder.interpolateTimedPath(
+    //                     AllianceFlip.apply(
+    //                         new Pose2d(FieldConstants.Trench.left_trench_center, new
+    // Rotation2d())),
+    //                     AllianceFlip.apply(
+    //                         new Pose2d(
+    //                             FieldConstants.Trench.left_trench_neutral_preentrance,
+    //                             new Rotation2d())))
+    //                 .andThen(
+    //                     PathBuilder.interpolateTimedPath(
+    //                         PathBuilder.scaleSpeeds(0.5),
+    //                         AllianceFlip.apply(
+    //                             new Pose2d(
+    //                                 FieldConstants.FuelField.left_close_corner, new
+    // Rotation2d())),
+    //                         AllianceFlip.apply(
+    //                             new Pose2d(
+    //                                 FieldConstants.field_center, Rotation2d.fromDegrees(120))))),
+    //             PathBuilder.triggerWhenClose(
+    //                 FieldConstants.Trench.left_trench_center,
+    //                 2.5,
+    //                 Commands.runOnce(
+    //                     () -> {
+    //                       PathBuilder.targetRotation(() -> Rotation2d.kZero);
+    //                     })),
+    //             PathBuilder.triggerWhenClose(
+    //                 FieldConstants.FuelField.left_close_corner,
+    //                 1,
+    //                 Commands.runOnce(
+    //                         () -> {
+    //                           PathBuilder.stopTarget();
+    //                         })
+    //                     .andThen(Commands.run(() -> intake.intakeVolts(10.0))))),
+    //         Commands.deadline(
+    //             PathBuilder.interpolateTimedPath(
+    //                 AllianceFlip.apply(new Pose2d(FieldConstants.field_center, new
+    // Rotation2d())),
+    //                 AllianceFlip.apply(
+    //                     new Pose2d(FieldConstants.FuelField.left_close_corner, new
+    // Rotation2d())),
+    //                 AllianceFlip.apply(
+    //                     new Pose2d(
+    //                         FieldConstants.Trench.left_trench_neutral_preentrance,
+    //                         new Rotation2d())),
+    //                 AllianceFlip.apply(
+    //                     new Pose2d(
+    //                         FieldConstants.Trench.left_trench_alliance_preentrance,
+    //                         new Rotation2d())),
+    //                 AllianceFlip.apply(
+    //                     new Pose2d(new Translation2d(2.975, 1.545), new Rotation2d()))),
+    //             PathBuilder.triggerWhenClose(
+    //                 FieldConstants.FuelField.left_midline_corner,
+    //                 1.5,
+    //                 Commands.runOnce(
+    //                         () -> {
+    //                           PathBuilder.targetRotation(() -> Rotation2d.kZero);
+    //                         })
+    //                     .andThen(Commands.run(() -> intake.intakeVolts(0)))),
+    //             PathBuilder.triggerWhenClose(
+    //                 new Translation2d(2.975, 1.545),
+    //                 0.5,
+    //                 Commands.runOnce(
+    //                         () -> {
+    //                           PathBuilder.targetTranslation(() ->
+    // FieldConstants.Hub.hub_center_2d);
+    //                         })
+    //                     .andThen(Commands.run(() -> intake.intakeVolts(0))))),
+    //         Commands.runOnce(() -> PathBuilder.stopTarget()),
+    //         Commands.parallel(
+    //                 DriveCommands.autonAtAngle(
+    //                     drive,
+    //                     () ->
+    //                         AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+    //                             .minus(drive.getPose().getTranslation())
+    //                             .getAngle()
+    //                             .minus(Rotation2d.fromDegrees(-6))),
+    //                 Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop())
+    //                     .withTimeout(1),
+    //                 ScoringCommands.staticAim(drive, hood),
+    //                 new WaitCommand(0.1)
+    //                     // .andThen(new WaitUntilCommand(() -> hood.atGoal()))
+    //                     .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)))
+    //             .withTimeout(4.0)));
 
     autoChooser.addOption(
         "i hate code",
@@ -495,8 +500,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
-                ScoringCommands.dataShoot(shooter, hopper),
-                // ScoringCommands.staticShoot(drive, shooter, hopper),
+                // ScoringCommands.dataShoot(shooter, hopper),
+                ScoringCommands.staticShoot(drive, shooter, hopper),
                 () -> pilot.a().getAsBoolean()));
 
     pilot
@@ -536,8 +541,8 @@ public class RobotContainer {
 
     copilot.a().whileTrue(ScoringCommands.shake(wrist));
 
-    copilot.getLeftBumperButton().onTrue(ScoringCommands.downWoStall(wrist));
-    copilot.getRightBumperButton().onTrue(Commands.runOnce(wrist::stow, wrist));
+    copilot.getLeftBumperButton().onTrue(ScoringCommands.forceDown(wrist));
+    copilot.getRightBumperButton().onTrue(ScoringCommands.goodStow(wrist));
 
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     // copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
@@ -567,7 +572,7 @@ public class RobotContainer {
                 FieldConstants.Trench.right_trench_alliance_entrance.getX()
                     + Constants.Robot.B_LENGTH / 2,
                 FieldConstants.Trench.right_trench_alliance_entrance.getY(),
-                Rotation2d.kZero));
+                Rotation2d.kCCW_90deg));
       } else if (DriverStation.getLocation().getAsInt() == 2) {
         drive.setPose(
             new Pose2d(

@@ -37,6 +37,14 @@ public class Shooter extends SubsystemBase {
     io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
+  // i love method overloading
+  public void setVelocityRPM(double leftRPM, double rightRPM) {
+    setRightRPM = rightRPM;
+    setLeftRPM = leftRPM;
+    io.setLeftVelocity(MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM));
+    io.setRightVelocity(MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM));
+  }
+
   public void setRightVelocityRPM(double RPM) {
     setRightRPM = RPM;
     io.setRightVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));

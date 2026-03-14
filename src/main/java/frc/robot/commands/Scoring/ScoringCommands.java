@@ -53,6 +53,10 @@ public class ScoringCommands {
                     RPMRegress(
                         AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                             .minus(drive.getPose().getTranslation())
+                            .getNorm()),
+                    rightRPMRegress(
+                        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                            .minus(drive.getPose().getTranslation())
                             .getNorm())),
             shooter::stop,
             shooter),
@@ -72,7 +76,10 @@ public class ScoringCommands {
   }
 
   public static double rightRPMRegress(double distance) {
-    return 0;
+    return (13.51793 * Math.pow(distance, 3))
+        - (101.92503 * Math.pow(distance, 2))
+        + (470.26059 * distance)
+        + 1322.57969;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
@@ -95,18 +102,36 @@ public class ScoringCommands {
 
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
-            Commands.runOnce(() -> wrist.runWristVolts(1.5)),
-            new WaitUntilCommand(() -> wrist.isStalled()),
-            Commands.runOnce(wrist::stop),
+            Commands.runEnd(() -> wrist.runWristVolts(1.5), () -> wrist.stop())
+                .until(() -> wrist.getAngle() > 40 || wrist.isStalled()),
             new WaitCommand(0.5))
-        .until(() -> wrist.getAngle() > 120.0)
-        .finallyDo(() -> wrist.stow());
+        // .until(() -> wrist.getAngle() > 120.0)
+        .finallyDo(() -> goodStow(wrist));
   }
 
   public static Command downWoStall(Wrist wrist) {
     return Commands.sequence(
             Commands.runOnce(wrist::down, wrist),
             new WaitUntilCommand(() -> wrist.getAngle() < 30.0 || wrist.isStalled()))
+        .finallyDo(wrist::stop);
+  }
+
+  public static Command downNoStall(Wrist wrist) {
+    return Commands.run(() -> wrist.runWristVolts(-3))
+        .until(() -> wrist.getAngle() < 30 || wrist.isStalled())
+        .finallyDo(wrist::stop);
+  }
+
+  public static Command forceDown(Wrist wrist) {
+    return Commands.repeatingSequence(
+            Commands.run(() -> wrist.runWristVolts(-4)).withTimeout(0.5).finallyDo(wrist::stow))
+        .until(() -> wrist.getAngle() < 15)
+        .finallyDo(wrist::stop);
+  }
+
+  public static Command goodStow(Wrist wrist) {
+    return Commands.run(() -> wrist.runWristVolts(3))
+        .until(() -> wrist.getAngle() > 120 || wrist.isStalled())
         .finallyDo(wrist::stop);
   }
 
