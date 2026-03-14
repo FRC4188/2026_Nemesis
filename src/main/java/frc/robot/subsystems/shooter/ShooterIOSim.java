@@ -2,29 +2,61 @@ package frc.robot.subsystems.shooter;
 
 public class ShooterIOSim implements ShooterIO {
 
-  private double appliedVolts = 0.0;
-  private double RPM = 0.0;
+  // private double appliedVolts = 0.0;
+  private double leftAppliedVolts = 0.0;
+  private double rightAppliedVolts = 0.0;
+  // private double RPM = 0.0;
+  private double leftRPM = 0.0;
+  private double rightRPM = 0.0;
 
   public ShooterIOSim() {}
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    inputs.leftVelocityRPM = RPM;
-    inputs.rightVelocityRPM = RPM;
+    inputs.leftVelocityRPM = leftRPM;
+    inputs.rightVelocityRPM = rightRPM;
 
-    inputs.leftAppliedVolts = appliedVolts;
-    inputs.rightAppliedVolts = appliedVolts;
+    inputs.leftAppliedVolts = leftAppliedVolts;
+    inputs.rightAppliedVolts = rightAppliedVolts;
   }
 
   @Override
   public void setVolts(double volts) {
-    RPM = -100;
-    appliedVolts = volts;
+    leftRPM = -100;
+    rightRPM = -100;
+    leftAppliedVolts = volts;
+    rightAppliedVolts = volts;
+  }
+
+  @Override
+  public void setLeftVolts(double volts) {
+    leftRPM = -100;
+    leftAppliedVolts = volts;
+  }
+
+  @Override
+  public void setRightVolts(double volts) {
+    rightRPM = -100;
+    rightAppliedVolts = volts;
   }
 
   @Override
   public void setVelocity(double rpm) {
-    appliedVolts = 0.0;
-    RPM = rpm;
+    leftAppliedVolts = 0.0;
+    rightAppliedVolts = 0.0;
+    leftRPM = rpm;
+    rightRPM = rpm;
+  }
+
+  @Override
+  public void setLeftVelocity(double rpm) {
+    leftAppliedVolts = 0.0;
+    leftRPM = rpm;
+  }
+
+  @Override
+  public void setRightVelocity(double rpm) {
+    rightAppliedVolts = 0.0;
+    rightRPM = rpm;
   }
 }

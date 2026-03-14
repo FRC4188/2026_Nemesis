@@ -17,7 +17,11 @@ public class Shooter extends SubsystemBase {
 
   @AutoLogOutput(key = "Shooter/Setpoint RPM")
   private double setRPM = 0.0;
+
+  @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
   private double setRightRPM = 0.0;
+
+  @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
   private double setLeftRPM = 0.0;
 
   public Shooter(ShooterIO io) {
@@ -44,13 +48,13 @@ public class Shooter extends SubsystemBase {
   }
 
   public void runShooterVolts(double volts) {
-    //huh?
+    // huh?
     setRPM = -100;
     io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
 
   public void runRightShooterVolts(double volts) {
-    //why?
+    // why?
     setRightRPM = -100;
     io.setRightVolts(MathUtil.clamp(volts, -12, 12));
   }

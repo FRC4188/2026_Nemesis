@@ -23,8 +23,9 @@ public class ScoringCommands {
 
   public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        //starting with right shooter first
-        Commands.runEnd(() -> shooter.setRightVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
+        // starting with right shooter first
+        Commands.runEnd(
+            () -> shooter.setRightVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.rightAtGoal())
