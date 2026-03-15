@@ -49,7 +49,8 @@ public final class PathBuilder {
   //         Constants.DriveConstants.ANGLE_MAXVEL * 0.4,
   //         Constants.DriveConstants.ANGLE_MAXACC * 0.4);
 
-private static PathConstraints constraints =
+  //prob too fast
+  private static PathConstraints constraints =
       new PathConstraints(
           Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
           Constants.DriveConstants.DRIVE_MAXACC * 0.8,

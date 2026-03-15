@@ -71,6 +71,7 @@ public class ScoringCommands {
     return 233.2242 * distance + 1523.17052;
   }
 
+  // TODO: might need to do a regression for left shooter
   public static double leftRPMRegress(double distance) {
     return 0;
   }
