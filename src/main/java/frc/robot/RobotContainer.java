@@ -592,7 +592,7 @@ public class RobotContainer {
                     FieldConstants.Trench.right_trench_alliance_entrance.getX()
                         + Constants.Robot.B_LENGTH / 2,
                     FieldConstants.Trench.right_trench_alliance_entrance.getY(),
-                    Rotation2d.kZero)));
+                    Rotation2d.kCCW_90deg)));
       } else if (DriverStation.getLocation().getAsInt() == 2) {
         drive.setPose(
             AllianceFlip.apply(
@@ -605,7 +605,7 @@ public class RobotContainer {
                     FieldConstants.Trench.left_trench_alliance_entrance.getX()
                         + Constants.Robot.B_LENGTH / 2,
                     FieldConstants.Trench.left_trench_alliance_entrance.getY(),
-                    Rotation2d.kZero)));
+                    Rotation2d.kCW_90deg)));
       }
     }
   }
