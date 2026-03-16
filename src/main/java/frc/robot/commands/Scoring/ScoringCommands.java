@@ -88,7 +88,7 @@ public class ScoringCommands {
   }
 
   public static Command passAim(Hood hood) {
-    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(60)), hood::stow, hood);
+    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(40)), hood::stow, hood);
   }
 
   public static Command passShoot(Shooter shooter, Hopper hopper) {
