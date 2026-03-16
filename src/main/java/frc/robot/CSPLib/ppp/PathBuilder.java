@@ -16,10 +16,8 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
@@ -34,6 +32,7 @@ import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -42,13 +41,8 @@ import org.littletonrobotics.junction.Logger;
  */
 public final class PathBuilder {
   private static Drive drive;
-  // private static Shooter shooter;
-  // private static Hood hood;
-  // private static Hopper hopper;
 
-  private static Supplier<Rotation2d> trackingSupplier;
   public static FollowPath.Builder pathBuilder;
-  private static double speedMultiplier = 1;
 
   // // Add Multiplier if too fast
   // private static PathConstraints constraints =
@@ -71,19 +65,15 @@ public final class PathBuilder {
    *
    * @param drivetrain
    */
-  public static void configure(Drive drivetrain) { // Add parameters for ALL subsystems
-    // if (drive != null || shooter_ != null || hood_ != null || hopper_ != null) return;
+  public static void configure(Drive drivetrain) { 
     if (drive != null) return;
     drive = drivetrain;
-    // shooter = shooter_;
-    // hood = hood_;
-    // hopper = hopper_;
 
     AutoBuilder.configure(
         drive::getPose,
         drive::setPose,
         drive::getChassisSpeeds,
-        PathBuilder::runCorrectedVelocity,
+        drive::runVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(
                 Constants.DriveConstants.DRIVE_PID.getP(),
@@ -110,73 +100,12 @@ public final class PathBuilder {
   }
 
   /**
-   * Sets the velocity from ChassisSpeeds, determines which velocity method to run depending on the
-   * robot mode.
-   *
-   * @param speeds ChassisSpeeds
-   */
-  public static void runCorrectedVelocity(ChassisSpeeds speeds) {
-    double mult = getSpeedMult();
-    speeds.vxMetersPerSecond *= mult;
-    speeds.vyMetersPerSecond *= mult;
-    speeds.omegaRadiansPerSecond *= mult;
-
-    drive.runVelocity(speeds);
-  }
-
-  public static void setSpeedMult(double scale) {
-    speedMultiplier = scale;
-  }
-
-  public static double getSpeedMult() {
-    return speedMultiplier;
-  }
-
-  public static double getOmega(Supplier<Rotation2d> rotationSupplier) {
-    Constants.DriveConstants.ANGLE_PID.enableContinuousInput(-Math.PI, Math.PI);
-
-    Logger.recordOutput("PathBuilder/Track Target Angle", rotationSupplier.get().getRadians());
-    Logger.recordOutput(
-        "PathBuilder/Track Current Angle", drive.getPose().getRotation().getRadians());
-
-    double omega =
-        Constants.DriveConstants.ANGLE_PID.calculate(
-                drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-            + Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity
-                * Constants.DriveConstants.ANGLE_FF;
-
-    if (Math.abs(drive.getRotation().getRadians() - rotationSupplier.get().getRadians())
-            < Constants.DriveConstants.ANGLE_TOL.getRadians()
-        && Constants.DriveConstants.ANGLE_PID.getSetpoint().velocity == 0.0) omega = 0.0;
-
-    return omega;
-  }
-
-  /**
-   * @return The robot chassis speeds, determined by the current robot mode, offsetted.
-   */
-  public static ChassisSpeeds getChassisSpeeds() {
-
-    return drive.getChassisSpeeds();
-  }
-
-  /**
-   * @return The robot position, determinedby the current robot mode, offsetted.
-   */
-  public static Pose2d getPose() {
-
-    return drive.getPose();
-  }
-
-  /**
-   * A method that takes in a Transltion2d that the robot will orient towards.
+   * A method that takes in a Translation2d that the robot will orient towards.
    *
    * @param wanted A Translation2d Supplier
    */
   public static void targetTranslation(Supplier<Translation2d> wanted) {
     targetRotation(() -> wanted.get().minus(drive.getPose().getTranslation()).getAngle());
-
-    trackingSupplier = () -> wanted.get().minus(drive.getPose().getTranslation()).getAngle();
   }
 
   /**
@@ -186,8 +115,6 @@ public final class PathBuilder {
    */
   public static void targetRotation(Supplier<Rotation2d> wanted) {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
-
-    trackingSupplier = wanted;
 
     PPHolonomicDriveController.overrideRotationFeedback(
         () -> {
@@ -218,8 +145,6 @@ public final class PathBuilder {
    */
   public static void stopTarget() {
     PPHolonomicDriveController.clearRotationFeedbackOverride();
-
-    trackingSupplier = null;
   }
 
   /**
@@ -239,24 +164,38 @@ public final class PathBuilder {
 public static class Target {
   public final Pose2d pose;
   public final double speedMultiplier;
+  public final double rotationLeadMeters;
+  public final double rotationSpread;
 
   public Target(Pose2d pose) {
-    this(pose, 1.0);
+    this(pose, 1.0, 0.0, 1.0);
   }
 
   public Target(Pose2d pose, double speedMultiplier) {
+    this(pose, speedMultiplier, 0.0, 1.0);
+  }
+
+  public Target(Pose2d pose, double speedMultiplier, double rotationLeadMeters) {
+    this(pose, speedMultiplier, rotationLeadMeters, 1.0);
+  }
+
+  public Target(Pose2d pose, double speedMultiplier, double rotationLeadMeters, double rotationSpread) {
     if (pose == null) throw new IllegalArgumentException("pose cannot be null");
     this.pose = pose;
     this.speedMultiplier = speedMultiplier;
+    this.rotationLeadMeters = rotationLeadMeters;
+    this.rotationSpread = rotationSpread;
   }
 }
+
+// Way too much work into this
 
 public static Command path(Target... targets) {
   if (targets == null || targets.length == 0) {
     throw new IllegalArgumentException("Must supply at least one Target");
   }
 
-  final double rotIndexRadius = Constants.DriveConstants.ROT_INDEX_RADIUS;
+  final double rotIndexRadius = Constants.DriveConstants.PATH_CREATION_TOL;
 
   Pose2d[] poses = new Pose2d[targets.length];
   for (int i = 0; i < targets.length; i++) poses[i] = targets[i].pose;
@@ -329,7 +268,6 @@ public static Command path(Target... targets) {
     return AutoBuilder.followPath(fallback);
   }
 
-  // 7) cumulative arc-length
   int m = sampled.size();
   double[] cum = new double[m];
   cum[0] = 0.0;
@@ -339,8 +277,6 @@ public static Command path(Target... targets) {
   }
   double totalLength = cum[m - 1];
   if (totalLength <= 1e-9) totalLength = 1e-9;
-
-  // 8) Project all targets to arc-length (meters)
   int searchSegStart = 0;
   double lastArcAccepted = 0.0;
   int nTargets = targets.length;
@@ -360,6 +296,7 @@ public static Command path(Target... targets) {
     double bestDist = Double.POSITIVE_INFINITY;
     double bestArc = Double.POSITIVE_INFINITY;
     int bestSeg = Math.max(0, searchSegStart);
+
     for (int i = searchSegStart; i < sampled.size() - 1; i++) {
       Translation2d a = sampled.get(i).getTranslation();
       Translation2d b = sampled.get(i + 1).getTranslation();
@@ -431,40 +368,53 @@ public static Command path(Target... targets) {
   rotationTargets.add(new RotationTarget(0.0, poses[0].getRotation()));
   Rotation2d lastRotation = poses[0].getRotation();
   final double ANGLE_TOL_RAD = Math.toRadians(0.1);
-  final double PRE_OFFSET_ARC = Math.max(1e-3, totalLength * 1e-6);
+  final double PRE_OFFSET_ARC = Math.max(1e-3, totalLength * 1e-6); 
 
   for (int t = 1; t < nTargets; t++) {
-    double arc = targetArcs[t];
-    double frac = arc / totalLength;
-    double waypointRelPos = frac * waypointSlots;
-
+    double arc = targetArcs[t];                      
     Rotation2d desired = poses[t].getRotation();
-    double angDiff = Math.abs(normalizeAngle(desired.getRadians() - lastRotation.getRadians()));
 
+    double angDiff = Math.abs(normalizeAngle(desired.getRadians() - lastRotation.getRadians()));
     if (angDiff <= ANGLE_TOL_RAD) {
       continue;
     }
 
-    double preArc = Math.max(0.0, arc - PRE_OFFSET_ARC);
-    double preFrac = preArc / totalLength;
-    double preWaypointPos = preFrac * waypointSlots;
+    double leadMeters = targets[t].rotationLeadMeters; 
+    double rotationStartArc = arc - leadMeters;
+    rotationStartArc = Math.max(0.0, Math.min(rotationStartArc, totalLength));
 
-    if (preArc + 1e-9 < arc) {
-      rotationTargets.add(new RotationTarget(preWaypointPos, lastRotation));
+    double baseEndArc = (leadMeters >= 0.0) ? arc : (arc - leadMeters);
+    baseEndArc = Math.max(0.0, Math.min(baseEndArc, totalLength));
+
+    double baseWindow = Math.abs(baseEndArc - rotationStartArc);
+    if (baseWindow < 1e-12) baseWindow = PRE_OFFSET_ARC;
+    double spread = targets[t].rotationSpread;
+    if (!Double.isFinite(spread) || spread <= 0.0) spread = 1.0; 
+
+    double spreadWindow = baseWindow * spread;
+    double rotationEndArc = rotationStartArc + spreadWindow;
+    rotationEndArc = Math.max(0.0, Math.min(rotationEndArc, totalLength));
+
+    double preArc = rotationStartArc;
+    double preWaypointPos = (preArc / totalLength) * waypointSlots;
+    double finalWaypointPos = (rotationEndArc / totalLength) * waypointSlots;
+
+    if (finalWaypointPos <= preWaypointPos + 1e-12) {
+      finalWaypointPos = Math.min(waypointSlots, preWaypointPos + 1e-6);
+      preWaypointPos = Math.max(0.0, finalWaypointPos - 1e-6);
     }
 
-    rotationTargets.add(new RotationTarget(waypointRelPos, desired));
+    rotationTargets.add(new RotationTarget(preWaypointPos, lastRotation));
+    rotationTargets.add(new RotationTarget(finalWaypointPos, desired));
     lastRotation = desired;
   }
 
-  // ensure final rotation at last waypoint index if needed
-  double finalWaypointPos = waypointSlots; // last waypoint index
+  double finalWaypointPos = waypointSlots;
   Rotation2d finalRot = poses[poses.length - 1].getRotation();
   if (Math.abs(normalizeAngle(finalRot.getRadians() - lastRotation.getRadians())) > ANGLE_TOL_RAD) {
     rotationTargets.add(new RotationTarget(finalWaypointPos, finalRot));
   }
 
-  // 10) Build constraints zones from contiguous non-1.0 blocks using waypoint-relative positions
   List<ConstraintsZone> constraintsZones = new ArrayList<>();
   final double ZONE_EPSILON = 1e-6;
   for (int i = 0; i < nTargets; i++) {
@@ -490,7 +440,6 @@ public static Command path(Target... targets) {
     double startFrac = startArc / totalLength;
     double endFrac = endArc / totalLength;
 
-    // convert to waypoint-relative positions
     double startWaypointPos = Math.max(0.0, Math.min(waypointSlots, startFrac * waypointSlots));
     double endWaypointPos = Math.max(0.0, Math.min(waypointSlots, endFrac * waypointSlots));
 
@@ -505,10 +454,8 @@ public static Command path(Target... targets) {
     constraintsZones.add(new ConstraintsZone(startWaypointPos, endWaypointPos, scaled));
   }
 
-  // merge zones (uses minPosition/maxPosition which are waypoint-relative positions)
   constraintsZones = mergeConstraintsZones(constraintsZones);
 
-  // 11) Build final PathPlannerPath
   GoalEndState finalGoal = new GoalEndState(0.0, finalRot);
   PathPlannerPath finalPath = new PathPlannerPath(
       waypoints,
@@ -589,89 +536,12 @@ private static Rotation2d safeHeading(double dx, double dy, Rotation2d fallback)
    * @param endPose Pose2d
    * @return Command
    */
-  //   public static Command createPath(Pose2d endPose) {
-  //     return AutoBuilder.pathfindToPose(endPose, constraints, 0.0).finallyDo(() -> drive.stop());
-  //   }
+    public static Command createPath(Pose2d endPose) {
+      return AutoBuilder.pathfindToPose(endPose, constraints, 0.0).finallyDo(() -> drive.stop());
+    }
 
   /**
-   * Creates a path off of several Pose2d using Pathfinding
-   *
-   * @param poses several Pose2d
-   * @return Command
-   */
-  //   public static Command createPath(Pose2d... poses) {
-  //     return Commands.sequence(
-  //             IntStream.range(0, poses.length)
-  //                 .mapToObj(
-  //                     i ->
-  //                         i == poses.length - 1
-  //                             ? PathBuilder.createPath(poses[i], 0)
-  //                             : PathBuilder.createPath(poses[i], 3.0))
-  //                 .toArray(Command[]::new))
-  //         .finallyDo(() -> drive.stop());
-  //   }
-
-  /**
-   * Creates a path off of several Translation2d using Pathfinding
-   *
-   * @param translations several Translation2d
-   * @return Command
-   */
-  //   public static Command createPath(Translation2d... translations) {
-  //     return Commands.sequence(
-  //             IntStream.range(0, translations.length)
-  //                 .mapToObj(
-  //                     i ->
-  //                         i == translations.length - 1
-  //                             ? PathBuilder.createPath(translations[i], 0)
-  //                             : PathBuilder.createPath(translations[i], 3.0))
-  //                 .toArray(Command[]::new))
-  //         .finallyDo(() -> drive.stop());
-  //   }
-
-  /**
-   * Creates a path off of a goal Translation2d using Pathfinding
-   *
-   * @param endTranslation Translation2d
-   * @return Command
-   */
-  //   public static Command createPath(Translation2d endTranslation) {
-  //     return AutoBuilder.pathfindToPose(
-  //             new Pose2d(endTranslation, new Rotation2d()), constraints, 0.0)
-  //         .beforeStarting(() ->
-  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()))
-  //         .finallyDo(() -> drive.stop());
-  //   }
-
-  /**
-   * Creates a path off of a goal Pose2d and an end velocity using Pathfinding
-   *
-   * @param endPose Pose2d
-   * @param endVel double
-   * @return Command
-   */
-  //   public static Command createPath(Pose2d endPose, double endVel) {
-  //     return AutoBuilder.pathfindToPose(endPose, constraints, endVel).finallyDo(() ->
-  // drive.stop());
-  //   }
-
-  /**
-   * Creates a path off of a goal Translation2d and an end velocity using Pathfinding
-   *
-   * @param endTranslation Translation2d
-   * @param endVel double
-   * @return Command
-   */
-  //   public static Command createPath(Translation2d endTranslation, double endVel) {
-  //     return AutoBuilder.pathfindToPose(
-  //             new Pose2d(endTranslation, new Rotation2d()), constraints, endVel)
-  //         .beforeStarting(() ->
-  // Constants.Drive.ANGLE_PID.reset(drive.getRotation().getRadians()));
-  //     // .finallyDo(() -> drive.stop());
-  //   }
-
-  /**
-   * Merges into a path finding using Pathfinding
+   * Merges into a path using Pathfinding
    *
    * @param knownPath PathPlannerPath
    * @return Command
