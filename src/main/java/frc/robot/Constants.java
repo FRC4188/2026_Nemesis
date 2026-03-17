@@ -100,6 +100,8 @@ public final class Constants {
     public static final double ANGLE_FF = 2.0;
     public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(2.0);
 
+    public static final double PATH_CREATION_TOL = Units.inchesToMeters(1);
+
     public static final double ANGLE_MAXVEL = DRIVE_MAXVEL / Drive.DRIVE_BASE_RADIUS;
     public static final double ANGLE_MAXACC = 20.0;
     public static final ProfiledPIDController ANGLE_PID =
