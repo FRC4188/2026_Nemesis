@@ -236,7 +236,8 @@ public class RobotContainer {
                     new Translation2d(2.975, 1.545),
                     0.1,
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
+            Commands.runOnce(() -> PathBuilder.stopTarget())
+                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(new Pose2d(2.975, 1.545, new Rotation2d()), 0.5),
@@ -244,7 +245,9 @@ public class RobotContainer {
                         new Pose2d(
                             FieldConstants.Trench.right_trench_alliance_preentrance,
                             Rotation2d.kZero),
-                        1),
+                        1,
+                        0,
+                        0.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
@@ -375,8 +378,10 @@ public class RobotContainer {
                             Rotation2d.kCCW_90deg)),
                     new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(105)),
-                        0.4, 1.5),
+                            FieldConstants.FuelField.right_midline_corner,
+                            Rotation2d.fromDegrees(105)),
+                        0.4,
+                        1.5),
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.field_center, Rotation2d.k180deg), 0.35),
                     new PathBuilder.Target(
@@ -442,48 +447,44 @@ public class RobotContainer {
                         new Pose2d(
                             new Translation2d(
                                 FieldConstants.FuelField.right_close_corner.getX()
-                                - Constants.Robot.B_WIDTH/2, 
-                                FieldConstants.FuelField.right_close_corner.getY()), 
-                                Rotation2d.fromDegrees(105)),
-                        0.4, 1.5),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            new Translation2d(
-                                FieldConstants.FuelField.middle_close_line.getX() 
-                                - Constants.Robot.B_WIDTH/2, 
-                                FieldConstants.FuelField.middle_close_line.getY()), 
-                                Rotation2d.k180deg), 0.4),
+                                    - Constants.Robot.B_WIDTH / 2,
+                                FieldConstants.FuelField.right_close_corner.getY()),
+                            Rotation2d.fromDegrees(105)),
+                        0.4,
+                        1.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             new Translation2d(
                                 FieldConstants.FuelField.middle_close_line.getX()
-                                - (3*Constants.Robot.B_WIDTH)/2,
-                                FieldConstants.FuelField.middle_close_line.getY()
-                            ),
-                            Rotation2d.kCW_90deg
-                        ), 0.4
-                    ),
+                                    - Constants.Robot.B_WIDTH / 2,
+                                FieldConstants.FuelField.middle_close_line.getY()),
+                            Rotation2d.k180deg),
+                        0.4),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            new Translation2d(
+                                FieldConstants.FuelField.middle_close_line.getX()
+                                    - (3 * Constants.Robot.B_WIDTH) / 2,
+                                FieldConstants.FuelField.middle_close_line.getY()),
+                            Rotation2d.kCW_90deg),
+                        0.4),
                     new PathBuilder.Target(
                         new Pose2d(
                             new Translation2d(
                                 FieldConstants.FuelField.right_close_corner.getX()
-                                - (3*Constants.Robot.B_WIDTH)/2,
-                                FieldConstants.FuelField.right_close_corner.getY()
-                            ),
-                            Rotation2d.kCW_90deg
-                        ),
-                        0.4
-                    )
-                                ),
+                                    - (3 * Constants.Robot.B_WIDTH) / 2,
+                                FieldConstants.FuelField.right_close_corner.getY()),
+                            Rotation2d.kCW_90deg),
+                        0.4)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.right_trench_center,
                     1.5,
                     ScoringCommands.forceDown(wrist)),
                 PathBuilder.triggerWhenClose(
                     new Translation2d(
-                                FieldConstants.FuelField.right_close_corner.getX()
-                                - Constants.Robot.B_WIDTH/2, 
-                                FieldConstants.FuelField.right_close_corner.getY()),
+                        FieldConstants.FuelField.right_close_corner.getX()
+                            - Constants.Robot.B_WIDTH / 2,
+                        FieldConstants.FuelField.right_close_corner.getY()),
                     1,
                     Commands.run(() -> intake.intakeVolts(10.0))))));
 
