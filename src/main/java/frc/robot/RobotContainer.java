@@ -236,7 +236,8 @@ public class RobotContainer {
                     new Translation2d(2.975, 1.545),
                     0.1,
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
+            Commands.runOnce(() -> PathBuilder.stopTarget())
+                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(new Pose2d(2.975, 1.545, new Rotation2d()), 0.5),
@@ -244,7 +245,9 @@ public class RobotContainer {
                         new Pose2d(
                             FieldConstants.Trench.right_trench_alliance_preentrance,
                             Rotation2d.kZero),
-                        1),
+                        1,
+                        0,
+                        0.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
