@@ -15,9 +15,6 @@ public class Shooter extends SubsystemBase {
   private final Alert leftDisconnectedAlert;
   private final Alert rightDisconnectedAlert;
 
-  @AutoLogOutput(key = "Shooter/Setpoint RPM")
-  private double setRPM = 0.0;
-
   @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
   private double setRightRPM = 0.0;
 
@@ -32,58 +29,21 @@ public class Shooter extends SubsystemBase {
     rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
   }
 
-  public void setVelocityRPM(double RPM) {
-    setRPM = RPM;
-    io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
-  }
-
-  // i love method overloading
   public void setVelocityRPM(double leftRPM, double rightRPM) {
     setRightRPM = rightRPM;
     setLeftRPM = leftRPM;
-    io.setLeftVelocity(MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM));
-    io.setRightVelocity(MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM));
-  }
-
-  public void setRightVelocityRPM(double RPM) {
-    setRightRPM = RPM;
-    io.setRightVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
-  }
-
-  public void setLeftVelocityRPM(double RPM) {
-    setLeftRPM = RPM;
-    io.setLeftVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
-  }
-
-  public void runShooterVolts(double volts) {
-    // huh?
-    setRPM = -100;
-    io.setVolts(MathUtil.clamp(volts, -12, 12));
-  }
-
-  public void runRightShooterVolts(double volts) {
-    // why?
-    setRightRPM = -100;
-    io.setRightVolts(MathUtil.clamp(volts, -12, 12));
-  }
-
-  public void runLeftShooterVolts(double volts) {
-    setLeftRPM = -100;
-    io.setLeftVolts(MathUtil.clamp(volts, -12, 12));
+    io.setVelocity(
+        MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM),
+        MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
   public void stop() {
+    setRightRPM = 0;
+    setLeftRPM = 0;
     io.setVolts(0.0);
   }
 
-  public double getLeftVelocityRPM() {
-    return inputs.leftVelocityRPM;
-  }
-
-  public double getRightVelocityRPM() {
-    return inputs.rightVelocityRPM;
-  }
-
+  @AutoLogOutput(key = "Shooter/At Goal?")
   public boolean atGoal() {
     return leftAtGoal() && rightAtGoal();
   }

@@ -25,12 +25,15 @@ public class ScoringCommands {
     return Commands.parallel(
         // starting with right shooter first
         Commands.runEnd(
-            () -> shooter.setRightVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
+            () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
+            shooter::stop,
+            shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.rightAtGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopperVolts(8.5), hopper::stop, hopper))));
+                        Commands.runEnd(
+                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim(Drive drive, Hood hood) {
@@ -64,7 +67,8 @@ public class ScoringCommands {
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopperVolts(6.0), hopper::stop, hopper))));
+                        Commands.runEnd(
+                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
@@ -93,12 +97,13 @@ public class ScoringCommands {
 
   public static Command passShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(2500), shooter::stop, shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(2500, 2500), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopperVolts(6.0), hopper::stop, hopper))));
+                        Commands.runEnd(
+                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
   }
 
   public static Command shake(Wrist wrist) {

@@ -106,6 +106,8 @@ public final class Constants {
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
 
+    public static final Rotation2d local_offset = Rotation2d.fromDegrees(-6);
+
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }

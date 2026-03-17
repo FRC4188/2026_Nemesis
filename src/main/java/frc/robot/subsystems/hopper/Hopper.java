@@ -20,9 +20,9 @@ public class Hopper extends SubsystemBase {
     indexerDisconnectedAlert = new Alert("Indexer motor disconnected.", AlertType.kError);
   }
 
-  public void runHopperVolts(double volts) {
-    io.setAggitateVolts(MathUtil.clamp(volts, -12, 12));
-    io.setIndexerVolts(MathUtil.clamp(volts, -12, 12));
+  public void runHopperVolts(double a_volts, double i_volts) {
+    io.setAggitateVolts(MathUtil.clamp(a_volts, -12, 12));
+    io.setIndexerVolts(MathUtil.clamp(i_volts, -12, 12));
   }
 
   public void stop() {
