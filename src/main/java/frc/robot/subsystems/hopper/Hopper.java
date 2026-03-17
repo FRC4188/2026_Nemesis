@@ -22,7 +22,7 @@ public class Hopper extends SubsystemBase {
 
   public void runHopperVolts(double volts) {
     io.setAggitateVolts(MathUtil.clamp(volts, -12, 12));
-    io.setIndexerVolts(MathUtil.clamp(volts, -12, 12));
+    io.setIndexerVolts(MathUtil.clamp(volts+1, -12, 12));
   }
 
   public void stop() {
