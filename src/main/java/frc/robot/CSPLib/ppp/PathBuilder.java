@@ -51,10 +51,7 @@ public final class PathBuilder {
   //         Constants.DriveConstants.ANGLE_MAXVEL * 0.4,
   //         Constants.DriveConstants.ANGLE_MAXACC * 0.4);
 
-<<<<<<< HEAD
   // prob too fast
-=======
->>>>>>> bead9f6990cbad72b4ba3bd53c6e112635d63015
   private static PathConstraints constraints =
       new PathConstraints(
           Constants.DriveConstants.DRIVE_MAXVEL * 0.8,

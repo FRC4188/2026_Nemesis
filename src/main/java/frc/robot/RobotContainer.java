@@ -264,32 +264,10 @@ public class RobotContainer {
                     1.5,
                     ScoringCommands.forceDown(wrist)),
                 PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(new Translation2d(2.975, 1.545)),
-                    0.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetTranslation(
-                                  () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d));
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0))))),
-            Commands.runOnce(() -> PathBuilder.stopTarget()),
-            Commands.parallel(
-                    DriveCommands.autonAtAngle(
-                        drive,
-                        () ->
-                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(drive.getPose().getTranslation())
-                                .getAngle()),
-                    Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop())
-                        .withTimeout(1),
-                    ScoringCommands.staticAim(drive, hood),
-                    new WaitCommand(0.1)
-                        .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
-                    new WaitCommand(2.5).andThen(ScoringCommands.goodStow(wrist)))
-                .withTimeout(6.0)));
+                    FieldConstants.FuelField.right_close_corner,
+                    1,
+                    Commands.run(() -> intake.intakeVolts(10.0))))));
 
-    // LEFT TRENCH AUTO
     autoChooser.addOption(
         "Right NZ 1 C Swipe",
         Commands.sequence(
@@ -325,20 +303,27 @@ public class RobotContainer {
                     Commands.run(() -> intake.intakeVolts(10.0)))),
             Commands.runOnce(() -> intake.stop()),
             Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                    AllianceFlip.apply(new Pose2d(FieldConstants.field_center, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d())),
-                    AllianceFlip.apply(
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero)),
+                    new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
+                            FieldConstants.Trench.right_trench_neutral_preentrance,
+                            Rotation2d.kZero),
+                        1),
+                    new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.Trench.left_trench_alliance_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(new Translation2d(2.975, 6.524326), new Rotation2d()))),
+                            FieldConstants.Trench.right_trench_alliance_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            2.975,
+                            1.545,
+                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                                .minus(new Translation2d(2.975, 1.545))
+                                .getAngle()),
+                        0.5)),
+                Commands.run(() -> intake.stop()),
                 PathBuilder.triggerWhenClose(
                     FieldConstants.Trench.right_trench_alliance_preentrance,
                     0.2,
@@ -372,34 +357,10 @@ public class RobotContainer {
                     1.5,
                     ScoringCommands.forceDown(wrist)),
                 PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(new Translation2d(2.975, 6.524326)),
-                    0.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetTranslation(
-                                  () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d));
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0))))),
-            Commands.runOnce(() -> PathBuilder.stopTarget()),
-            Commands.parallel(
-                    DriveCommands.autonAtAngle(
-                        drive,
-                        () ->
-                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(drive.getPose().getTranslation())
-                                .getAngle()),
-                    Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop())
-                        .withTimeout(1),
-                    ScoringCommands.staticAim(drive, hood),
-                    new WaitCommand(0.1)
-                        .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
-                    new WaitCommand(2.5).andThen(ScoringCommands.goodStow(wrist)))
-                .withTimeout(6.0)));
-    // end of left trench auto
+                    FieldConstants.FuelField.right_midline_corner,
+                    1,
+                    Commands.run(() -> intake.intakeVolts(10.0))))));
 
-    // this is actually good tho
-    // right trench
     autoChooser.addOption(
         "Optim. Right NZ 1 C Swipe",
         Commands.sequence(
@@ -414,8 +375,10 @@ public class RobotContainer {
                             Rotation2d.kCCW_90deg)),
                     new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(105)),
-                        0.4, 1.5),
+                            FieldConstants.FuelField.right_midline_corner,
+                            Rotation2d.fromDegrees(105)),
+                        0.4,
+                        1.5),
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.field_center, Rotation2d.k180deg), 0.35),
                     new PathBuilder.Target(
@@ -466,13 +429,14 @@ public class RobotContainer {
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
             AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
             Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                    AllianceFlip.apply(new Pose2d(FieldConstants.field_center, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.middle_close_line, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.right_close_corner, new Rotation2d())),
-                    AllianceFlip.apply(
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_alliance_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero)),
+                    new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
                             Rotation2d.kZero)),
@@ -480,90 +444,65 @@ public class RobotContainer {
                         new Pose2d(
                             new Translation2d(
                                 FieldConstants.FuelField.right_close_corner.getX()
-                                - Constants.Robot.B_WIDTH/2, 
-                                FieldConstants.FuelField.right_close_corner.getY()), 
-                                Rotation2d.fromDegrees(105)),
-                        0.4, 1.5),
+                                    - Constants.Robot.B_WIDTH / 2,
+                                FieldConstants.FuelField.right_close_corner.getY()),
+                            Rotation2d.fromDegrees(105)),
+                        0.4,
+                        1.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             new Translation2d(
-                                FieldConstants.FuelField.middle_close_line.getX() 
-                                - Constants.Robot.B_WIDTH/2, 
-                                FieldConstants.FuelField.middle_close_line.getY()), 
-                                Rotation2d.k180deg), 0.4),
+                                FieldConstants.FuelField.middle_close_line.getX()
+                                    - Constants.Robot.B_WIDTH / 2,
+                                FieldConstants.FuelField.middle_close_line.getY()),
+                            Rotation2d.k180deg),
+                        0.4),
                     new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.Trench.right_trench_alliance_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(new Translation2d(2.975, 1.545), new Rotation2d()))),
-                PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(FieldConstants.FuelField.middle_close_line),
-                    0.25,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(
-                              () -> AllianceFlip.apply(Rotation2d.kCW_90deg));
-                        })),
+                            new Translation2d(
+                                FieldConstants.FuelField.middle_close_line.getX()
+                                    - (3 * Constants.Robot.B_WIDTH) / 2,
+                                FieldConstants.FuelField.middle_close_line.getY()),
+                            Rotation2d.kCW_90deg),
+                        0.4),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            new Translation2d(
+                                FieldConstants.FuelField.right_close_corner.getX()
+                                    - (3 * Constants.Robot.B_WIDTH) / 2,
+                                FieldConstants.FuelField.right_close_corner.getY()),
+                            Rotation2d.kCW_90deg),
+                        0.4)),
                 PathBuilder.triggerWhenFar(
-                    AllianceFlip.apply(FieldConstants.field_center),
-                    0.1,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(() -> AllianceFlip.apply(Rotation2d.k180deg));
-                        })),
-                PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(FieldConstants.Trench.right_trench_neutral_preentrance),
+                    FieldConstants.Trench.right_trench_center,
                     1.5,
                     ScoringCommands.forceDown(wrist)),
                 PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(new Translation2d(2.975, 1.545)),
-                    0.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetTranslation(
-                                  () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d));
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0))))),
-            Commands.runOnce(() -> PathBuilder.stopTarget()),
-            Commands.parallel(
-                    DriveCommands.autonAtAngle(
-                        drive,
-                        () ->
-                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(drive.getPose().getTranslation())
-                                .getAngle()),
-                    Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop())
-                        .withTimeout(1),
-                    ScoringCommands.staticAim(drive, hood),
-                    new WaitCommand(0.1)
-                        .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-                        .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
-                    new WaitCommand(2.5).andThen(ScoringCommands.goodStow(wrist)))
-                .withTimeout(6.0)));
+                    new Translation2d(
+                        FieldConstants.FuelField.right_close_corner.getX()
+                            - Constants.Robot.B_WIDTH / 2,
+                        FieldConstants.FuelField.right_close_corner.getY()),
+                    1,
+                    Commands.run(() -> intake.intakeVolts(10.0))))));
 
-    // same thing as above
-    // left trench
     autoChooser.addOption(
         "Left NZ 1.5 Center Swipe",
         Commands.sequence(
             Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.Trench.left_trench_center, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.left_trench_neutral_preentrance,
-                                new Rotation2d())))
-                    .andThen(
-                        PathBuilder.interpolateTimedPath(
-                            PathBuilder.scaleSpeeds(0.25),
-                            AllianceFlip.apply(
-                                new Pose2d(
-                                    FieldConstants.FuelField.left_midline_corner,
-                                    new Rotation2d())),
-                            AllianceFlip.apply(
-                                new Pose2d(FieldConstants.field_center, new Rotation2d())))),
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kCW_90deg)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
+                        0.25),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)),
+                        0.25)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.left_trench_center,
                     1.5,
@@ -574,49 +513,34 @@ public class RobotContainer {
                     Commands.run(() -> intake.intakeVolts(10.0)))),
             Commands.runOnce(() -> intake.stop()),
             Commands.deadline(
-                PathBuilder.interpolateTimedPath(
-                    AllianceFlip.apply(new Pose2d(FieldConstants.field_center, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.middle_close_line, new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(FieldConstants.FuelField.left_close_corner, new Rotation2d())),
-                    AllianceFlip.apply(
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
+                        1,
+                        1.5,
+                        2),
+                    new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_neutral_preentrance,
                             Rotation2d.kZero)),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_alliance_preentrance,
-                            new Rotation2d())),
-                    AllianceFlip.apply(
-                        new Pose2d(new Translation2d(2.975, 6.524326), new Rotation2d()))),
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            2.975,
+                            FieldConstants.field_width - 1.545,
+                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                                .minus(new Translation2d(2.975, FieldConstants.field_width - 1.545))
+                                .getAngle()),
+                        0.5)),
+                Commands.run(() -> intake.stop()),
                 PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(FieldConstants.FuelField.middle_close_line),
-                    0.25,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(
-                              () -> AllianceFlip.apply(Rotation2d.kCCW_90deg));
-                        })),
-                PathBuilder.triggerWhenFar(
-                    AllianceFlip.apply(FieldConstants.field_center),
-                    0.1,
-                    Commands.runOnce(
-                        () -> {
-                          PathBuilder.targetRotation(() -> AllianceFlip.apply(Rotation2d.k180deg));
-                        })),
-                PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(FieldConstants.Trench.left_trench_neutral_preentrance),
-                    1.5,
-                    Commands.runOnce(
-                            () -> {
-                              PathBuilder.targetRotation(
-                                  () -> AllianceFlip.apply(Rotation2d.kZero));
-                            })
-                        .andThen(Commands.run(() -> intake.intakeVolts(0)))),
-                PathBuilder.triggerWhenClose(
-                    AllianceFlip.apply(new Translation2d(2.975, 6.524326)),
-                    0.5,
+                    FieldConstants.Trench.left_trench_alliance_preentrance,
+                    0.2,
                     Commands.runOnce(
                         () ->
                             PathBuilder.targetTranslation(
@@ -627,54 +551,37 @@ public class RobotContainer {
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
             AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
             Commands.deadline(
-                    PathBuilder.interpolateTimedPath(
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_neutral_preentrance,
-                                new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.FuelField.right_close_corner, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.field_center, new Rotation2d()))),
-                    Commands.run(() -> intake.intakeVolts(0.7)))
-                .andThen(
-                    Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
-            Commands.parallel(
-                    PathBuilder.triggerWhenClose(
-                        FieldConstants.Trench.right_trench_center,
-                        2.5,
-                        Commands.runOnce(() -> PathBuilder.targetRotation(() -> Rotation2d.kZero))),
-                    PathBuilder.interpolateTimedPath(
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.field_center, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.FuelField.right_midline_corner, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_neutral_preentrance,
-                                new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_alliance_preentrance,
-                                new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(FieldConstants.right_alliance_shoot, new Rotation2d())),
-                        AllianceFlip.apply(
-                            new Pose2d(new Translation2d(2.975, 1.545), new Rotation2d()))))
-                .andThen(
-                    Commands.parallel(
-                        DriveCommands.autonAtAngle(
-                            drive,
-                            () ->
-                                AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                    .minus(drive.getPose().getTranslation())
-                                    .getAngle()
-                                    .minus(Constants.DriveConstants.local_offset)),
-                        ScoringCommands.staticAim(drive, hood))),
-            new WaitUntilCommand(() -> hood.atGoal())
-                .andThen(ScoringCommands.staticShoot(drive, shooter, hopper).withTimeout(5))));
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(2.975, FieldConstants.field_width - 1.545, new Rotation2d()),
+                        0.5),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_alliance_preentrance,
+                            Rotation2d.kZero),
+                        1),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.left_close_corner, Rotation2d.kCW_90deg),
+                        0.4,
+                        1.75,
+                        1.5),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.middle_close_line, Rotation2d.kCW_90deg),
+                        0.4)),
+                PathBuilder.triggerWhenFar(
+                    FieldConstants.Trench.left_trench_center,
+                    1.5,
+                    ScoringCommands.forceDown(wrist)),
+                PathBuilder.triggerWhenClose(
+                    FieldConstants.FuelField.left_close_corner,
+                    1,
+                    Commands.run(() -> intake.intakeVolts(10.0))))));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -741,7 +648,7 @@ public class RobotContainer {
                                     FieldConstants.Bump.right_bump_alliance_entrance)))
                         .minus(drive.getPose().getTranslation())
                         .getAngle()
-                        .minus(Constants.DriveConstants.local_offset)
+                        .minus(Rotation2d.fromDegrees(-6))
                     : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                         .minus(drive.getPose().getTranslation())
                         .getAngle()),
@@ -756,8 +663,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
-                ScoringCommands.dataShoot(shooter, hopper),
-                // ScoringCommands.staticShoot(drive, shooter, hopper),
+                // ScoringCommands.dataShoot(shooter, hopper),
+                ScoringCommands.staticShoot(drive, shooter, hopper),
                 () -> pilot.a().getAsBoolean()));
 
     pilot
@@ -801,7 +708,7 @@ public class RobotContainer {
     copilot.getRightBumperButton().onTrue(ScoringCommands.goodStow(wrist));
 
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
-    copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
+    // copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
     copilot.getUpButton().onTrue(Commands.runOnce(hood::zero));
 
     copilot.rightTrigger(0.3).onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
