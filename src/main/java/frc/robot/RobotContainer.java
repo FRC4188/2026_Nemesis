@@ -188,7 +188,8 @@ public class RobotContainer {
                             FieldConstants.FuelField.right_midline_corner, Rotation2d.kCCW_90deg),
                         0.25),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)), 0.25)),
+                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)),
+                        0.25)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.right_trench_center,
                     1.5,
@@ -203,8 +204,10 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)),
                     new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero), 1, 1.5, 2),
+                        new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
+                        1,
+                        1.5,
+                        2),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
@@ -236,16 +239,12 @@ public class RobotContainer {
             AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
             Commands.deadline(
                 PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            2.975,
-                            1.545,
-                            new Rotation2d()),
-                        0.5),
+                    new PathBuilder.Target(new Pose2d(2.975, 1.545, new Rotation2d()), 0.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_alliance_preentrance,
-                            Rotation2d.kZero), 1),
+                            Rotation2d.kZero),
+                        1),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
@@ -253,9 +252,13 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.FuelField.right_close_corner, Rotation2d.kCCW_90deg),
-                        0.4),
+                        0.4,
+                        2.5,
+                        2.5),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.middle_close_line, Rotation2d.kCCW_90deg), 0.4)),
+                        new Pose2d(
+                            FieldConstants.FuelField.middle_close_line, Rotation2d.kCCW_90deg),
+                        0.4)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.right_trench_center,
                     1.5,
@@ -284,10 +287,12 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.field_center, Rotation2d.k180deg), 0.25),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.middle_close_line, Rotation2d.kCW_90deg), 0.25),
+                        new Pose2d(
+                            FieldConstants.FuelField.middle_close_line, Rotation2d.kCW_90deg),
+                        0.25),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero), 0.25)
-                ),
+                        new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero),
+                        0.25)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.right_trench_center,
                     1.5,
@@ -300,8 +305,7 @@ public class RobotContainer {
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.right_close_corner, Rotation2d.kZero)),
+                        new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kZero)),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.right_trench_neutral_preentrance,
@@ -363,8 +367,7 @@ public class RobotContainer {
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)),
+                        new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_neutral_preentrance,
@@ -374,7 +377,8 @@ public class RobotContainer {
                             FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
                         0.25),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)), 0.25)),
+                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)),
+                        0.25)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.left_trench_center,
                     1.5,
@@ -389,8 +393,10 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
                     new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero), 1, 1.5, 2),
+                        new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
+                        1,
+                        1.5,
+                        2),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_neutral_preentrance,
@@ -402,9 +408,9 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(
                             2.975,
-                            FieldConstants.field_width-1.545,
+                            FieldConstants.field_width - 1.545,
                             AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(new Translation2d(2.975, FieldConstants.field_width-1.545))
+                                .minus(new Translation2d(2.975, FieldConstants.field_width - 1.545))
                                 .getAngle()),
                         0.5)),
                 Commands.run(() -> intake.stop()),
@@ -416,22 +422,20 @@ public class RobotContainer {
                             PathBuilder.targetTranslation(
                                 () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
                 PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, FieldConstants.field_width-1.545),
+                    new Translation2d(2.975, FieldConstants.field_width - 1.545),
                     0.1,
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
             AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
-                        new Pose2d(
-                            2.975,
-                            FieldConstants.field_width-1.545,
-                            new Rotation2d()),
+                        new Pose2d(2.975, FieldConstants.field_width - 1.545, new Rotation2d()),
                         0.5),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_alliance_preentrance,
-                            Rotation2d.kZero), 1),
+                            Rotation2d.kZero),
+                        1),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Trench.left_trench_neutral_preentrance,
@@ -439,9 +443,13 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.FuelField.left_close_corner, Rotation2d.kCW_90deg),
-                        0.4),
+                        0.4,
+                        1.75,
+                        1.5),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.middle_close_line, Rotation2d.kCW_90deg), 0.4)),
+                        new Pose2d(
+                            FieldConstants.FuelField.middle_close_line, Rotation2d.kCW_90deg),
+                        0.4)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.left_trench_center,
                     1.5,
