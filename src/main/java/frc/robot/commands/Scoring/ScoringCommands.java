@@ -88,12 +88,12 @@ public class ScoringCommands {
   }
 
   public static Command passAim(Hood hood) {
-    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(60)), hood::stow, hood);
+    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(40)), hood::stow, hood);
   }
 
   public static Command passShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(2500), shooter::stop, shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(3100), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
@@ -103,7 +103,7 @@ public class ScoringCommands {
 
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
-            Commands.runEnd(() -> wrist.runWristVolts(1.5), () -> wrist.stop())
+            Commands.runEnd(() -> wrist.runWristVolts(2), () -> wrist.stop())
                 .until(() -> wrist.getAngle() > 40 || wrist.isStalled()),
             new WaitCommand(0.5))
         // .until(() -> wrist.getAngle() > 120.0)
