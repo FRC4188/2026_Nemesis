@@ -145,7 +145,7 @@ public final class Constants {
 
   public static class WristConstants {
     public static final Rotation2d kTolerance = Rotation2d.fromDegrees(10.0);
-    public static final double kGearRatio = 25.0;
+    public static final double kGearRatio = 25.0 * 2.666666666667;
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(144.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
