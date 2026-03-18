@@ -233,9 +233,9 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(166.89));
 
     public static final Translation2d left_approach_pos = new Translation2d(1.589, 5);
-    public static final Translation2d right_approach_pos = new Translation2d(1.589, 2.2);
+    public static final Translation2d right_approach_pos = new Translation2d(1.559, 1.750);
     public static final Translation2d left_align_pos = new Translation2d(1.589, 5);
-    public static final Translation2d right_align_pos = new Translation2d(1.589, 2.2);
+    public static final Translation2d right_align_pos = new Translation2d(1.559, 2.351);
 
     public static final List<Waypoint> left_approach =
         PathPlannerPath.waypointsFromPoses(
