@@ -8,8 +8,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
-
-import java.lang.reflect.Field;
 import java.util.List;
 
 public final class FieldConstants { // going off of an onshape cad of field
@@ -201,20 +199,26 @@ public final class FieldConstants { // going off of an onshape cad of field
 
     public static final Translation2d intake_midline =
         new Translation2d(
-            FieldConstants.field_length / 2 -Constants.Robot.B_LENGTH / 2, Units.inchesToMeters(67.89) + fuelfield_width / 2);
-            public static final Translation2d intake_closeline =
+            FieldConstants.field_length / 2 - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(67.89) + fuelfield_width / 2);
+    public static final Translation2d intake_closeline =
         new Translation2d(
-            Units.inchesToMeters(289.66)-Constants.Robot.B_LENGTH / 2, Units.inchesToMeters(67.89) + fuelfield_width / 2);
+            Units.inchesToMeters(289.66) - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(67.89) + fuelfield_width / 2);
 
     public static final Translation2d intake_right_close_corner =
-        new Translation2d(Units.inchesToMeters(289.66) - Constants.Robot.B_LENGTH / 2, Units.inchesToMeters(67.89));
+        new Translation2d(
+            Units.inchesToMeters(289.66) - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(67.89));
     public static final Translation2d intake_left_close_corner =
         new Translation2d(
-            Units.inchesToMeters(289.66) - Constants.Robot.B_LENGTH / 2, Units.inchesToMeters(67.89) + fuelfield_width);
+            Units.inchesToMeters(289.66) - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(67.89) + fuelfield_width);
 
     public static final Translation2d intake_right_midline_corner =
         new Translation2d(
-            Units.inchesToMeters(289.66) + fuelfield_length / 2 - Constants.Robot.B_LENGTH / 2, Units.inchesToMeters(67.89));
+            Units.inchesToMeters(289.66) + fuelfield_length / 2 - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(67.89));
     public static final Translation2d intake_left_midline_corner =
         new Translation2d(
             Units.inchesToMeters(289.66) + fuelfield_length / 2 - Constants.Robot.B_LENGTH / 2,
@@ -232,10 +236,17 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d left_far_corner =
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(166.89));
 
-    public static final Translation2d left_approach_pos = new Translation2d(1.589, 5);
-    public static final Translation2d right_approach_pos = new Translation2d(1.559, 1.750);
-    public static final Translation2d left_align_pos = new Translation2d(1.589, 5);
-    public static final Translation2d right_align_pos = new Translation2d(1.559, 2.351);
+    public static final Translation2d left_approach_pos = new Translation2d(0.85, 4.85);
+    public static final Translation2d left_intermediate_approach_pos = new Translation2d(0.85, 4.62);
+    public static final Translation2d left_inter_inter_approach_pos = new Translation2d(1, 4.62);
+    public static final Translation2d left_align_pos = new Translation2d(1, 4.562);
+
+    public static final Translation2d right_approach_pos = new Translation2d(1.5, 1.750);
+    public static final Translation2d right_intermediate_approach_pos =
+        new Translation2d(1.3, 2.85);
+    public static final Translation2d right_inter_inter_approach_pos =
+        new Translation2d(1.112, 2.85);
+    public static final Translation2d right_align_pos = new Translation2d(1.112, 2.924);
 
     public static final List<Waypoint> left_approach =
         PathPlannerPath.waypointsFromPoses(
