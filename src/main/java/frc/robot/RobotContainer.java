@@ -652,6 +652,93 @@ public class RobotContainer {
             Commands.runOnce(() -> PathBuilder.stopTarget())
                 .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))));
 
+    autoChooser.addOption(
+        "Climb + Left NZ 1.5 Center Swipe",
+        Commands.sequence(
+            Commands.deadline(
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg),
+                        0.25),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kCW_90deg),
+                        0.25),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
+                        0.20),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)),
+                        0.20)),
+                PathBuilder.triggerWhenFar(
+                    FieldConstants.Trench.left_trench_center,
+                    1.5,
+                    ScoringCommands.forceDown(wrist)),
+                PathBuilder.triggerWhenClose(
+                    FieldConstants.FuelField.left_midline_corner,
+                    1,
+                    Commands.run(() -> intake.intakeVolts(10.0)))),
+            Commands.runOnce(() -> intake.stop()),
+            Commands.deadline(
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
+                        1,
+                        1.5,
+                        2),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_alliance_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.kZero))),
+                Commands.runOnce(() -> intake.stop()),
+                PathBuilder.triggerWhenClose(
+                    FieldConstants.Trench.left_trench_alliance_preentrance,
+                    0.2,
+                    Commands.runOnce(
+                        () ->
+                            PathBuilder.targetTranslation(
+                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
+                PathBuilder.triggerWhenClose(
+                    new Translation2d(2.975, FieldConstants.field_width - 1.545),
+                    0.1,
+                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
+            Commands.runOnce(() -> PathBuilder.stopTarget())
+                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)),
+            Commands.sequence(
+                Commands.runOnce(climber::raise, climber),
+                PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.k180deg),
+                        1,
+                        0,
+                        0.5),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg),
+                        0.2),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Tower.left_intermediate_approach_pos,
+                            Rotation2d.k180deg),
+                        0.2),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
+                        0.2),
+                    new PathBuilder.Target(new Pose2d(FieldConstants.Tower.left_align_pos,
+                    Rotation2d.k180deg), 0.1)
+                    ),
+                Commands.runOnce(climber::lower, climber))));
+
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));

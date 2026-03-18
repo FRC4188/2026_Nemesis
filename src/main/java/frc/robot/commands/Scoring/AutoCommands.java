@@ -31,6 +31,6 @@ public class AutoCommands {
                 .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
                 .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
             new WaitCommand(2.5).andThen(ScoringCommands.shake(wrist)))
-        .withTimeout(10.0);
+        .withTimeout(10);
   }
 }
