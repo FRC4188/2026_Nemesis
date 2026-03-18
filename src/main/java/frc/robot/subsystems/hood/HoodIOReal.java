@@ -82,8 +82,8 @@ public class HoodIOReal implements HoodIO {
   }
 
   @Override
-  public void setZero() {
-    motor.setPosition(0.0);
+  public void setOffset(Rotation2d position) {
+    motor.setPosition(position.getRotations());
   }
 
   @Override

@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Hood extends SubsystemBase {
   private final HoodIO io;
@@ -17,6 +18,10 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/Setpoint Degrees")
   private double setpoint = 0.0;
+
+  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees", 0.0);
+
+  private double accumulatedOffset = 0.0;
 
   public Hood(HoodIO io) {
     this.io = io;
@@ -49,8 +54,10 @@ public class Hood extends SubsystemBase {
     io.setPosition(Rotation2d.kZero);
   }
 
-  public void zero() {
-    io.setZero();
+  public void setOffset() {
+    io.setOffset(
+        inputs.position.minus(Rotation2d.fromDegrees(offset.getAsDouble() - accumulatedOffset)));
+    accumulatedOffset = offset.getAsDouble();
   }
 
   @AutoLogOutput(key = "Hood/Is Stalled?")

@@ -300,12 +300,11 @@ public class RobotContainer {
                 Commands.runOnce(climber::raise, climber),
                 PathBuilder.path(
                     new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),
-                    new PathBuilder.Target(new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
-                    new PathBuilder.Target(new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1)
-                ),
-                Commands.runOnce(climber::lower, climber)
-            )
-                ));
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1)),
+                Commands.runOnce(climber::lower, climber))));
 
     autoChooser.addOption(
         "Right NZ 1.5 Close Swipe",
@@ -323,10 +322,12 @@ public class RobotContainer {
                         0.25),
                     new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.FuelField.intake_right_midline_corner, Rotation2d.kCCW_90deg),
+                            FieldConstants.FuelField.intake_right_midline_corner,
+                            Rotation2d.kCCW_90deg),
                         0.20),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(105)),
+                        new Pose2d(
+                            FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(105)),
                         0.20)),
                 PathBuilder.triggerWhenFar(
                     FieldConstants.Trench.right_trench_center,
@@ -342,7 +343,8 @@ public class RobotContainer {
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.FuelField.intake_midline, Rotation2d.kCCW_90deg)),
                     new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.intake_right_midline_corner, Rotation2d.kZero),
+                        new Pose2d(
+                            FieldConstants.FuelField.intake_right_midline_corner, Rotation2d.kZero),
                         1,
                         1.5,
                         2),
@@ -368,7 +370,7 @@ public class RobotContainer {
                     0.1,
                     Commands.runOnce(() -> PathBuilder.stopTarget()))),
             Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)) ));
+                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))));
 
     autoChooser.addOption(
         "Right NZ 1 C Swipe",
@@ -722,17 +724,20 @@ public class RobotContainer {
             () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
-
     pilot.a().whileTrue(ScoringCommands.passAim(hood));
 
     pilot
         .rightTrigger(0.3)
         .whileTrue(
             Commands.either(
-                ScoringCommands.passShoot(shooter, hopper),
-                // ScoringCommands.dataShoot(shooter, hopper),
-                ScoringCommands.staticShoot(drive, shooter, hopper),
-                () -> pilot.a().getAsBoolean()));
+                    ScoringCommands.passShoot(shooter, hopper),
+                    // ScoringCommands.dataShoot(shooter, hopper),
+                    Commands.either(
+                        ScoringCommands.staticShoot(drive, shooter, hopper),
+                        ScoringCommands.manualShots(hood, shooter, hopper),
+                        () -> pilot.getRightBumperButton().getAsBoolean()),
+                    () -> pilot.a().getAsBoolean())
+                .alongWith(ScoringCommands.shake(wrist)));
 
     pilot
         .leftTrigger(0.3)
@@ -746,7 +751,6 @@ public class RobotContainer {
                 Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
 
     pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
-    // pilot.x().onTrue(ScoringCommands.goToClimb(drive, climber));
 
     copilot
         .b()
@@ -755,12 +759,6 @@ public class RobotContainer {
                 () -> climber.runClimberVolts(8 * -copilot.getLeftY(Scale.LINEAR)),
                 climber::stop,
                 climber));
-
-    copilot
-        .x()
-        .whileTrue(
-            Commands.runEnd(
-                () -> hood.runHoodVolts(-copilot.getLeftY(Scale.LINEAR)), hood::stop, hood));
     copilot
         .y()
         .whileTrue(
@@ -769,17 +767,12 @@ public class RobotContainer {
                 wrist::stop,
                 wrist));
 
-    copilot.a().whileTrue(ScoringCommands.shake(wrist));
-
-    copilot.getLeftBumperButton().onTrue(ScoringCommands.forceDown(wrist));
-    copilot.getRightBumperButton().onTrue(ScoringCommands.shake(wrist));
+    copilot.x().onTrue(ScoringCommands.downNoStall(wrist));
+    copilot.a().onTrue(ScoringCommands.goodStow(wrist));
 
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
-    copilot.getUpButton().onTrue(Commands.runOnce(hood::zero));
-
-    copilot.rightTrigger(0.3).onTrue(Commands.runOnce(() -> drive.acceptVision(true)));
-    copilot.leftTrigger(0.3).onTrue(Commands.runOnce(() -> drive.acceptVision(false)));
+    copilot.getUpButton().onTrue(Commands.runOnce(hood::setOffset));
   }
 
   /**
