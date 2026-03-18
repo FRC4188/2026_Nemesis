@@ -237,7 +237,8 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(Units.inchesToMeters(45.1), Units.inchesToMeters(166.89));
 
     public static final Translation2d left_approach_pos = new Translation2d(0.85, 4.85);
-    public static final Translation2d left_intermediate_approach_pos = new Translation2d(0.85, 4.62);
+    public static final Translation2d left_intermediate_approach_pos =
+        new Translation2d(0.85, 4.62);
     public static final Translation2d left_inter_inter_approach_pos = new Translation2d(1, 4.62);
     public static final Translation2d left_align_pos = new Translation2d(1, 4.562);
 

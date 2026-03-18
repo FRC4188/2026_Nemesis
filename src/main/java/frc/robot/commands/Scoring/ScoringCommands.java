@@ -127,8 +127,8 @@ public class ScoringCommands {
 
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
-            Commands.run(() -> wrist.runWristVolts(6), wrist).withTimeout(1),
-            Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(1))
+            Commands.run(() -> wrist.runWristVolts(6), wrist).withTimeout(0.25),
+            Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.25))
         .until(() -> wrist.getAngle() > 120.0)
         .finallyDo(wrist::stop);
   }

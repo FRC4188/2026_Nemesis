@@ -729,14 +729,13 @@ public class RobotContainer {
                         new Pose2d(
                             FieldConstants.Tower.left_intermediate_approach_pos,
                             Rotation2d.k180deg),
-                        0.2),
+                        0.1),
                     new PathBuilder.Target(
                         new Pose2d(
                             FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
                         0.2),
-                    new PathBuilder.Target(new Pose2d(FieldConstants.Tower.left_align_pos,
-                    Rotation2d.k180deg), 0.1)
-                    ),
+                    new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05)),
                 Commands.runOnce(climber::lower, climber))));
 
     // Set up SysId routines
@@ -817,14 +816,13 @@ public class RobotContainer {
         .rightTrigger(0.3)
         .whileTrue(
             Commands.either(
-                    ScoringCommands.passShoot(shooter, hopper),
-                    // ScoringCommands.dataShoot(shooter, hopper),
-                    Commands.either(
-                        ScoringCommands.staticShoot(drive, shooter, hopper),
-                        ScoringCommands.manualShots(hood, shooter, hopper),
-                        () -> pilot.getRightBumperButton().getAsBoolean()),
-                    () -> pilot.a().getAsBoolean())
-                .alongWith(ScoringCommands.shake(wrist)));
+                ScoringCommands.passShoot(shooter, hopper),
+                // ScoringCommands.dataShoot(shooter, hopper),
+                //  Commands.either(
+                ScoringCommands.staticShoot(drive, shooter, hopper),
+                // ScoringCommands.manualShots(hood, shooter, hopper),
+                // () -> pilot.getRightBumperButton().getAsBoolean()),
+                () -> pilot.a().getAsBoolean()));
 
     pilot
         .leftTrigger(0.3)
@@ -857,6 +855,7 @@ public class RobotContainer {
     copilot.x().onTrue(ScoringCommands.downNoStall(wrist));
     copilot.a().onTrue(ScoringCommands.goodStow(wrist));
 
+    copilot.getLeftBumperButton().whileTrue(ScoringCommands.shake(wrist));
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
     copilot.getUpButton().onTrue(Commands.runOnce(hood::setOffset));
