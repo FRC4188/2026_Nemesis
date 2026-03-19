@@ -62,6 +62,7 @@ import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -89,6 +90,9 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
+  private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
+  private final LoggedDashboardChooser<AutoCommands.Climb> climbChooser;
 
   public RobotContainer() {
     switch (Constants.Robot.currentMode) {
@@ -169,208 +173,34 @@ public class RobotContainer {
     // Set up auto routines
     PathBuilder.configure(drive); // Add all subsystems as parameters later
 
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices"); // AutoBuilder.buildAutoChooser());
+    // These 4 choosers are subbing for PB's dashboard fyi
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices");
+    startChooser = new LoggedDashboardChooser<>("Start Choices");
+    startChooser.addOption("Left Trench", AutoCommands.Start.LEFT);
+    startChooser.addOption("Right Trench", AutoCommands.Start.RIGHT);
+    swipeChooser = new LoggedDashboardChooser<>("Swipe Choices");
+    swipeChooser.addOption("Center Swipe", AutoCommands.Swipe.CENTER);
+    swipeChooser.addOption("Close Swipe", AutoCommands.Swipe.CLOSE);
+    climbChooser = new LoggedDashboardChooser<>("Climb Choices");
+    climbChooser.addOption("Climb", AutoCommands.Climb.CLIMB);
+    climbChooser.addOption("No Climb", AutoCommands.Climb.NONE);
 
     autoChooser.addOption(
-        "Right NZ 1.5 Center Swipe",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.right_midline_corner, Rotation2d.kCCW_90deg),
-                        0.20),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)),
-                        0.20)),
-                PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.right_trench_center,
-                    1.5,
-                    ScoringCommands.forceDown(wrist)),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.right_midline_corner,
-                    1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
-                        1,
-                        1.5,
-                        2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_alliance_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero))),
-                Commands.runOnce(() -> intake.stop()),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.right_trench_alliance_preentrance,
-                    0.2,
-                    Commands.runOnce(
-                        () ->
-                            PathBuilder.targetTranslation(
-                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, 1.545),
-                    0.1,
-                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))));
-
-    autoChooser.addOption(
-        "Climb + Right NZ 1.5 Center Swipe",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.right_midline_corner, Rotation2d.kCCW_90deg),
-                        0.20),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)),
-                        0.20)),
-                PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.right_trench_center,
-                    1.5,
-                    ScoringCommands.forceDown(wrist)),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.right_midline_corner,
-                    1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
-                        1,
-                        1.5,
-                        2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_alliance_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero))),
-                Commands.runOnce(() -> intake.stop()),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.right_trench_alliance_preentrance,
-                    0.2,
-                    Commands.runOnce(
-                        () ->
-                            PathBuilder.targetTranslation(
-                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, 1.545),
-                    0.1,
-                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)),
-            Commands.sequence(
-                Commands.runOnce(climber::raise, climber),
-                PathBuilder.path(
-                    new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1)),
-                Commands.runOnce(climber::lower, climber))));
-
-    autoChooser.addOption(
-        "Right NZ 1.5 Close Swipe",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kCCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.intake_right_midline_corner,
-                            Rotation2d.kCCW_90deg),
-                        0.20),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(105)),
-                        0.20)),
-                PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.right_trench_center,
-                    1.5,
-                    ScoringCommands.forceDown(wrist)),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.intake_right_midline_corner,
-                    1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.intake_midline, Rotation2d.kCCW_90deg)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.intake_right_midline_corner, Rotation2d.kZero),
-                        1,
-                        1.5,
-                        2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_alliance_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero))),
-                Commands.runOnce(() -> intake.stop()),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.right_trench_alliance_preentrance,
-                    0.2,
-                    Commands.runOnce(
-                        () ->
-                            PathBuilder.targetTranslation(
-                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, 1.545),
-                    0.1,
-                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))));
+        "PsuedoBoard",
+        Commands.defer(
+            () ->
+                AutoCommands.pseudoBoard(
+                    startChooser.get(),
+                    swipeChooser.get(),
+                    climbChooser.get(),
+                    drive,
+                    shooter,
+                    hood,
+                    hopper,
+                    intake,
+                    wrist,
+                    climber),
+            Set.of(drive, shooter, hood, hopper, intake, wrist, climber)));
 
     autoChooser.addOption(
         "Right NZ 1 C Swipe",
@@ -404,8 +234,7 @@ public class RobotContainer {
                 PathBuilder.triggerWhenClose(
                     FieldConstants.FuelField.right_close_corner,
                     1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
+                    Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake))),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
@@ -427,7 +256,6 @@ public class RobotContainer {
                                 .minus(new Translation2d(2.975, 1.545))
                                 .getAngle()),
                         0.5)),
-                Commands.run(() -> intake.stop()),
                 PathBuilder.triggerWhenClose(
                     FieldConstants.Trench.right_trench_alliance_preentrance,
                     0.2,
@@ -463,7 +291,7 @@ public class RobotContainer {
                 PathBuilder.triggerWhenClose(
                     FieldConstants.FuelField.right_midline_corner,
                     1,
-                    Commands.run(() -> intake.intakeVolts(10.0))))));
+                    Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake)))));
 
     autoChooser.addOption(
         "Optim. Right NZ 1 C Swipe",
@@ -500,8 +328,7 @@ public class RobotContainer {
                 PathBuilder.triggerWhenClose(
                     FieldConstants.FuelField.right_close_corner,
                     1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
+                    Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake))),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
@@ -519,7 +346,6 @@ public class RobotContainer {
                                 .minus(new Translation2d(2.975, 1.545))
                                 .getAngle()),
                         0.5)),
-                Commands.run(() -> intake.stop()),
                 PathBuilder.triggerWhenClose(
                     FieldConstants.Trench.right_trench_alliance_preentrance,
                     0.2,
@@ -587,156 +413,7 @@ public class RobotContainer {
                             - Constants.Robot.B_WIDTH / 2,
                         FieldConstants.FuelField.right_close_corner.getY()),
                     1,
-                    Commands.run(() -> intake.intakeVolts(10.0))))));
-
-    autoChooser.addOption(
-        "Left NZ 1.5 Center Swipe",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            Rotation2d.kCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
-                        0.20),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)),
-                        0.20)),
-                PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.left_trench_center,
-                    1.5,
-                    ScoringCommands.forceDown(wrist)),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.left_midline_corner,
-                    1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
-                        1,
-                        1.5,
-                        2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_alliance_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.kZero))),
-                Commands.runOnce(() -> intake.stop()),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.left_trench_alliance_preentrance,
-                    0.2,
-                    Commands.runOnce(
-                        () ->
-                            PathBuilder.targetTranslation(
-                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, FieldConstants.field_width - 1.545),
-                    0.1,
-                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))));
-
-    autoChooser.addOption(
-        "Climb + Left NZ 1.5 Center Swipe",
-        Commands.sequence(
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            Rotation2d.kCW_90deg),
-                        0.25),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
-                        0.20),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(-105)),
-                        0.20)),
-                PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.left_trench_center,
-                    1.5,
-                    ScoringCommands.forceDown(wrist)),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.FuelField.left_midline_corner,
-                    1,
-                    Commands.run(() -> intake.intakeVolts(10.0)))),
-            Commands.runOnce(() -> intake.stop()),
-            Commands.deadline(
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
-                        1,
-                        1.5,
-                        2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_neutral_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.left_trench_alliance_preentrance,
-                            Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.kZero))),
-                Commands.runOnce(() -> intake.stop()),
-                PathBuilder.triggerWhenClose(
-                    FieldConstants.Trench.left_trench_alliance_preentrance,
-                    0.2,
-                    Commands.runOnce(
-                        () ->
-                            PathBuilder.targetTranslation(
-                                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-                PathBuilder.triggerWhenClose(
-                    new Translation2d(2.975, FieldConstants.field_width - 1.545),
-                    0.1,
-                    Commands.runOnce(() -> PathBuilder.stopTarget()))),
-            Commands.runOnce(() -> PathBuilder.stopTarget())
-                .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)),
-            Commands.sequence(
-                Commands.runOnce(climber::raise, climber),
-                PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.k180deg),
-                        1,
-                        0,
-                        0.5),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg),
-                        0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Tower.left_intermediate_approach_pos,
-                            Rotation2d.k180deg),
-                        0.1),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
-                        0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05)),
-                Commands.runOnce(climber::lower, climber))));
+                    Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake)))));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -811,6 +488,7 @@ public class RobotContainer {
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
     pilot.a().whileTrue(ScoringCommands.passAim(hood));
+    pilot.x().whileTrue(ScoringCommands.manualAim(hood));
 
     pilot
         .rightTrigger(0.3)
@@ -818,11 +496,13 @@ public class RobotContainer {
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
                 // ScoringCommands.dataShoot(shooter, hopper),
-                //  Commands.either(
-                ScoringCommands.staticShoot(drive, shooter, hopper),
-                // ScoringCommands.manualShots(hood, shooter, hopper),
-                // () -> pilot.getRightBumperButton().getAsBoolean()),
+                Commands.either(
+                    ScoringCommands.staticShoot(drive, shooter, hopper),
+                    ScoringCommands.manualShoot(shooter, hopper),
+                    () -> pilot.getRightBumperButton().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
+
+    pilot.rightTrigger(0.3).whileTrue(ScoringCommands.shake(wrist));
 
     pilot
         .leftTrigger(0.3)
@@ -856,9 +536,14 @@ public class RobotContainer {
     copilot.a().onTrue(ScoringCommands.goodStow(wrist));
 
     copilot.getLeftBumperButton().whileTrue(ScoringCommands.shake(wrist));
+
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
-    copilot.getUpButton().onTrue(Commands.runOnce(hood::setOffset));
+    copilot.getUpButton().onTrue(Commands.runOnce(hood::zero));
+    copilot
+        .getDownButton()
+        .toggleOnTrue(
+            Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }
 
   /**

@@ -21,5 +21,5 @@ public interface HoodIO {
 
   public default void setPosition(Rotation2d position) {}
 
-  public default void setOffset(Rotation2d position) {}
+  public default void setZero() {}
 }

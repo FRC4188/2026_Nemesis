@@ -72,10 +72,13 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
   }
 
-  public static Command manualShots(Hood hood, Shooter shooter, Hopper hopper) {
+  public static Command manualAim(Hood hood) {
+    return Commands.runEnd(
+        () -> hood.setAngle(inclineHueristic(Units.feetToMeters(12.0))), hood::stow, hood);
+  }
+
+  public static Command manualShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.runEnd(
-            () -> hood.setAngle(inclineHueristic(Units.feetToMeters(12.0))), hood::stow, hood),
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
@@ -92,18 +95,6 @@ public class ScoringCommands {
 
   public static double RPMRegress(double distance) {
     return 144.557 * distance + 1806.67131;
-  }
-
-  // TODO: might need to do a regression for left shooter
-  public static double leftRPMRegress(double distance) {
-    return 0;
-  }
-
-  public static double rightRPMRegress(double distance) {
-    return (13.51793 * Math.pow(distance, 3))
-        - (101.92503 * Math.pow(distance, 2))
-        + (470.26059 * distance)
-        + 1322.57969;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
@@ -127,8 +118,8 @@ public class ScoringCommands {
 
   public static Command shake(Wrist wrist) {
     return Commands.repeatingSequence(
-            Commands.run(() -> wrist.runWristVolts(6), wrist).withTimeout(0.25),
-            Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.25))
+            Commands.run(() -> wrist.runWristVolts(5), wrist).withTimeout(0.25),
+            Commands.run(() -> wrist.runWristVolts(-5), wrist).withTimeout(0.25))
         .until(() -> wrist.getAngle() > 120.0)
         .finallyDo(wrist::stop);
   }

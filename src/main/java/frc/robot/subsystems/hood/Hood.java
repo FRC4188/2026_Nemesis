@@ -21,8 +21,6 @@ public class Hood extends SubsystemBase {
 
   private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees", 0.0);
 
-  private double accumulatedOffset = 0.0;
-
   public Hood(HoodIO io) {
     this.io = io;
     inputs = new HoodIOInputsAutoLogged();
@@ -44,7 +42,7 @@ public class Hood extends SubsystemBase {
     io.setPosition(
         Rotation2d.fromDegrees(
             MathUtil.clamp(
-                angle.getDegrees(),
+                angle.getDegrees() + offset.getAsDouble(),
                 Constants.HoodConstants.Min_A.getDegrees(),
                 Constants.HoodConstants.Max_A.getDegrees())));
   }
@@ -54,10 +52,8 @@ public class Hood extends SubsystemBase {
     io.setPosition(Rotation2d.kZero);
   }
 
-  public void setOffset() {
-    io.setOffset(
-        inputs.position.minus(Rotation2d.fromDegrees(offset.getAsDouble() - accumulatedOffset)));
-    accumulatedOffset = offset.getAsDouble();
+  public void zero() {
+    io.setZero();
   }
 
   @AutoLogOutput(key = "Hood/Is Stalled?")
@@ -68,13 +64,12 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(inputs.position.getDegrees() - setpoint)
-        < Constants.HoodConstants.kTolerance.getDegrees();
+    return Math.abs(getAngle() - setpoint) < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
   @AutoLogOutput(key = "Hood/Angle Degrees")
   public double getAngle() {
-    return inputs.position.getDegrees();
+    return inputs.position.getDegrees() - offset.getAsDouble();
   }
 
   public void periodic() {

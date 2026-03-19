@@ -23,6 +23,13 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
+  @AutoLogOutput(key = "Vision/Vision Enabled?")
+  private boolean updateVision = true;
+
+  public void enableVision(boolean enable) {
+    updateVision = enable;
+  }
+
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
@@ -69,6 +76,8 @@ public class Vision extends SubsystemBase {
       io[i].updateInputs(inputs[i]);
       Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
     }
+
+    if (!updateVision) return;
 
     // Initialize logging values
     List<Pose3d> allTagPoses = new LinkedList<>();
