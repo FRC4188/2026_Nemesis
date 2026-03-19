@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.CSPLib.ppp.PathBuilder;
+import frc.robot.Constants;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -29,7 +30,8 @@ public class AutoCommands {
             () ->
                 AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                     .minus(drive.getPose().getTranslation())
-                    .getAngle()),
+                    .getAngle()
+                    .minus(Constants.DriveConstants.local_offset)),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
         ScoringCommands.staticAim(drive, hood),
         new WaitCommand(0.1)
@@ -205,12 +207,12 @@ public class AutoCommands {
             .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))
             .withTimeout(
                 switch (climb) {
-                  case CLIMB -> 10.0;
-                  case NONE -> 15.0;
+                  case CLIMB -> 4.0;
+                  case NONE -> 10.0;
                 }),
         switch (climb) {
           case CLIMB -> Commands.sequence(
-              // Commands.runOnce(climber::raise, climber),
+              Commands.runOnce(climber::raise, climber),
               switch (start) {
                 case RIGHT -> PathBuilder.path(
                     new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),

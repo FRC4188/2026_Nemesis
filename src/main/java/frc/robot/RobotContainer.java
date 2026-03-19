@@ -480,7 +480,7 @@ public class RobotContainer {
                                     FieldConstants.Bump.right_bump_alliance_entrance)))
                         .minus(drive.getPose().getTranslation())
                         .getAngle()
-                        .minus(Rotation2d.fromDegrees(-6))
+                        .minus(Constants.DriveConstants.local_offset)
                     : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                         .minus(drive.getPose().getTranslation())
                         .getAngle()),
@@ -536,6 +536,13 @@ public class RobotContainer {
     copilot.a().onTrue(ScoringCommands.goodStow(wrist));
 
     copilot.getLeftBumperButton().whileTrue(ScoringCommands.shake(wrist));
+    copilot.getRightBumperButton().whileTrue(ScoringCommands.forceDown(wrist));
+
+    copilot
+        .leftTrigger(0.3)
+        .toggleOnTrue(
+            Commands.startEnd(
+                () -> ScoringCommands.enableShake(false), () -> ScoringCommands.enableShake(true)));
 
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));

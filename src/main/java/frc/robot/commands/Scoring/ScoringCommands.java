@@ -17,10 +17,18 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
+
+  @AutoLogOutput(key = "Wrist/Shake Enable?")
+  private static boolean shakeEnable = true;
+
+  public static void enableShake(boolean enable) {
+    shakeEnable = enable;
+  }
 
   public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
@@ -117,28 +125,31 @@ public class ScoringCommands {
   }
 
   public static Command shake(Wrist wrist) {
-    return Commands.repeatingSequence(
-            Commands.run(() -> wrist.runWristVolts(5), wrist).withTimeout(0.25),
-            Commands.run(() -> wrist.runWristVolts(-5), wrist).withTimeout(0.25))
-        .until(() -> wrist.getAngle() > 120.0)
-        .finallyDo(wrist::stop);
+    return Commands.either(
+        Commands.repeatingSequence(
+                Commands.run(() -> wrist.runWristVolts(5), wrist).withTimeout(0.25),
+                Commands.run(() -> wrist.runWristVolts(-5), wrist).withTimeout(0.25))
+            .until(() -> wrist.getAngle() > 120.0)
+            .finallyDo(wrist::stop),
+        Commands.none(),
+        () -> shakeEnable);
   }
 
   public static Command downNoStall(Wrist wrist) {
     return Commands.run(() -> wrist.runWristVolts(-4), wrist)
-        .until(() -> wrist.getAngle() < 30 || wrist.isStalled())
+        .until(() -> wrist.getAngle() < 30)
         .finallyDo(wrist::stop);
   }
 
   public static Command forceDown(Wrist wrist) {
     return Commands.run(() -> wrist.runWristVolts(-8), wrist)
-        .until(() -> wrist.getAngle() < 30 || wrist.isStalled())
+        .until(() -> wrist.getAngle() < 30)
         .finallyDo(wrist::stop);
   }
 
   public static Command goodStow(Wrist wrist) {
     return Commands.run(() -> wrist.runWristVolts(6), wrist)
-        .until(() -> wrist.getAngle() > 120 || wrist.isStalled())
+        .until(() -> wrist.getAngle() > 120)
         .finallyDo(wrist::stop);
   }
 

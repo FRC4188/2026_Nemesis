@@ -108,7 +108,7 @@ public final class Constants {
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
 
-    public static final Rotation2d local_offset = Rotation2d.fromDegrees(-6);
+    public static final Rotation2d local_offset = Rotation2d.fromDegrees(6);
 
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
@@ -151,7 +151,7 @@ public final class Constants {
 
     public static final double kStatorCurrent = 50; // placeholder
     public static final double kSupplyCurrent = 30; // placeholder
-    public static final double kStallCurrent = 20; // placeholder
+    public static final double kStallCurrent = 40; // placeholder
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
