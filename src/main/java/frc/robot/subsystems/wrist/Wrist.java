@@ -13,7 +13,7 @@ public class Wrist extends SubsystemBase {
   private final WristIOInputsAutoLogged inputs;
   private final Alert wristDisconnectedAlert;
 
-  @AutoLogOutput(key = "Wrist/Setpoint Degrees")
+  // @AutoLogOutput(key = "Wrist/Setpoint Degrees")
   private double setpoint = 0.0;
 
   @AutoLogOutput(key = "Wrist/Shake Enable?")
@@ -62,18 +62,18 @@ public class Wrist extends SubsystemBase {
     io.setZero();
   }
 
-  @AutoLogOutput(key = "Wrist/is Stalling?")
+  // @AutoLogOutput(key = "Wrist/is Stalling?")
   public boolean isStalled() {
     return Math.abs(inputs.currentAmps) > Constants.WristConstants.kStallCurrent
         && inputs.velocity.getDegrees() < 2.0;
   }
 
-  @AutoLogOutput(key = "Wrist/Angle Degrees")
+  // @AutoLogOutput(key = "Wrist/Angle Degrees")
   public double getAngle() {
     return inputs.position.getDegrees();
   }
 
-  @AutoLogOutput(key = "Wrist/At Goal?")
+  // @AutoLogOutput(key = "Wrist/At Goal?")
   public boolean atGoal() {
     return Math.abs(inputs.position.getDegrees() - setpoint)
         < Constants.WristConstants.kTolerance.getDegrees();

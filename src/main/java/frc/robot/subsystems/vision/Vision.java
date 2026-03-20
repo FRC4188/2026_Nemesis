@@ -37,7 +37,7 @@ public class Vision extends SubsystemBase {
   private final DigitalInput vrm;
   private final Debouncer mainDebouncer;
 
-  @AutoLogOutput(key = "Vision/Using Main Camera")
+  // @AutoLogOutput(key = "Vision/Using Main Camera")
   public static boolean usingMainCamera;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {

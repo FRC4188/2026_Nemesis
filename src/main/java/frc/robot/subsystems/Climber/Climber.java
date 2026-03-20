@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
@@ -15,7 +14,7 @@ public class Climber extends SubsystemBase {
 
   private final Alert climberDisconnectedAlert;
 
-  @AutoLogOutput(key = "Climber/Setpoint Inches")
+  // @AutoLogOutput(key = "Climber/Setpoint Inches")
   private double setpoint = 0.0;
 
   public Climber(ClimberIO io) {
@@ -44,19 +43,19 @@ public class Climber extends SubsystemBase {
     io.setPosition(Constants.ClimberConstants.Min_H * Constants.ClimberConstants.kConversion);
   }
 
-  @AutoLogOutput(key = "Climber/At Goal?")
+  // @AutoLogOutput(key = "Climber/At Goal?")
   public boolean atGoal() {
     return Math.abs(getHeight() - setpoint)
         < Units.metersToInches(Constants.ClimberConstants.kTolerance);
   }
 
-  @AutoLogOutput(key = "Climber/Is Stalled?")
+  // @AutoLogOutput(key = "Climber/Is Stalled?")
   public boolean isStalled() {
     return Math.abs(inputs.currentAmps) > Constants.ClimberConstants.kStallCurrent
         && inputs.velRots < 0.1;
   }
 
-  @AutoLogOutput(key = "Climber/Height Inches")
+  // @AutoLogOutput(key = "Climber/Height Inches")
   public double getHeight() {
     return Units.metersToInches(inputs.posRots / Constants.ClimberConstants.kConversion);
   }

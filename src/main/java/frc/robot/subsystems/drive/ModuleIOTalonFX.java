@@ -59,9 +59,11 @@ public class ModuleIOTalonFX implements ModuleIO {
   private TalonFXConfiguration turnConfig;
 
   // Voltage control requests
-  private final VoltageOut voltageRequest = new VoltageOut(0);
-  private final PositionVoltage positionVoltageRequest = new PositionVoltage(0.0);
-  private final VelocityVoltage velocityVoltageRequest = new VelocityVoltage(0.0);
+  private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+  private final PositionVoltage positionVoltageRequest =
+      new PositionVoltage(0.0).withEnableFOC(true);
+  private final VelocityVoltage velocityVoltageRequest =
+      new VelocityVoltage(0.0).withEnableFOC(true);
 
   // Torque-current control requests
   private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0);
@@ -141,6 +143,9 @@ public class ModuleIOTalonFX implements ModuleIO {
     turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
     turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
     turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
+    turnConfig.CurrentLimits.StatorCurrentLimit = Constants.DriveConstants.kTurnStatorCurrent;
+    turnConfig.CurrentLimits.SupplyCurrentLimit = Constants.DriveConstants.kTurnSupplyCurrent;
+    turnConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     turnConfig.MotorOutput.Inverted =
         constants.SteerMotorInverted
             ? InvertedValue.Clockwise_Positive

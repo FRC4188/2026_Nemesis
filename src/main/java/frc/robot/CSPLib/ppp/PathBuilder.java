@@ -11,7 +11,6 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PointTowardsZone;
 import com.pathplanner.lib.path.RotationTarget;
 import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,7 +23,6 @@ import frc.robot.Constants;
 import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlip;
-import frc.robot.util.LocalADStarAK;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -88,7 +86,6 @@ public final class PathBuilder {
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
 
-    Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
           Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));

@@ -17,25 +17,24 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
-  public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
+  // public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
-  public static Command dataShoot(Shooter shooter, Hopper hopper) {
-    return Commands.parallel(
-        // starting with right shooter first
-        Commands.runEnd(
-            () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
-            shooter::stop,
-            shooter),
-        new WaitCommand(0.1)
-            .andThen(
-                new WaitUntilCommand(() -> shooter.rightAtGoal())
-                    .andThen(
-                        Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
-  }
+  //   public static Command dataShoot(Shooter shooter, Hopper hopper) {
+  //     return Commands.parallel(
+  //         // starting with right shooter first
+  //         Commands.runEnd(
+  //             () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
+  //             shooter::stop,
+  //             shooter),
+  //         new WaitCommand(0.1)
+  //             .andThen(
+  //                 new WaitUntilCommand(() -> shooter.rightAtGoal())
+  //                     .andThen(
+  //                         Commands.runEnd(
+  //                             () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
+  //   }
 
   public static Command staticAim(Drive drive, Hood hood) {
     return Commands.runEnd(

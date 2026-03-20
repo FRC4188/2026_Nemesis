@@ -86,10 +86,10 @@ public final class Constants {
   }
 
   public static class DriveConstants {
-    public static final double kTurnStatorCurrent = 60.0;
-    public static final double kTurnSupplyCurrent = 40.0;
-    public static final double kDriveStatorCurrent = 80.0;
-    public static final double kDriveSupplyCurrent = 60.0;
+    public static final double kTurnStatorCurrent = 50.0;
+    public static final double kTurnSupplyCurrent = 30.0;
+    public static final double kDriveStatorCurrent = 60.0;
+    public static final double kDriveSupplyCurrent = 40.0;
 
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double DRIVE_MAXACC = 8.0;

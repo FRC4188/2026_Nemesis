@@ -611,21 +611,20 @@ public class RobotContainer {
             //             + Constants.Robot.B_LENGTH / 2,
             //         FieldConstants.Trench.left_trench_alliance_entrance.getY(),
             //         Rotation2d.kCW_90deg)));
-            new Pose2d(0, 0, Rotation2d.kZero)
-        );
+            new Pose2d(0, 0, Rotation2d.kZero));
       }
     }
   }
 
   public void periodic() {
-    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
-    Logger.recordOutput(
-        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
-    Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
+    // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    // Logger.recordOutput(
+    //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    // Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    Logger.recordOutput(
-        "Drive/Distance From Hub",
-        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    // Logger.recordOutput(
+    //     "Drive/Distance From Hub",
+    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {

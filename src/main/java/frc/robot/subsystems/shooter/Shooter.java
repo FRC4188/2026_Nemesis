@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
@@ -15,10 +14,10 @@ public class Shooter extends SubsystemBase {
   private final Alert leftDisconnectedAlert;
   private final Alert rightDisconnectedAlert;
 
-  @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
+  // @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
   private double setRightRPM = 0.0;
 
-  @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
+  // @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
   private double setLeftRPM = 0.0;
 
   public Shooter(ShooterIO io) {
@@ -43,7 +42,7 @@ public class Shooter extends SubsystemBase {
     io.setVolts(0.0);
   }
 
-  @AutoLogOutput(key = "Shooter/At Goal?")
+  // @AutoLogOutput(key = "Shooter/At Goal?")
   public boolean atGoal() {
     return leftAtGoal() && rightAtGoal();
   }
