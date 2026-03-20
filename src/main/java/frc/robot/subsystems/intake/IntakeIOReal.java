@@ -39,11 +39,7 @@ public class IntakeIOReal implements IntakeIO {
                                 .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.IntakeConstants.kNuetralMode)
-                    .withInverted(Constants.IntakeConstants.kInvertedValue))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.IntakeConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.IntakeConstants.kPeakReverseTC));
+                    .withInverted(Constants.IntakeConstants.kInvertedValue));
 
     motor.getConfigurator().apply(motorConfig);
 

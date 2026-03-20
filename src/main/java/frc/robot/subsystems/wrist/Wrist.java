@@ -34,16 +34,6 @@ public class Wrist extends SubsystemBase {
     setpoint = 180;
     io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
-
-  public void runWristTC(double amps) {
-    setpoint = 180;
-    io.setTorqueCurrent(
-        MathUtil.clamp(
-            amps,
-            -Constants.WristConstants.kPeakReverseTC,
-            Constants.WristConstants.kPeakForwardTC));
-  }
-
   public void stop() {
     io.setVolts(0.0);
   }

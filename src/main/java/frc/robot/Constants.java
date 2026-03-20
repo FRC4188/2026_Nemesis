@@ -135,10 +135,8 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final double kStatorCurrent = 50.0; // placeholder
-    public static final double kSupplyCurrent = 30.0; // placeholder
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final double kStatorCurrent = 50.0;
+    public static final double kSupplyCurrent = 30.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
   }
@@ -149,11 +147,9 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(144.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 50; // placeholder
-    public static final double kSupplyCurrent = 30; // placeholder
+    public static final double kStatorCurrent = 50; 
+    public static final double kSupplyCurrent = 30;
     public static final double kStallCurrent = 40; // placeholder
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
     public static final Slot0Configs wristGains =
@@ -174,8 +170,8 @@ public final class Constants {
     public static final double kSproketDiameter = Units.inchesToMeters(0.75);
     public static final double kConversion = kGearBox / (kSproketDiameter * Math.PI);
 
-    public static final double kStatorCurrent = 60.0; // placeholder
-    public static final double kSupplyCurrent = 40.0; // paceholder
+    public static final double kStatorCurrent = 60.0;
+    public static final double kSupplyCurrent = 40.0; 
     public static final double kStallCurrent = 50.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -183,9 +179,9 @@ public final class Constants {
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final Slot0Configs climberGains =
         new Slot0Configs()
-            .withKP(1.0) // 1.0
+            .withKP(1.0)
             .withKI(0.0)
-            .withKD(0.3) // 0.3
+            .withKD(0.3)
             .withKG(0.0)
             .withGravityType(GravityTypeValue.Elevator_Static);
   }
@@ -196,11 +192,9 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 50.0; // placeholder
-    public static final double kSupplyCurrent = 30.0; // placeholder
+    public static final double kStatorCurrent = 50.0; 
+    public static final double kSupplyCurrent = 30.0; 
     public static final double kStallCurrent = 20.0; // placeholder
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
@@ -215,12 +209,11 @@ public final class Constants {
 
   public static class ShooterConstants {
     public static final double kTolerance = 100.0;
-    public static final double kMinRPM = 1500.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
-    public static final double kStatorCurrent = 60.0; // placeholder
-    public static final double kSupplyCurrent = 40.0; // placeholder
+    public static final double kStatorCurrent = 60.0;
+    public static final double kSupplyCurrent = 40.0;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
 
@@ -233,8 +226,8 @@ public final class Constants {
   }
 
   public static class IndexerConstants {
-    public static final double kStatorCurrent = 40.0; // placeholder
-    public static final double kSupplyCurrent = 20.0; // placeholder
+    public static final double kStatorCurrent = 40.0;
+    public static final double kSupplyCurrent = 20.0;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
@@ -242,8 +235,8 @@ public final class Constants {
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 40.0; // placeholder
-    public static final double kSupplyCurrent = 20.0; // placeholder
+    public static final double kStatorCurrent = 40.0; 
+    public static final double kSupplyCurrent = 20.0; 
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;

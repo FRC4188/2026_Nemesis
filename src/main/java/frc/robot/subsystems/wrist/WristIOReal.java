@@ -56,10 +56,6 @@ public class WristIOReal implements WristIO {
             .withFeedback(
                 new FeedbackConfigs()
                     .withSensorToMechanismRatio(Constants.WristConstants.kGearRatio))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.WristConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.WristConstants.kPeakReverseTC))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity(100.0 / Constants.WristConstants.kGearRatio)
@@ -88,11 +84,6 @@ public class WristIOReal implements WristIO {
   @Override
   public void setVolts(double volts) {
     motor.setControl(voltageRequest.withOutput(volts));
-  }
-
-  @Override
-  public void setTorqueCurrent(double amps) {
-    motor.setControl(torqueCurrentRequest.withOutput(amps));
   }
 
   @Override
