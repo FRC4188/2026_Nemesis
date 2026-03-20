@@ -16,6 +16,13 @@ public class Wrist extends SubsystemBase {
   @AutoLogOutput(key = "Wrist/Setpoint Degrees")
   private double setpoint = 0.0;
 
+  @AutoLogOutput(key = "Wrist/Shake Enable?")
+  public boolean shakeEnable = true;
+
+  public void enableShake(boolean enable) {
+    shakeEnable = enable;
+  }
+
   public Wrist(WristIO io) {
     this.io = io;
     inputs = new WristIOInputsAutoLogged();

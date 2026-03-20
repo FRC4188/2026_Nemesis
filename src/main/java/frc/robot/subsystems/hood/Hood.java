@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Hood extends SubsystemBase {
   private final HoodIO io;
@@ -19,7 +18,8 @@ public class Hood extends SubsystemBase {
   @AutoLogOutput(key = "Hood/Setpoint Degrees")
   private double setpoint = 0.0;
 
-  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees", 0.0);
+  // private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline",
+  // 0.0);
 
   public Hood(HoodIO io) {
     this.io = io;
@@ -42,7 +42,7 @@ public class Hood extends SubsystemBase {
     io.setPosition(
         Rotation2d.fromDegrees(
             MathUtil.clamp(
-                angle.getDegrees() + offset.getAsDouble(),
+                angle.getDegrees(),
                 Constants.HoodConstants.Min_A.getDegrees(),
                 Constants.HoodConstants.Max_A.getDegrees())));
   }
@@ -69,7 +69,7 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/Angle Degrees")
   public double getAngle() {
-    return inputs.position.getDegrees() - offset.getAsDouble();
+    return inputs.position.getDegrees();
   }
 
   public void periodic() {

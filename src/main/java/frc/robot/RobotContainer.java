@@ -414,6 +414,9 @@ public class RobotContainer {
                         FieldConstants.FuelField.right_close_corner.getY()),
                     1,
                     Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake)))));
+    autoChooser.addOption("Climb Only Right", AutoCommands.climbRight(climber));
+    autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
+    autoChooser.addOption("Nothing", Commands.none());
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -541,8 +544,7 @@ public class RobotContainer {
     copilot
         .leftTrigger(0.3)
         .toggleOnTrue(
-            Commands.startEnd(
-                () -> ScoringCommands.enableShake(false), () -> ScoringCommands.enableShake(true)));
+            Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
 
     copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
     copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
@@ -603,12 +605,14 @@ public class RobotContainer {
                     new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
       } else if (DriverStation.getLocation().getAsInt() == 1) {
         drive.setPose(
-            AllianceFlip.apply(
-                new Pose2d(
-                    FieldConstants.Trench.left_trench_alliance_entrance.getX()
-                        + Constants.Robot.B_LENGTH / 2,
-                    FieldConstants.Trench.left_trench_alliance_entrance.getY(),
-                    Rotation2d.kCW_90deg)));
+            // AllianceFlip.apply(
+            //     new Pose2d(
+            //         FieldConstants.Trench.left_trench_alliance_entrance.getX()
+            //             + Constants.Robot.B_LENGTH / 2,
+            //         FieldConstants.Trench.left_trench_alliance_entrance.getY(),
+            //         Rotation2d.kCW_90deg)));
+            new Pose2d(0, 0, Rotation2d.kZero)
+        );
       }
     }
   }

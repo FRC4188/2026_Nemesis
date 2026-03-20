@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.AllianceFlip;
 import frc.robot.util.LocalADStarAK;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -527,13 +528,17 @@ public final class PathBuilder {
   public static Command triggerWhenClose(
       Translation2d location, double distance, Command runnable) {
     return Commands.waitUntil(
-            () -> drive.getPose().getTranslation().getDistance(location) <= distance)
+            () ->
+                drive.getPose().getTranslation().getDistance(AllianceFlip.apply(location))
+                    <= distance)
         .andThen(runnable);
   }
 
   public static Command triggerWhenFar(Translation2d location, double distance, Command runnable) {
     return Commands.waitUntil(
-            () -> drive.getPose().getTranslation().getDistance(location) > distance)
+            () ->
+                drive.getPose().getTranslation().getDistance(AllianceFlip.apply(location))
+                    > distance)
         .andThen(runnable);
   }
 

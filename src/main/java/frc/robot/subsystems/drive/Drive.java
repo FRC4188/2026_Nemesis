@@ -47,6 +47,9 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   @AutoLogOutput(key = "Vision/Accept?")
   private boolean vision_accept = true;
 
+  // public LoggedNetworkNumber driveOffset =
+  //     new LoggedNetworkNumber("Drive/Offset Degrees Azimuth", 0.0);
+
   private final Field2d field;
 
   // TunerConstants doesn't include these constants, so they are declared locally

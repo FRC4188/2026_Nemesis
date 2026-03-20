@@ -126,6 +126,7 @@ public class DriveCommands {
             omega =
                 angleController.calculate(
                         drive.getRotation().getRadians(), rotSupplier.get().getRadians())
+                    // + Units.degreesToRadians(drive.driveOffset.getAsDouble()))
                     + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
             if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
@@ -165,6 +166,7 @@ public class DriveCommands {
           omega =
               angleController.calculate(
                       drive.getRotation().getRadians(), rotSupplier.get().getRadians())
+                  // + Units.degreesToRadians(drive.driveOffset.getAsDouble()))
                   + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
           if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {

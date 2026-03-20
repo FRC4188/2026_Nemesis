@@ -17,18 +17,10 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
-
-  @AutoLogOutput(key = "Wrist/Shake Enable?")
-  private static boolean shakeEnable = true;
-
-  public static void enableShake(boolean enable) {
-    shakeEnable = enable;
-  }
 
   public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
@@ -132,7 +124,7 @@ public class ScoringCommands {
             .until(() -> wrist.getAngle() > 120.0)
             .finallyDo(wrist::stop),
         Commands.none(),
-        () -> shakeEnable);
+        () -> wrist.shakeEnable);
   }
 
   public static Command downNoStall(Wrist wrist) {

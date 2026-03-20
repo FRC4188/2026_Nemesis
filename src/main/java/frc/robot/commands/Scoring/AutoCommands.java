@@ -67,6 +67,16 @@ public class AutoCommands {
       Wrist wrist,
       Climber climber) {
     return Commands.sequence(
+        Commands.runOnce(
+            () ->
+                drive.setPose(
+                    AllianceFlip.apply(
+                        switch (start) {
+                          case LEFT -> new Pose2d(
+                              FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
+                          case RIGHT -> new Pose2d(
+                              FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
+                        }))),
         Commands.deadline(
             PathBuilder.path(
                 new PathBuilder.Target(
@@ -244,5 +254,39 @@ public class AutoCommands {
               Commands.runOnce(climber::lower, climber));
           case NONE -> Commands.none();
         });
+  }
+
+  public static Command climbRight(Climber climber) {
+    return Commands.sequence(
+        Commands.runOnce(climber::raise, climber),
+        PathBuilder.path(
+            new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1)),
+        Commands.runOnce(climber::lower, climber));
+  }
+
+  public static Command climbLeft(Climber climber) {
+    return Commands.sequence(
+        Commands.runOnce(climber::raise, climber),
+        PathBuilder.path(
+            new PathBuilder.Target(
+                new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.k180deg),
+                1,
+                0,
+                0.5),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg), 0.2),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.left_intermediate_approach_pos, Rotation2d.k180deg),
+                0.1),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
+                0.2),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05)),
+        Commands.runOnce(climber::lower, climber));
   }
 }
