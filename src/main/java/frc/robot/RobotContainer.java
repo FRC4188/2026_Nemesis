@@ -509,7 +509,7 @@ public class RobotContainer {
 
     pilot
         .leftTrigger(0.3)
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(6.0), intake::stop, intake));
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake));
 
     pilot
         .leftBumper()

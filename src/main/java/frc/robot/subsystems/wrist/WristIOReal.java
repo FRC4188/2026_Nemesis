@@ -47,8 +47,7 @@ public class WristIOReal implements WristIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.WristConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.WristConstants.kStatorCurrent)
-                    .withStatorCurrentLimitEnable(true))
+                    .withSupplyCurrentLimit(Constants.WristConstants.kStatorCurrent))
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.WristConstants.kNuetralMode)

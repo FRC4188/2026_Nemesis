@@ -36,8 +36,9 @@ public class AutoCommands {
         ScoringCommands.staticAim(drive, hood),
         new WaitCommand(0.1)
             .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-            .andThen(ScoringCommands.staticShoot(drive, shooter, hopper)),
-        new WaitCommand(2.5).andThen(ScoringCommands.shake(wrist)));
+            .andThen(
+                ScoringCommands.staticShoot(drive, shooter, hopper)
+                    .alongWith(ScoringCommands.shake(wrist))));
   }
 
   public static enum Swipe {
@@ -185,15 +186,24 @@ public class AutoCommands {
                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance;
                           case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance;
                         },
-                        Rotation2d.kZero)),
+                        switch (start) {
+                          case RIGHT -> Rotation2d.kCCW_90deg;
+                          case LEFT -> Rotation2d.kCW_90deg;
+                        }),
+                    0.8,
+                    0.5),
                 new PathBuilder.Target(
                     new Pose2d(
-                        2.975,
+                        2.225,
                         switch (start) {
-                          case RIGHT -> 1.545;
-                          case LEFT -> FieldConstants.field_width - 1.545;
+                          case RIGHT -> 2.245;
+                          case LEFT -> FieldConstants.field_width - 2.245;
                         },
-                        Rotation2d.kZero))),
+                        switch (start) {
+                          case RIGHT -> Rotation2d.kCCW_90deg;
+                          case LEFT -> Rotation2d.kCW_90deg;
+                        }),
+                    0.8)),
             PathBuilder.triggerWhenClose(
                 switch (start) {
                   case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance;
@@ -206,10 +216,10 @@ public class AutoCommands {
                             () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
             PathBuilder.triggerWhenClose(
                 new Translation2d(
-                    2.975,
+                    2.225,
                     switch (start) {
-                      case RIGHT -> 1.545;
-                      case LEFT -> FieldConstants.field_width - 1.545;
+                      case RIGHT -> 2.245;
+                      case LEFT -> FieldConstants.field_width - 2.245;
                     }),
                 0.1,
                 Commands.runOnce(() -> PathBuilder.stopTarget()))),
@@ -225,14 +235,14 @@ public class AutoCommands {
               Commands.runOnce(climber::raise, climber),
               switch (start) {
                 case RIGHT -> PathBuilder.path(
-                    new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),
+                    new PathBuilder.Target(new Pose2d(2.225, 2.245, Rotation2d.kZero)),
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
                     new PathBuilder.Target(
                         new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1));
                 case LEFT -> PathBuilder.path(
                     new PathBuilder.Target(
-                        new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.k180deg),
+                        new Pose2d(2.225, FieldConstants.field_width - 2.245, Rotation2d.k180deg),
                         1,
                         0,
                         0.5),
@@ -260,7 +270,7 @@ public class AutoCommands {
     return Commands.sequence(
         Commands.runOnce(climber::raise, climber),
         PathBuilder.path(
-            new PathBuilder.Target(new Pose2d(2.975, 1.545, Rotation2d.kZero)),
+            new PathBuilder.Target(new Pose2d(2.225, 2.245, Rotation2d.kZero)),
             new PathBuilder.Target(
                 new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
             new PathBuilder.Target(
@@ -273,7 +283,7 @@ public class AutoCommands {
         Commands.runOnce(climber::raise, climber),
         PathBuilder.path(
             new PathBuilder.Target(
-                new Pose2d(2.975, FieldConstants.field_width - 1.545, Rotation2d.k180deg),
+                new Pose2d(2.225, FieldConstants.field_width - 2.245, Rotation2d.k180deg),
                 1,
                 0,
                 0.5),

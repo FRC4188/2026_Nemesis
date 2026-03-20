@@ -68,8 +68,7 @@ public class TunerConstants {
                   // low
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Constants.DriveConstants.kTurnStatorCurrent)
-                  .withSupplyCurrentLimit(Constants.DriveConstants.kTurnSupplyCurrent)
-                  .withStatorCurrentLimitEnable(true));
+                  .withSupplyCurrentLimit(Constants.DriveConstants.kTurnSupplyCurrent));
   private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
   private static final Pigeon2Configuration pigeonConfigs = null;

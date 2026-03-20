@@ -43,8 +43,7 @@ public class HopperIOReal implements HopperIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.IndexerConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.IndexerConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
+                    .withSupplyCurrentLimit(Constants.IndexerConstants.kSupplyCurrent))
             .withTorqueCurrent(
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.IndexerConstants.kPeakForwardTC)

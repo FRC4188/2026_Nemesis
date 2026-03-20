@@ -35,9 +35,8 @@ public class IntakeIOReal implements IntakeIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.IntakeConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.IntakeConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
-            .withMotorOutput(
+                    .withSupplyCurrentLimit(Constants.IntakeConstants.kSupplyCurrent))
+                                .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.IntakeConstants.kNuetralMode)
                     .withInverted(Constants.IntakeConstants.kInvertedValue))

@@ -45,8 +45,7 @@ public class ClimberIOReal implements ClimberIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.ClimberConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.ClimberConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
+                    .withSupplyCurrentLimit(Constants.ClimberConstants.kSupplyCurrent))
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.ClimberConstants.kNuetralMode)

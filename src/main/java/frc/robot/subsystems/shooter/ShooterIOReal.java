@@ -49,9 +49,8 @@ public class ShooterIOReal implements ShooterIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
-            .withTorqueCurrent(
+                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent))
+                                .withTorqueCurrent(
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
                     .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))

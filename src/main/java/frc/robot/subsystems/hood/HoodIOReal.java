@@ -46,8 +46,7 @@ public class HoodIOReal implements HoodIO {
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.HoodConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.HoodConstants.kSupplyCurrent)
-                    .withStatorCurrentLimitEnable(true))
+                    .withSupplyCurrentLimit(Constants.HoodConstants.kSupplyCurrent))
             .withTorqueCurrent(
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.HoodConstants.kPeakForwardTC)
