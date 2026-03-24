@@ -31,34 +31,6 @@ public class AllianceFlip {
     }
   }
 
-  // public static List<Pose2d> apply(List<Pose2d> poses) {
-  //   List<Pose2d> temp = new ArrayList<>();
-
-  //   for (Pose2d pos : poses.toArray(new Pose2d[0])) {
-  //     if (canFlip()) {
-  //       temp.add(new Pose2d(flipX(pos.getX()), flipY(pos.getY()), apply(pos.getRotation())));
-  //     } else {
-  //       temp.add(pos);
-  //     }
-  //   }
-
-  //   return temp;
-  // }
-
-  // public static List<Translation2d> apply(List<Translation2d> poses) {
-  //   List<Translation2d> temp = new ArrayList<>();
-
-  //   for (Translation2d pos : poses.toArray(new Translation2d[0])) {
-  //     if (canFlip()) {
-  //       temp.add(new Translation2d(flipX(pos.getX()), flipY(pos.getY()))));
-  //     } else {
-  //       temp.add(pos);
-  //     }
-  //   }
-
-  //   return temp;
-  // }
-
   public static Translation2d apply(Translation2d pos) {
     if (canFlip()) {
       return new Translation2d(flipX(pos.getX()), flipY(pos.getY()));

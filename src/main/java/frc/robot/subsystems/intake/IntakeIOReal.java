@@ -5,7 +5,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
@@ -36,7 +35,7 @@ public class IntakeIOReal implements IntakeIO {
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.IntakeConstants.kStatorCurrent)
                     .withSupplyCurrentLimit(Constants.IntakeConstants.kSupplyCurrent))
-                                .withMotorOutput(
+            .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.IntakeConstants.kNuetralMode)
                     .withInverted(Constants.IntakeConstants.kInvertedValue));

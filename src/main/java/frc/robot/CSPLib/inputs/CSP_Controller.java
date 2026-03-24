@@ -66,80 +66,20 @@ public class CSP_Controller extends CommandXboxController {
         .getTranslation();
   }
 
-  /**
-   * @param scale
-   * @return
-   */
-  public double getRightY(Scale scale) {
-    return getOutput(this.getRightY(), scale);
-  }
-
-  public double getRightX(Scale scale) {
-    return getOutput(this.getRightX(), scale);
-  }
-
   public double getLeftY(Scale scale) {
-    return getOutput(this.getLeftY(), scale);
+    return getOutput(getLeftY(), scale);
   }
 
   public double getLeftX(Scale scale) {
-    return getOutput(this.getLeftX(), scale);
+    return getOutput(getLeftX(), scale);
   }
 
-  public Trigger getLeftS() {
-    return this.leftStick();
+  public double getRightY(Scale scale) {
+    return getOutput(getRightY(), scale);
   }
 
-  public Trigger getRightS() {
-    return this.rightStick();
-  }
-
-  public Trigger getXButton() {
-    return this.x();
-  }
-
-  public Trigger getYButton() {
-    return this.y();
-  }
-
-  public Trigger getAButton() {
-    return this.a();
-  }
-
-  public Trigger getBButton() {
-    return this.b();
-  }
-
-  public Trigger getUpButton() {
-    return this.povUp();
-  }
-
-  public Trigger getDownButton() {
-    return this.povDown();
-  }
-
-  public Trigger getRightButton() {
-    return this.povRight();
-  }
-
-  public Trigger getLeftButton() {
-    return this.povLeft();
-  }
-
-  public Trigger getLeftBumperButton() {
-    return this.leftBumper();
-  }
-
-  public Trigger getRightBumperButton() {
-    return this.rightBumper();
-  }
-
-  public Trigger getStartButton() {
-    return this.start();
-  }
-
-  public Trigger getBackButton() {
-    return this.back();
+  public double getRightX(Scale scale) {
+    return getOutput(getRightX(), scale);
   }
 
   public double getRightT(Scale scale) {

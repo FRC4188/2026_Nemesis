@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
@@ -21,7 +20,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -88,8 +86,8 @@ public final class Constants {
   public static class DriveConstants {
     public static final double kTurnStatorCurrent = 50.0;
     public static final double kTurnSupplyCurrent = 30.0;
-    public static final double kDriveStatorCurrent = 60.0;
-    public static final double kDriveSupplyCurrent = 40.0;
+    public static final double kDriveStatorCurrent = 80.0;
+    public static final double kDriveSupplyCurrent = 60.0;
 
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double DRIVE_MAXACC = 8.0;
@@ -98,7 +96,7 @@ public final class Constants {
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
-    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(2.0);
+    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(3.0);
 
     public static final double PATH_CREATION_TOL = Units.inchesToMeters(1);
 
@@ -107,8 +105,6 @@ public final class Constants {
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
-
-    public static final Rotation2d local_offset = Rotation2d.kZero; // Rotation2d.fromDegrees(6);
 
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
@@ -127,11 +123,6 @@ public final class Constants {
                 TunerConstants.FrontLeft.SlipCurrent,
                 1),
             frc.robot.subsystems.drive.Drive.getModuleTranslations());
-
-    public static final double BLINE_DRIVE_TOL = 0.03;
-    public static final Angle BLINE_ROT_TOL = Degrees.of(0.0349);
-    public static final double BLINE_HANDOFF_RADIUS =
-        0.1; // Increase for smooth motion / more inaccurate
   }
 
   public static class IntakeConstants {
@@ -147,7 +138,7 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(144.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 50; 
+    public static final double kStatorCurrent = 50;
     public static final double kSupplyCurrent = 30;
     public static final double kStallCurrent = 40; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
@@ -171,7 +162,7 @@ public final class Constants {
     public static final double kConversion = kGearBox / (kSproketDiameter * Math.PI);
 
     public static final double kStatorCurrent = 60.0;
-    public static final double kSupplyCurrent = 40.0; 
+    public static final double kSupplyCurrent = 40.0;
     public static final double kStallCurrent = 50.0; // paceholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -192,8 +183,8 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 50.0; 
-    public static final double kSupplyCurrent = 30.0; 
+    public static final double kStatorCurrent = 50.0;
+    public static final double kSupplyCurrent = 30.0;
     public static final double kStallCurrent = 20.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -208,14 +199,14 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 100.0;
+    public static final double kTolerance = 50.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
     public static final double kStatorCurrent = 60.0;
     public static final double kSupplyCurrent = 40.0;
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final double kPeakForwardTC = 50.0;
+    public static final double kPeakReverseTC = 50.0;
 
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
@@ -235,8 +226,8 @@ public final class Constants {
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 40.0; 
-    public static final double kSupplyCurrent = 20.0; 
+    public static final double kStatorCurrent = 40.0;
+    public static final double kSupplyCurrent = 20.0;
     public static final double kPeakForwardTC = 50.0; // placeholder
     public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;

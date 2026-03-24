@@ -9,15 +9,15 @@ public class VisConstants {
   public static AprilTagFieldLayout aprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  public static String leftPho = "left";
-  public static String rightPho = "right";
-  public static String frontPho = "front";
+  public static final String leftPho = "left";
+  public static final String rightPho = "right";
+  public static final String frontPho = "front";
 
-  public static Transform3d robotToCameraLeft = Constants.CameraConstants.cameraLeft;
+  public static final Transform3d robotToCameraLeft = Constants.CameraConstants.cameraLeft;
 
-  public static Transform3d robotToCameraRight = Constants.CameraConstants.cameraRight;
+  public static final Transform3d robotToCameraRight = Constants.CameraConstants.cameraRight;
 
-  public static Transform3d robotToCameraFront = Constants.CameraConstants.cameraFront;
+  public static final Transform3d robotToCameraFront = Constants.CameraConstants.cameraFront;
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;

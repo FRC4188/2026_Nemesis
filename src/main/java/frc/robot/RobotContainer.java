@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
+import frc.robot.CSPLib.ppp.PBExperimental;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
@@ -172,6 +173,7 @@ public class RobotContainer {
 
     // Set up auto routines
     PathBuilder.configure(drive); // Add all subsystems as parameters later
+    // PBExperimental.configure(drive);
 
     // These 4 choosers are subbing for PB's dashboard fyi
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -456,7 +458,7 @@ public class RobotContainer {
             () ->
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
-                    || pilot.getRightBumperButton().getAsBoolean()
+                    || pilot.rightBumper().getAsBoolean()
                     || pilot.a().getAsBoolean()));
 
     driveInput.whileTrue(
@@ -483,7 +485,6 @@ public class RobotContainer {
                                     FieldConstants.Bump.right_bump_alliance_entrance)))
                         .minus(drive.getPose().getTranslation())
                         .getAngle()
-                        .minus(Constants.DriveConstants.local_offset)
                     : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                         .minus(drive.getPose().getTranslation())
                         .getAngle()),
@@ -494,7 +495,7 @@ public class RobotContainer {
     pilot.x().whileTrue(ScoringCommands.manualAim(hood));
 
     pilot
-        .rightTrigger(0.3)
+        .getRightTButton()
         .whileTrue(
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
@@ -502,14 +503,14 @@ public class RobotContainer {
                 Commands.either(
                     ScoringCommands.staticShoot(drive, shooter, hopper),
                     ScoringCommands.manualShoot(shooter, hopper),
-                    () -> pilot.getRightBumperButton().getAsBoolean()),
+                    () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    pilot.rightTrigger(0.3).whileTrue(ScoringCommands.shake(wrist));
+    pilot.getRightTButton().whileTrue(ScoringCommands.shake(wrist));
 
     pilot
-        .leftTrigger(0.3)
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake));
+        .getLeftTButton()
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(7.25), intake::stop, intake));
 
     pilot
         .leftBumper()
@@ -524,7 +525,7 @@ public class RobotContainer {
         .b()
         .whileTrue(
             Commands.runEnd(
-                () -> climber.runClimberVolts(8 * -copilot.getLeftY(Scale.LINEAR)),
+                () -> climber.runClimberVolts(8 * -copilot.getCorrectedLeft(Scale.LINEAR).getY()),
                 climber::stop,
                 climber));
     copilot
@@ -538,19 +539,19 @@ public class RobotContainer {
     copilot.x().onTrue(ScoringCommands.downNoStall(wrist));
     copilot.a().onTrue(ScoringCommands.goodStow(wrist));
 
-    copilot.getLeftBumperButton().whileTrue(ScoringCommands.shake(wrist));
-    copilot.getRightBumperButton().whileTrue(ScoringCommands.forceDown(wrist));
+    copilot.leftBumper().whileTrue(ScoringCommands.shake(wrist));
+    copilot.rightBumper().onTrue(ScoringCommands.forceDown(wrist));
 
     copilot
-        .leftTrigger(0.3)
+        .getLeftTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
 
-    copilot.getLeftButton().onTrue(Commands.runOnce(climber::zero));
-    copilot.getRightButton().onTrue(Commands.runOnce(wrist::zero));
-    copilot.getUpButton().onTrue(Commands.runOnce(hood::zero));
+    copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
+    copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
+    copilot.povUp().onTrue(Commands.runOnce(hood::zero));
     copilot
-        .getDownButton()
+        .povDown()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }

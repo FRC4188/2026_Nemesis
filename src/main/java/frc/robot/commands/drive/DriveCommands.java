@@ -126,18 +126,16 @@ public class DriveCommands {
             omega =
                 angleController.calculate(
                         drive.getRotation().getRadians(), rotSupplier.get().getRadians())
-                    // + Units.degreesToRadians(drive.driveOffset.getAsDouble()))
                     + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
             if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
               if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
                 drive.stopWithX();
                 return;
-              } else {
-                omega = 0.0;
               }
+              omega = 0.0;
+              drive.acceptVision(false);
             }
-            drive.acceptVision(false);
           }
 
           ChassisSpeeds speeds =
@@ -166,7 +164,6 @@ public class DriveCommands {
           omega =
               angleController.calculate(
                       drive.getRotation().getRadians(), rotSupplier.get().getRadians())
-                  // + Units.degreesToRadians(drive.driveOffset.getAsDouble()))
                   + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
           if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {

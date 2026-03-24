@@ -34,6 +34,7 @@ public class Wrist extends SubsystemBase {
     setpoint = 180;
     io.setVolts(MathUtil.clamp(volts, -12, 12));
   }
+
   public void stop() {
     io.setVolts(0.0);
   }

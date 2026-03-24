@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -513,10 +512,6 @@ public final class PathBuilder {
       return fallback != null ? fallback : Rotation2d.fromDegrees(0.0);
     }
     return new Rotation2d(dx, dy);
-  }
-
-  public static Command shootOnMove(DoubleSupplier RPM) {
-    return Commands.none();
   }
 
   // My own auto triggers :) very simple Commands but maintains a uniform structure through the
