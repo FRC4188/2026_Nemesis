@@ -115,7 +115,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
     // new WaitCommand(0.1)
     //     .andThen(
     //         Commands.repeatingSequence(
@@ -148,12 +148,16 @@ public class ScoringCommands {
   }
 
   public static double RPMRegress(double distance) {
-    //return 145.557 * distance + 1806.67131;
-    return theLeftTree.get(distance);
+    return 152.5 * distance + 1806.67131 + 100;
+    // return theLeftTree.get(distance);
+    // return 160 * (distance - 2) + 2100;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
-    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7 / distance));
+    return Rotation2d.fromRadians(
+        Math.PI / 2
+            - Math.atan(7 / distance)
+            + ((distance < 2.5) ? Units.degreesToRadians(5.0) : 0.0));
   }
 
   public static Command passAim(Hood hood) {

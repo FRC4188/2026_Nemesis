@@ -106,6 +106,10 @@ public final class Constants {
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
 
+    public static final ProfiledPIDController CORRECTION_PID =
+        (new ProfiledPIDController(
+            0.1, 0.0, 0.006, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
+
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
@@ -199,7 +203,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 50.0;
+    public static final double kTolerance = 25.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
@@ -212,8 +216,11 @@ public final class Constants {
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
-    public static final Slot0Configs shooterGains =
+    public static final Slot0Configs leftShooterGains =
         new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.5);
+
+    public static final Slot0Configs rightShooterGains =
+        new Slot0Configs().withKP(20.0).withKI(0.0).withKD(0.0).withKS(0.0).withKV(0.4);
   }
 
   public static class IndexerConstants {
@@ -272,9 +279,9 @@ public final class Constants {
 
     public static final Transform3d cameraFront =
         new Transform3d(
-            Units.inchesToMeters(8.812214),
-            Units.inchesToMeters(-9.982283),
-            Units.inchesToMeters(8.205321),
-            new Rotation3d(0, 0, 0));
+            Units.inchesToMeters(-10.64272),
+            Units.inchesToMeters(-6.18796 - 0.25),
+            Units.inchesToMeters(15.25159),
+            new Rotation3d(0, Math.toRadians(32), 0));
   }
 }

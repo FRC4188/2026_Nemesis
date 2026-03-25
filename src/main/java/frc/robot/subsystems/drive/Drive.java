@@ -102,6 +102,10 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     Constants.DriveConstants.ANGLE_PID.setTolerance(
         Constants.DriveConstants.ANGLE_TOL.getRadians());
 
+    Constants.DriveConstants.CORRECTION_PID.enableContinuousInput(-180, 180);
+    Constants.DriveConstants.CORRECTION_PID.setTolerance(
+        Constants.DriveConstants.ANGLE_TOL.getRadians());
+
     field = new Field2d();
 
     // Configure SysId
@@ -184,6 +188,15 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    // if (speeds.omegaRadiansPerSecond != 0.0) {
+    //   Constants.DriveConstants.CORRECTION_PID.reset(getRotation().getDegrees());
+    // } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
+    //   speeds.omegaRadiansPerSecond =
+    //       (Constants.DriveConstants.CORRECTION_PID.atGoal())
+    //           ? 0.0
+    //           : Constants.DriveConstants.CORRECTION_PID.calculate(getRotation().getDegrees());
+    // }
+
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);

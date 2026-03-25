@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,7 +30,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setVelocityRPM(double leftRPM, double rightRPM) {
-    setRightRPM = MathUtil.clamp(rightRPM + 50, 0, Constants.ShooterConstants.kMaxRPM);
+    setRightRPM = MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM);
     setLeftRPM = MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM);
     io.setVelocity(
         MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM),
@@ -49,11 +48,11 @@ public class Shooter extends SubsystemBase {
   }
 
   public boolean leftAtGoal() {
-    return inputs.leftVelocityRPM - setLeftRPM > 0;
+    return setLeftRPM - inputs.leftVelocityRPM < Constants.ShooterConstants.kTolerance;
   }
 
   public boolean rightAtGoal() {
-    return inputs.rightVelocityRPM - setRightRPM > 0;
+    return setRightRPM - inputs.rightVelocityRPM < Constants.ShooterConstants.kTolerance;
   }
 
   public void periodic() {

@@ -56,7 +56,7 @@ public class ShooterIOReal implements ShooterIO {
                     .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
             .withMotorOutput(
                 new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
-            .withSlot0(Constants.ShooterConstants.shooterGains)
+            .withSlot0(Constants.ShooterConstants.rightShooterGains)
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
