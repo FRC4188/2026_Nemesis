@@ -41,8 +41,7 @@ public class VisionIOPhoton implements VisionIO {
   }
 
   public boolean valid(int id) {
-    return !(id == 13 || id == 14 || id == 15 || id == 16 || id == 29 || id == 30 || id == 31
-        || id == 32);
+    return !(id == 22 || id == 23);
   }
 
   @Override

@@ -18,13 +18,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.ppp.PBExperimental;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.lib.BLine.*;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.climber.ClimberIOReal;
@@ -172,8 +170,22 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    PathBuilder.configure(drive); // Add all subsystems as parameters later
-    // PBExperimental.configure(drive);
+    // PathBuilder.configureDrive(
+    //     true,
+    //     Constants.DriveConstants.ANGLE_FF,
+    //     Constants.DriveConstants.ANGLE_TOL,
+    //     () -> drive.getPose(),
+    //     drive::setPose,
+    //     () -> drive.getChassisSpeeds(),
+    //     () -> drive.stop(),
+    //     drive::runVelocity,
+    //     Constants.DriveConstants.DRIVE_PID,
+    //     Constants.DriveConstants.ANGLE_PID,
+    //     Constants.DriveConstants.PP_CONFIG,
+    //     () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+    //     drive);
+
+    PathBuilder.configure(drive);
 
     // These 4 choosers are subbing for PB's dashboard fyi
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -499,8 +511,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 ScoringCommands.passShoot(shooter, hopper),
-                // ScoringCommands.dataShoot(shooter, hopper),
                 Commands.either(
+                    // ScoringCommands.dataShoot(shooter, hopper),
                     ScoringCommands.staticShoot(drive, shooter, hopper),
                     ScoringCommands.manualShoot(shooter, hopper),
                     () -> pilot.rightBumper().getAsBoolean()),
@@ -618,14 +630,14 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
-    // Logger.recordOutput(
-    //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
-    // Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
+    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    Logger.recordOutput(
+        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    // Logger.recordOutput(
-    //     "Drive/Distance From Hub",
-    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    Logger.recordOutput(
+        "Drive/Distance From Hub",
+        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {
