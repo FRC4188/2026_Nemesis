@@ -5,8 +5,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
@@ -32,11 +30,8 @@ public class AutoCommands {
                     .getAngle()),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
         ScoringCommands.staticAim(drive, hood),
-        new WaitCommand(0.1)
-            .andThen(new WaitUntilCommand(() -> shooter.atGoal()))
-            .andThen(
-                ScoringCommands.staticShoot(drive, shooter, hopper)
-                    .alongWith(ScoringCommands.shake(wrist))));
+        ScoringCommands.staticShoot(drive, shooter, hopper),
+        ScoringCommands.shake(wrist));
   }
 
   public static enum Swipe {
@@ -136,7 +131,7 @@ public class AutoCommands {
                   case LEFT -> FieldConstants.Trench.left_trench_center;
                   case RIGHT -> FieldConstants.Trench.right_trench_center;
                 },
-                1.5,
+                1,
                 ScoringCommands.forceDown(wrist)),
             PathBuilder.triggerWhenClose(
                 switch (start) {

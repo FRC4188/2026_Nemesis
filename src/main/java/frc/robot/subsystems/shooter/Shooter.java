@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
@@ -14,10 +16,10 @@ public class Shooter extends SubsystemBase {
   private final Alert leftDisconnectedAlert;
   private final Alert rightDisconnectedAlert;
 
-  // @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
+  @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
   private double setRightRPM = 0.0;
 
-  // @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
+  @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
   private double setLeftRPM = 0.0;
 
   public Shooter(ShooterIO io) {
@@ -29,7 +31,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setVelocityRPM(double leftRPM, double rightRPM) {
-    setRightRPM = MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM);
+    setRightRPM = MathUtil.clamp(rightRPM + 50, 0, Constants.ShooterConstants.kMaxRPM);
     setLeftRPM = MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM);
     io.setVelocity(
         MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM),
@@ -42,17 +44,16 @@ public class Shooter extends SubsystemBase {
     io.setVolts(0.0);
   }
 
-  // @AutoLogOutput(key = "Shooter/At Goal?")
   public boolean atGoal() {
     return leftAtGoal() && rightAtGoal();
   }
 
   public boolean leftAtGoal() {
-    return Math.abs(inputs.leftVelocityRPM - setLeftRPM) < Constants.ShooterConstants.kTolerance;
+    return inputs.leftVelocityRPM - setLeftRPM > 0;
   }
 
   public boolean rightAtGoal() {
-    return Math.abs(inputs.rightVelocityRPM - setRightRPM) < Constants.ShooterConstants.kTolerance;
+    return inputs.rightVelocityRPM - setRightRPM > 0;
   }
 
   public void periodic() {

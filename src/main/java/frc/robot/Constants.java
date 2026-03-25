@@ -86,8 +86,8 @@ public final class Constants {
   public static class DriveConstants {
     public static final double kTurnStatorCurrent = 50.0;
     public static final double kTurnSupplyCurrent = 30.0;
-    public static final double kDriveStatorCurrent = 80.0;
-    public static final double kDriveSupplyCurrent = 60.0;
+    public static final double kDriveStatorCurrent = 70.0;
+    public static final double kDriveSupplyCurrent = 50.0;
 
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double DRIVE_MAXACC = 8.0;
@@ -205,8 +205,8 @@ public final class Constants {
 
     public static final double kStatorCurrent = 60.0;
     public static final double kSupplyCurrent = 40.0;
-    public static final double kPeakForwardTC = 50.0;
-    public static final double kPeakReverseTC = 50.0;
+    public static final double kPeakForwardTC = 60.0;
+    public static final double kPeakReverseTC = 60.0;
 
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;

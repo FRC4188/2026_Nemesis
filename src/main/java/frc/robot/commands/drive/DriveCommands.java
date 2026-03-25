@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double FF_START_DELAY = 2.0; // Secs
@@ -128,13 +129,17 @@ public class DriveCommands {
                         drive.getRotation().getRadians(), rotSupplier.get().getRadians())
                     + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
-            if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+            if (angleController.atGoal()) {
               if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
                 drive.stopWithX();
+                drive.acceptVision(false);
                 return;
               }
               omega = 0.0;
+              Logger.recordOutput("Drive/Omega Allegedly", omega);
               drive.acceptVision(false);
+            } else {
+              drive.acceptVision(true);
             }
           }
 
@@ -166,11 +171,13 @@ public class DriveCommands {
                       drive.getRotation().getRadians(), rotSupplier.get().getRadians())
                   + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
-          if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
+          if (angleController.atGoal()) {
             drive.stopWithX();
+            drive.acceptVision(false);
             return;
+          } else {
+            drive.acceptVision(true);
           }
-          drive.acceptVision(false);
 
           ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
 
