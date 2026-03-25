@@ -84,8 +84,7 @@ public class AutoCommands {
                           FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
                       case RIGHT -> new Pose2d(
                           FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
-                    },
-                    0.25),
+                    }),
                 new PathBuilder.Target(
                     switch (start) {
                       case LEFT -> new Pose2d(
@@ -93,6 +92,15 @@ public class AutoCommands {
                           Rotation2d.kCW_90deg);
                       case RIGHT -> new Pose2d(
                           FieldConstants.Trench.right_trench_neutral_preentrance,
+                          Rotation2d.kCCW_90deg);
+                    }),
+                  new PathBuilder.Target(
+                    switch (start) {
+                      case LEFT -> new Pose2d(
+                          FieldConstants.Trench.left_trench_intermediate,
+                          Rotation2d.kCW_90deg);
+                      case RIGHT -> new Pose2d(
+                          FieldConstants.Trench.right_trench_intermediate,
                           Rotation2d.kCCW_90deg);
                     },
                     0.25),
@@ -111,7 +119,7 @@ public class AutoCommands {
                           },
                           Rotation2d.kCCW_90deg);
                     },
-                    0.20),
+                    0.25),
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {

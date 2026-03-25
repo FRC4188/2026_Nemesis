@@ -12,13 +12,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.ppp.PBExperimental;
 import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
@@ -172,7 +172,22 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    PathBuilder.configure(drive); // Add all subsystems as parameters later
+    // PathBuilder.configure(drive); // Add all subsystems as parameters later
+
+    PathBuilder.configureDrive(
+        true,
+        2,
+        Constants.DriveConstants.ANGLE_TOL,
+        () -> drive.getPose(),
+        drive::setPose,
+        () -> drive.getChassisSpeeds(),
+        () -> drive.stop(),
+        drive::runVelocity,
+        Constants.DriveConstants.DRIVE_PID,
+        Constants.DriveConstants.ANGLE_PID,
+        Constants.DriveConstants.PP_CONFIG,
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        drive);
     // PBExperimental.configure(drive);
 
     // These 4 choosers are subbing for PB's dashboard fyi

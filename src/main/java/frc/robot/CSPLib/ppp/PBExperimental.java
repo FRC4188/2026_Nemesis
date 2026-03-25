@@ -49,7 +49,7 @@ public final class PBExperimental {
           Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
           Constants.DriveConstants.ANGLE_MAXACC * 0.8);
 
-  private static double ROTATION_TOL_RAD = Math.toRadians(30);
+  private static double ROTATION_TOL_RAD = Math.toRadians(1);
   private static double FOLLOW_ROTATION_SAMPLE_METERS = 1.5;
   private static double PATH_CREATION_TOL = Units.inchesToMeters(1);
 
