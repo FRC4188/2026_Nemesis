@@ -148,7 +148,7 @@ public class ScoringCommands {
   }
 
   public static double RPMRegress(double distance) {
-    //return 145.557 * distance + 1806.67131;
+    // return 145.557 * distance + 1806.67131;
     return theLeftTree.get(distance);
   }
 
