@@ -111,6 +111,7 @@ public class RobotContainer {
                 drive::accept,
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
                 new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+        // new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
 
         hood = new Hood(new HoodIOReal());
         shooter = new Shooter(new ShooterIOReal());
@@ -663,7 +664,8 @@ public class RobotContainer {
     copilot
         .getLeftTButton()
         .toggleOnTrue(
-            Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
+            Commands.startEnd(
+                () -> wrist.enableShake(false), () -> wrist.enableShake(true), wrist));
 
     copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
