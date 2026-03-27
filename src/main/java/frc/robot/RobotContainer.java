@@ -432,109 +432,150 @@ public class RobotContainer {
                     1,
                     Commands.runEnd(() -> intake.intakeVolts(10.0), intake::stop, intake)))));
 
+    autoChooser.addOption(
+        "FORWARD Right Disruptor",
+        Commands.sequence(
+                Commands.runOnce(() -> PathBuilder.stopTarget()),
+                Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            AllianceFlip.apply(
+                                new Pose2d(
+                                    FieldConstants.Trench.right_trench_center, Rotation2d.kZero)))),
+                Commands.deadline(
+                    PathBuilder.path(
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.Trench.right_trench_neutral_preentrance,
+                                    Rotation2d.kZero))
+                            .withSpeed(1),
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.FuelField.right_midline_corner,
+                                    Rotation2d.fromDegrees(105)))
+                            .withSpeed(0.6)
+                            .withRotationSpread(1.5)
+                            .withRotationLead(2)
+                            .withCommand(
+                                () ->
+                                    Commands.runEnd(
+                                        () -> intake.intakeVolts(8), intake::stop, intake)),
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.field_center, Rotation2d.fromDegrees(105)))
+                            .withSpeed(0.3)
+                            .withCommand(() -> Commands.runOnce(intake::stop, intake))),
+                    PathBuilder.triggerWhenFar(
+                        FieldConstants.Trench.right_trench_center,
+                        0.4,
+                        ScoringCommands.forceDown(wrist))),
+                Commands.deadline(
+                    PathBuilder.path(
+                        new PathBuilder.Target(
+                            new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
+                            1,
+                            1.5,
+                            2),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_neutral_preentrance,
+                                Rotation2d.kZero)),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_alliance_preentrance,
+                                Rotation2d.kCCW_90deg),
+                            1,
+                            0.5),
+                        new PathBuilder.Target(
+                            new Pose2d(2.225, 2.245, Rotation2d.kCCW_90deg), 0.8)),
+                    PathBuilder.triggerWhenClose(
+                        FieldConstants.Trench.right_trench_alliance_preentrance,
+                        0.2,
+                        Commands.runOnce(
+                            () ->
+                                PathBuilder.targetTranslation(
+                                    () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
+                Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(
+                AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)
+                    .withTimeout(10.0)));
 
+    autoChooser.addOption(
+        "FORWARD Left Disruptor",
+        Commands.sequence(
+                Commands.runOnce(() -> PathBuilder.stopTarget()),
+                Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            AllianceFlip.apply(
+                                new Pose2d(
+                                    FieldConstants.Trench.left_trench_center, Rotation2d.kZero)))),
+                Commands.deadline(
+                    PathBuilder.path(
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.Trench.left_trench_neutral_preentrance,
+                                    Rotation2d.kZero))
+                            .withSpeed(1),
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.FuelField.left_midline_corner,
+                                    Rotation2d.fromDegrees(-105)))
+                            .withSpeed(0.6)
+                            .withRotationSpread(1.5)
+                            .withRotationLead(2)
+                            .withCommand(
+                                () ->
+                                    Commands.runEnd(
+                                        () -> intake.intakeVolts(8), intake::stop, intake)),
+                        new PathBuilder.Target(
+                                new Pose2d(
+                                    FieldConstants.field_center, Rotation2d.fromDegrees(105)))
+                            .withSpeed(0.3)
+                            .withCommand(() -> Commands.runOnce(intake::stop, intake))),
+                    PathBuilder.triggerWhenFar(
+                        FieldConstants.Trench.left_trench_center,
+                        0.4,
+                        ScoringCommands.forceDown(wrist))),
+                Commands.deadline(
+                    PathBuilder.path(
+                        new PathBuilder.Target(
+                            new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
+                            1,
+                            1.5,
+                            2),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.left_trench_neutral_preentrance,
+                                Rotation2d.kZero)),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.left_trench_alliance_preentrance,
+                                Rotation2d.kCW_90deg),
+                            1,
+                            0.5),
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                2.225, FieldConstants.field_width - 2.245, Rotation2d.kCW_90deg),
+                            0.8)),
+                    PathBuilder.triggerWhenClose(
+                        FieldConstants.Trench.left_trench_alliance_preentrance,
+                        0.2,
+                        Commands.runOnce(
+                            () ->
+                                PathBuilder.targetTranslation(
+                                    () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
+                Commands.runOnce(() -> PathBuilder.stopTarget()))
+            .andThen(
+                AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist)
+                    .withTimeout(10.0)));
 
-    autoChooser.addOption("FORWARD Right Disruptor", Commands.sequence(
-        Commands.runOnce(() -> PathBuilder.stopTarget()),
-        Commands.runOnce(() -> drive.setPose(AllianceFlip.apply(new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero)))),
-        Commands.deadline(
-            PathBuilder.path(
-                new PathBuilder.Target(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero))
-                .withSpeed(1),
-                new PathBuilder.Target(new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(105)))
-                .withSpeed(0.6)
-                .withRotationSpread(1.5)
-                .withRotationLead(2)
-                .withCommand(() -> Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)),
-                new PathBuilder.Target(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)))
-                .withSpeed(0.3).withCommand(() -> Commands.runOnce(intake::stop, intake))
-            ),
-            PathBuilder.triggerWhenFar(FieldConstants.Trench.right_trench_center, 0.4, ScoringCommands.forceDown(wrist))
-        ),
-        Commands.deadline(PathBuilder.path(
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.field_center,
-                    Rotation2d.kCCW_90deg)),
-            new PathBuilder.Target(
-                new Pose2d(
-                        FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
-                1,
-                1.5,
-                2),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_neutral_preentrance,
-                    Rotation2d.kZero)),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_alliance_preentrance,
-                    Rotation2d.kCCW_90deg),
-                1,
-                0.5),
-            new PathBuilder.Target(
-                new Pose2d(
-                    2.225,
-                    2.245,
-                    Rotation2d.kCCW_90deg),
-                0.8)
-        ),
-        PathBuilder.triggerWhenClose(FieldConstants.Trench.right_trench_alliance_preentrance, 0.2, Commands.runOnce(() -> PathBuilder.targetTranslation(() -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
-        Commands.runOnce(() -> PathBuilder.stopTarget())).andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0)
-    ));
-
-    autoChooser.addOption("FORWARD Left Disruptor", Commands.sequence(
-        Commands.runOnce(() -> PathBuilder.stopTarget()),
-        Commands.runOnce(() -> drive.setPose(AllianceFlip.apply(new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kZero)))),
-        Commands.deadline(
-            PathBuilder.path(
-                new PathBuilder.Target(new Pose2d(FieldConstants.Trench.left_trench_neutral_preentrance, Rotation2d.kZero))
-                .withSpeed(1),
-                new PathBuilder.Target(new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.fromDegrees(-105)))
-                .withSpeed(0.6)
-                .withRotationSpread(1.5)
-                .withRotationLead(2)
-                .withCommand(() -> Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)),
-                new PathBuilder.Target(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(105)))
-                .withSpeed(0.3).withCommand(() -> Commands.runOnce(intake::stop, intake))
-            ),
-            PathBuilder.triggerWhenFar(FieldConstants.Trench.left_trench_center, 0.4, ScoringCommands.forceDown(wrist))
-        ),
-        Commands.deadline(
-        PathBuilder.path(
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.field_center,
-                    Rotation2d.kCW_90deg)),
-            new PathBuilder.Target(
-                new Pose2d(
-                        FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),
-                1,
-                1.5,
-                2),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.left_trench_neutral_preentrance,
-                    Rotation2d.kZero)),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.left_trench_alliance_preentrance,
-                    Rotation2d.kCW_90deg),
-                1,
-                0.5),
-            new PathBuilder.Target(
-                new Pose2d(
-                    2.225,
-                    FieldConstants.field_width-2.245,
-                    Rotation2d.kCW_90deg),
-                0.8)
-        ),
-        PathBuilder.triggerWhenClose(FieldConstants.Trench.left_trench_alliance_preentrance, 0.2, Commands.runOnce(() -> PathBuilder.targetTranslation(() -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
-        Commands.runOnce(() -> PathBuilder.stopTarget())).andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0)
-    ));
-
-
-    
     autoChooser.addOption("Climb Only Right", AutoCommands.climbRight(climber));
     autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
     autoChooser.addOption("Nothing", Commands.none());
