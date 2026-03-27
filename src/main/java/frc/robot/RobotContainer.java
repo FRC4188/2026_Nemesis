@@ -110,8 +110,7 @@ public class RobotContainer {
             new Vision(
                 drive::accept,
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
-                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight),
-                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
 
         hood = new Hood(new HoodIOReal());
         shooter = new Shooter(new ShooterIOReal());
@@ -201,6 +200,7 @@ public class RobotContainer {
     climbChooser = new LoggedDashboardChooser<>("Climb Choices");
     climbChooser.addOption("Climb", AutoCommands.Climb.CLIMB);
     climbChooser.addOption("No Climb", AutoCommands.Climb.NONE);
+    climbChooser.addOption("1.5 Neutral", AutoCommands.Climb.NZ);
 
     autoChooser.addOption(
         "PsuedoBoard",
@@ -218,6 +218,11 @@ public class RobotContainer {
                     wrist,
                     climber),
             Set.of(drive, shooter, hood, hopper, intake, wrist, climber)));
+
+    // autoChooser.addOption(
+    //     "testing drive idk",
+    //     Commands.runOnce(() -> drive.setPose(new Pose2d()));
+    //     );
 
     autoChooser.addOption(
         "Right NZ 1 C Swipe",
@@ -705,15 +710,13 @@ public class RobotContainer {
     copilot
         .getLeftTButton()
         .toggleOnTrue(
-            Commands.startEnd(
-                () -> wrist.enableShake(false), () -> wrist.enableShake(true), wrist));
+            Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
 
     copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
-    copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
-    copilot.povDown().onTrue(Commands.runOnce(hood::subOne));
+    copilot.povUp().onTrue(Commands.runOnce(hood::zero));
     copilot
-        .getRightTButton()
+        .povDown()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }
@@ -777,17 +780,20 @@ public class RobotContainer {
             new Pose2d(0, 0, Rotation2d.kZero));
       }
     }
+
+    // drive.setPose(new Pose2d(FieldConstants.FuelField.second_intake_right_close_corner,
+    // Rotation2d.kCW_90deg));
   }
 
   public void periodic() {
-    // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
-    // Logger.recordOutput(
-    //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    Logger.recordOutput(
+        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
     Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    // Logger.recordOutput(
-    //     "Drive/Distance From Hub",
-    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    Logger.recordOutput(
+        "Drive/Distance From Hub",
+        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {

@@ -46,6 +46,7 @@ public class AutoCommands {
 
   public static enum Climb {
     CLIMB,
+    NZ,
     NONE
   }
 
@@ -237,6 +238,7 @@ public class AutoCommands {
             .withTimeout(
                 switch (climb) {
                   case CLIMB -> 4.0;
+                  case NZ -> 7.0;
                   case NONE -> 10.0;
                 }),
         switch (climb) {
@@ -272,6 +274,48 @@ public class AutoCommands {
               },
               Commands.runOnce(climber::lower, climber));
           case NONE -> Commands.none();
+          case NZ -> Commands.deadline(
+              switch (start) {
+                case RIGHT -> PathBuilder.path(
+                    new PathBuilder.Target(new Pose2d(2.225, 2.245, Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_alliance_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_neutral_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.FuelField.second_intake_right_close_corner,
+                                Rotation2d.kCCW_90deg))
+                        .withRotationSpread(2.5)
+                        .withRotationLead(1)
+                        .withCommand(
+                            Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)));
+
+                case LEFT -> PathBuilder.path(
+                    new PathBuilder.Target(
+                        new Pose2d(2.225, FieldConstants.field_width - 2.245, Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_alliance_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kZero)),
+                    new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.FuelField.second_intake_left_close_corner,
+                                Rotation2d.kCW_90deg))
+                        .withRotationSpread(2.5)
+                        .withRotationLead(1)
+                        .withCommand(
+                            Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)));
+              },
+              Commands.none());
         });
   }
 

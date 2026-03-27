@@ -239,6 +239,21 @@ public final class FieldConstants { // going off of an onshape cad of field
         new Translation2d(
             Units.inchesToMeters(289.66) + fuelfield_length / 2 - Constants.Robot.B_LENGTH / 2,
             Units.inchesToMeters(67.89) + fuelfield_width);
+
+    public static final Translation2d second_intake_left_close_corner =
+        new Translation2d(
+            FieldConstants.FuelField.left_close_corner.getX() - Constants.Robot.B_CROSS,
+            FieldConstants.FuelField.left_close_corner.getY());
+
+    public static final Translation2d second_intake_midline_close_line =
+        new Translation2d(
+            FieldConstants.FuelField.middle_close_line.getX() - Constants.Robot.B_CROSS,
+            FieldConstants.FuelField.middle_close_line.getY());
+
+    public static final Translation2d second_intake_right_close_corner =
+        new Translation2d(
+            FieldConstants.FuelField.right_close_corner.getX() - Constants.Robot.B_CROSS,
+            FieldConstants.FuelField.right_close_corner.getY());
   }
 
   public static class Tower {
