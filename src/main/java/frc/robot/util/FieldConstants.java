@@ -84,6 +84,15 @@ public final class FieldConstants { // going off of an onshape cad of field
 
     public static final Translation2d right_trench_intermediate =
         new Translation2d(FieldConstants.field_length / 2, trench_width / 2);
+
+    public static final Translation2d intake_left_trench_intermediate =
+        new Translation2d(
+            FieldConstants.field_length / 2 - Constants.Robot.B_LENGTH / 2,
+            Units.inchesToMeters(267.34) + trench_width / 2);
+
+    public static final Translation2d intake_right_trench_intermediate =
+        new Translation2d(
+            FieldConstants.field_length / 2 - Constants.Robot.B_LENGTH / 2, trench_width / 2);
   }
 
   public static class Bump {

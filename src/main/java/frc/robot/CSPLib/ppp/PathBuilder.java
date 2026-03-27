@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -218,7 +219,7 @@ public final class PathBuilder {
     public final double tangentWeight;
     public final BooleanSupplier condition;
     public final double toleranceMeters;
-    public final Command command;
+    public final Supplier<Command> command;
 
     public Target(Pose2d pose) {
       this(
@@ -291,7 +292,7 @@ public final class PathBuilder {
         Rotation2d heading,
         double tangentWeight,
         double toleranceMeters,
-        Command command,
+        Supplier<Command> command,
         BooleanSupplier condition) {
       if (pose == null) throw new IllegalArgumentException("pose cannot be null");
       if (!Double.isFinite(speedMultiplier) || speedMultiplier <= 0.0) {
@@ -463,6 +464,10 @@ public final class PathBuilder {
     }
 
     public Target withCommand(Command command) {
+      return withCommand(() -> command);
+    }
+
+    public Target withCommand(Supplier<Command> command) {
       return new Target(
           pose,
           speedMultiplier,
@@ -575,7 +580,11 @@ public final class PathBuilder {
         Target target = activeTargets.get(i);
 
         if (target.command != null) {
-          fallbackMarkers.add(new EventMarker("target_" + i, pct * waypointSlots, target.command));
+          fallbackMarkers.add(
+              new EventMarker(
+                  "target_" + i,
+                  pct * waypointSlots,
+                  Commands.defer(target.command, Collections.emptySet())));
         }
 
         Rotation2d desired;
@@ -757,7 +766,9 @@ public final class PathBuilder {
 
       if (target.command != null) {
         double markerPos = (arc / totalLength) * waypointSlots;
-        eventMarkers.add(new EventMarker("target_" + t, markerPos, target.command));
+        eventMarkers.add(
+            new EventMarker(
+                "target_" + t, markerPos, Commands.defer(target.command, Collections.emptySet())));
       }
 
       switch (target.rotationMode) {
@@ -850,59 +861,36 @@ public final class PathBuilder {
     }
 
     List<ConstraintsZone> constraintsZones = new ArrayList<>();
-    final double ZONE_EPSILON = 1e-6;
-    for (int i = 0; i < nTargets; i++) {
-      Target target = activeTargets.get(i);
 
-      boolean linearChanged = Math.abs(target.speedMultiplier - 1.0) > 1e-9;
-      boolean angularChanged = Math.abs(target.rotationSpeedMultiplier - 1.0) > 1e-9;
-      if (!linearChanged && !angularChanged) continue;
-
-      if (i > 0) {
-        Target prev = activeTargets.get(i - 1);
-        boolean prevChanged =
-            Math.abs(prev.speedMultiplier - 1.0) > 1e-9
-                || Math.abs(prev.rotationSpeedMultiplier - 1.0) > 1e-9;
-        if (prevChanged) {
-          continue;
-        }
-      }
-
-      int j = i + 1;
-      while (j < nTargets) {
-        Target next = activeTargets.get(j);
-        boolean nextChanged =
-            Math.abs(next.speedMultiplier - 1.0) > 1e-9
-                || Math.abs(next.rotationSpeedMultiplier - 1.0) > 1e-9;
-        if (!nextChanged) break;
-        j++;
-      }
+    for (int i = 0; i < nTargets - 1; i++) {
+      Target current = activeTargets.get(i);
+      Target next = activeTargets.get(i + 1);
 
       double startArc = targetArcs[i];
-      double endArc = (j < nTargets) ? targetArcs[j] : totalLength;
+      double endArc = targetArcs[i + 1];
 
-      if (endArc - startArc < ZONE_EPSILON) {
-        endArc = Math.min(totalLength, startArc + 1e-3);
-        if (endArc - startArc < ZONE_EPSILON) {
-          startArc = Math.max(0.0, startArc - 1e-3);
-        }
-      }
+      if (endArc - startArc < 1e-6) continue;
 
       double startFrac = startArc / totalLength;
       double endFrac = endArc / totalLength;
 
-      double startWaypointPos = Math.max(0.0, Math.min(waypointSlots, startFrac * waypointSlots));
-      double endWaypointPos = Math.max(0.0, Math.min(waypointSlots, endFrac * waypointSlots));
+      double startWaypointPos = startFrac * waypointSlots;
+      double endWaypointPos = endFrac * waypointSlots;
 
-      double linearMult = target.speedMultiplier;
-      double angularMult = target.rotationSpeedMultiplier;
+      double linearMult = current.speedMultiplier;
+      double angularMult = current.rotationSpeedMultiplier;
+
+      // Skip if BOTH are default
+      if (Math.abs(linearMult - 1.0) < 1e-9 && Math.abs(angularMult - 1.0) < 1e-9) {
+        continue;
+      }
 
       PathConstraints scaled =
           new PathConstraints(
-              Math.max(0.0, globalConstraints.maxVelocityMPS() * linearMult),
-              Math.max(0.0, globalConstraints.maxAccelerationMPSSq() * linearMult),
-              Math.max(0.0, globalConstraints.maxAngularVelocityRadPerSec() * angularMult),
-              Math.max(0.0, globalConstraints.maxAngularAccelerationRadPerSecSq() * angularMult));
+              globalConstraints.maxVelocityMPS() * linearMult,
+              globalConstraints.maxAccelerationMPSSq() * linearMult,
+              globalConstraints.maxAngularVelocityRadPerSec() * angularMult,
+              globalConstraints.maxAngularAccelerationRadPerSecSq() * angularMult);
 
       constraintsZones.add(new ConstraintsZone(startWaypointPos, endWaypointPos, scaled));
     }
@@ -1073,8 +1061,6 @@ public final class PathBuilder {
 
   public static Command triggerWhenClose(
       Translation2d location, double distance, Command runnable) {
-    System.out.println(getPose.get());
-
     return Commands.waitUntil(
             () ->
                 getPose.get().getTranslation().getDistance(AllianceFlip.apply(location))
