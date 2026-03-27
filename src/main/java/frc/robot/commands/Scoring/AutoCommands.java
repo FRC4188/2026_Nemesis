@@ -140,7 +140,7 @@ public class AutoCommands {
                   case LEFT -> FieldConstants.Trench.left_trench_center;
                   case RIGHT -> FieldConstants.Trench.right_trench_center;
                 },
-                0.5,
+                0.25,
                 ScoringCommands.forceDown(wrist)),
             PathBuilder.triggerWhenClose(
                 switch (start) {
