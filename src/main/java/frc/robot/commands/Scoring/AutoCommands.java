@@ -237,7 +237,7 @@ public class AutoCommands {
             .withTimeout(
                 switch (climb) {
                   case CLIMB -> 4.0;
-                  case NONE -> 10.0;
+                  case NONE -> 6.0;
                 }),
         switch (climb) {
           case CLIMB -> Commands.sequence(
@@ -271,7 +271,82 @@ public class AutoCommands {
                         new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05));
               },
               Commands.runOnce(climber::lower, climber));
-          case NONE -> Commands.none();
+          case NONE -> Commands.deadline(
+            PathBuilder.path(
+                new PathBuilder.Target(
+                        switch (start) {
+                          case LEFT -> new Pose2d(
+                              FieldConstants.Trench.left_trench_alliance_preentrance, Rotation2d.kZero);
+                          case RIGHT -> new Pose2d(
+                              FieldConstants.Trench.right_trench_alliance_preentrance, Rotation2d.kZero);
+                        })
+                    .withSpeed(0.8),
+                new PathBuilder.Target(
+                        switch (start) {
+                          case LEFT -> new Pose2d(
+                              FieldConstants.Trench.left_trench_neutral_preentrance,
+                              Rotation2d.kCW_90deg);
+                          case RIGHT -> new Pose2d(
+                              FieldConstants.Trench.right_trench_neutral_preentrance,
+                              Rotation2d.kCCW_90deg);
+                        })
+                    .withSpeed(0.8),
+                new PathBuilder.Target(
+                    switch (start) {
+                      case LEFT -> new Pose2d(
+                          switch (swipe) {
+                            case CENTER -> FieldConstants.Trench.intake_left_trench_intermediate;
+                            case CLOSE -> FieldConstants.Trench.left_trench_intermediate;
+                          },
+                          Rotation2d.kCW_90deg);
+                      case RIGHT -> new Pose2d(
+                          switch (swipe) {
+                            case CENTER -> FieldConstants.Trench.intake_right_trench_intermediate;
+                            case CLOSE -> FieldConstants.Trench.right_trench_intermediate;
+                          },
+                          Rotation2d.kCCW_90deg);
+                    },
+                    0.25),
+                new PathBuilder.Target(
+                    switch (start) {
+                      case LEFT -> new Pose2d(
+                          switch (swipe) {
+                            case CENTER -> FieldConstants.FuelField.intake_left_midline_corner;
+                            case CLOSE -> FieldConstants.FuelField.left_midline_corner;
+                          },
+                          Rotation2d.kCW_90deg);
+                      case RIGHT -> new Pose2d(
+                          switch (swipe) {
+                            case CENTER -> FieldConstants.FuelField.intake_right_midline_corner;
+                            case CLOSE -> FieldConstants.FuelField.right_midline_corner;
+                          },
+                          Rotation2d.kCCW_90deg);
+                    },
+                    0.25),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        switch (swipe) {
+                          case CENTER -> FieldConstants.FuelField.intake_midline;
+                          case CLOSE -> FieldConstants.field_center;
+                        },
+                        switch (start) {
+                          case LEFT -> Rotation2d.fromDegrees(-105);
+                          case RIGHT -> Rotation2d.fromDegrees(105);
+                        }),
+                    0.20)),
+            PathBuilder.triggerWhenClose(
+                switch (start) {
+                  case LEFT -> switch (swipe) {
+                    case CENTER -> FieldConstants.FuelField.intake_left_midline_corner;
+                    case CLOSE -> FieldConstants.FuelField.left_midline_corner;
+                  };
+                  case RIGHT -> switch (swipe) {
+                    case CENTER -> FieldConstants.FuelField.intake_right_midline_corner;
+                    case CLOSE -> FieldConstants.FuelField.right_midline_corner;
+                  };
+                },
+                1,
+                Commands.runEnd(() -> intake.intakeVolts(7.0), intake::stop, intake)));
         });
   }
 
