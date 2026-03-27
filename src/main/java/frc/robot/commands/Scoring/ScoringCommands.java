@@ -2,7 +2,6 @@ package frc.robot.commands.Scoring;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,66 +17,23 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
-import java.util.Map;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
-  public static InterpolatingDoubleTreeMap theLeftTree =
-      InterpolatingDoubleTreeMap.ofEntries(
-          Map.entry(2.8215051131055264, 2200.0),
-          Map.entry(2.0, 2100.0),
-          Map.entry(3.275369307926615, 2300.0),
-          Map.entry(3.595707710420995, 2300.0),
-          Map.entry(2.1367730463892607, 2200.0),
-          Map.entry(1.7612802191261636, 2000.0),
-          Map.entry(2.8377080004414252, 2200.0),
-          Map.entry(4.480608710542746, 2400.0),
-          Map.entry(3.5215872192835054, 2350.0),
-          Map.entry(5.033825137547001, 2500.0),
-          Map.entry(3.947989647341449, 2400.0),
-          Map.entry(4.068028454299497, 2400.0),
-          Map.entry(2.6433163458634867, 2200.0),
-          Map.entry(5.289323328222003, 2575.0),
-          Map.entry(4.979638580003689, 2575.0),
-          Map.entry(5.098624335292876, 2575.0));
 
-  public static InterpolatingDoubleTreeMap theRightTree =
-      InterpolatingDoubleTreeMap.ofEntries(
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0),
-          Map.entry(0.0, 0.0));
-
-  public static LoggedNetworkNumber _RPML = new LoggedNetworkNumber("Aim Tuning/Left RPM", 0.0);
-  public static LoggedNetworkNumber _RPMR = new LoggedNetworkNumber("Aim Tuning/Right RPM", 0.0);
+  public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
   public static Command dataShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
         Commands.runEnd(
-            () -> shooter.setVelocityRPM(_RPML.getAsDouble(), _RPMR.getAsDouble()),
+            () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
             .andThen(
                 Commands.repeatingSequence(
                     new WaitUntilCommand(() -> shooter.atGoal()),
-                    Commands.runOnce(() -> hopper.runHopperVolts(6.0, 6.0), hopper),
+                    Commands.runOnce(() -> hopper.runHopperVolts(6.0, 4.0), hopper),
                     new WaitUntilCommand(() -> !shooter.atGoal()),
                     Commands.runOnce(() -> hopper.runHopperVolts(0.0, 0.0), hopper)))
             .finallyDo(hopper::stop));
@@ -116,14 +72,6 @@ public class ScoringCommands {
                     .andThen(
                         Commands.runEnd(
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
-    // new WaitCommand(0.1)
-    //     .andThen(
-    //         Commands.repeatingSequence(
-    //             new WaitUntilCommand(() -> shooter.atGoal()),
-    //             Commands.runOnce(() -> hopper.runHopperVolts(6.0, 6.0), hopper),
-    //             new WaitUntilCommand(() -> !shooter.atGoal()),
-    //             Commands.runOnce(() -> hopper.runHopperVolts(0.0, 0.0), hopper)))
-    //     .finallyDo(hopper::stop));
   }
 
   public static Command manualAim(Hood hood) {
@@ -144,20 +92,15 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
-    return 152.5 * distance + 1806.67131 + 100;
-    // return theLeftTree.get(distance);
-    // return 160 * (distance - 2) + 2100;
+    return 145.557 * distance + 1806.67131;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
-    return Rotation2d.fromRadians(
-        Math.PI / 2
-            - Math.atan(7 / distance)
-            + ((distance < 2.5) ? Units.degreesToRadians(5.0) : 0.0));
+    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7.0 / distance));
   }
 
   public static Command passAim(Hood hood) {
@@ -172,7 +115,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
   public static Command shake(Wrist wrist) {

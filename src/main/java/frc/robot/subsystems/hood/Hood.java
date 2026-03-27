@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -15,10 +16,10 @@ public class Hood extends SubsystemBase {
 
   private final Alert hoodDisconnectedAlert;
 
-  // @AutoLogOutput(key = "Hood/Setpoint Degrees")
+  @AutoLogOutput(key = "Hood/Setpoint Degrees")
   private double setpoint = 0.0;
 
-  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline", 0.0);
+  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline", 8.0);
 
   public Hood(HoodIO io) {
     this.io = io;
@@ -34,6 +35,14 @@ public class Hood extends SubsystemBase {
 
   public void stop() {
     io.setVolts(0.0);
+  }
+
+  public void addOne() {
+    offset.set(offset.get() + 1);
+  }
+
+  public void subOne() {
+    offset.set(offset.get() - 1);
   }
 
   public void setAngle(Rotation2d angle) {
@@ -66,7 +75,7 @@ public class Hood extends SubsystemBase {
     return Math.abs(getAngle() - setpoint) < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
-  // @AutoLogOutput(key = "Hood/Angle Degrees")
+  @AutoLogOutput(key = "Hood/Angle Degrees")
   public double getAngle() {
     return inputs.position.getDegrees() - offset.getAsDouble();
   }

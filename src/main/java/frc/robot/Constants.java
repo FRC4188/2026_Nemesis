@@ -203,7 +203,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 25.0;
+    public static final double kTolerance = 10.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
@@ -282,6 +282,6 @@ public final class Constants {
             Units.inchesToMeters(-10.64272),
             Units.inchesToMeters(-6.18796 - 0.25),
             Units.inchesToMeters(15.25159),
-            new Rotation3d(0, Math.toRadians(32), 0));
+            new Rotation3d(0, Math.toRadians(34), 0));
   }
 }

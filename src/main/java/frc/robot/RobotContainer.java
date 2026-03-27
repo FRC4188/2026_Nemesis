@@ -110,8 +110,8 @@ public class RobotContainer {
             new Vision(
                 drive::accept,
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
-                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
-        // new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight),
+                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront));
 
         hood = new Hood(new HoodIOReal());
         shooter = new Shooter(new ShooterIOReal());
@@ -565,9 +565,10 @@ public class RobotContainer {
 
     copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
-    copilot.povUp().onTrue(Commands.runOnce(hood::zero));
+    copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
+    copilot.povDown().onTrue(Commands.runOnce(hood::subOne));
     copilot
-        .povDown()
+        .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }
@@ -634,14 +635,14 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
-    Logger.recordOutput(
-        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    // Logger.recordOutput(
+    //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
     Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    Logger.recordOutput(
-        "Drive/Distance From Hub",
-        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    // Logger.recordOutput(
+    //     "Drive/Distance From Hub",
+    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {
