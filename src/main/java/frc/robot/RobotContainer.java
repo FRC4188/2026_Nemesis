@@ -769,9 +769,10 @@ public class RobotContainer {
 
     copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
-    copilot.povUp().onTrue(Commands.runOnce(hood::zero));
+    copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
+    copilot.povDown().onTrue(Commands.runOnce(hood::subOne));
     copilot
-        .povDown()
+        .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }
