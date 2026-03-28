@@ -685,18 +685,20 @@ public class RobotContainer {
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
                     || pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.b().getAsBoolean()));
+                    || pilot.a().getAsBoolean()));
 
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
             drive,
-            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
-            // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
-            //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () -> -pilot.getCorrectedRight(Scale.SQUARED).getX(),
-            //   * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                -pilot.getCorrectedLeft(Scale.SQUARED).getY()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                -pilot.getCorrectedLeft(Scale.SQUARED).getX()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () ->
+                -pilot.getCorrectedRight(Scale.SQUARED).getX()
+                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 (pilot.a().getAsBoolean()
                     ? drive
@@ -715,20 +717,20 @@ public class RobotContainer {
             () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
-    pilot.a().or(() -> pilot.b().getAsBoolean()).whileTrue(ScoringCommands.passAim(hood));
+    pilot.a().whileTrue(ScoringCommands.passAim(hood));
     pilot.x().whileTrue(ScoringCommands.manualAim(hood));
 
     pilot
         .getRightTButton()
         .whileTrue(
             Commands.either(
-                ScoringCommands.passShoot(shooter, hopper, () -> pilot.b().getAsBoolean()),
+                ScoringCommands.passShoot(shooter, hopper),
                 Commands.either(
                     // ScoringCommands.dataShoot(shooter, hopper),
                     ScoringCommands.staticShoot(drive, shooter, hopper),
                     ScoringCommands.manualShoot(shooter, hopper),
                     () -> pilot.rightBumper().getAsBoolean()),
-                () -> pilot.a().getAsBoolean() || pilot.b().getAsBoolean()));
+                () -> pilot.a().getAsBoolean()));
 
     pilot.getRightTButton().whileTrue(ScoringCommands.shake(wrist));
 
