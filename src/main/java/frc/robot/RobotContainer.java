@@ -459,7 +459,7 @@ public class RobotContainer {
                                 new Pose2d(
                                     FieldConstants.FuelField.right_midline_corner,
                                     Rotation2d.fromDegrees(105)))
-                            .withSpeed(0.6)
+                            .withSpeed(0.8)
                             .withRotationSpread(1.5)
                             .withRotationLead(2)
                             .withCommand(
@@ -468,8 +468,9 @@ public class RobotContainer {
                                         () -> intake.intakeVolts(8), intake::stop, intake)),
                         new PathBuilder.Target(
                                 new Pose2d(
-                                    FieldConstants.field_center, Rotation2d.fromDegrees(105)))
-                            .withSpeed(0.3)
+                                    FieldConstants.FuelField.left_midline_corner,
+                                    Rotation2d.fromDegrees(105)))
+                            .withSpeed(0.8)
                             .withCommand(() -> Commands.runOnce(intake::stop, intake))),
                     PathBuilder.triggerWhenFar(
                         FieldConstants.Trench.right_trench_center,
@@ -478,7 +479,9 @@ public class RobotContainer {
                 Commands.deadline(
                     PathBuilder.path(
                         new PathBuilder.Target(
-                            new Pose2d(FieldConstants.field_center, Rotation2d.kCCW_90deg)),
+                            new Pose2d(
+                                FieldConstants.FuelField.left_midline_corner,
+                                Rotation2d.kCCW_90deg)),
                         new PathBuilder.Target(
                             new Pose2d(
                                 FieldConstants.FuelField.right_midline_corner, Rotation2d.kZero),
@@ -530,7 +533,7 @@ public class RobotContainer {
                                 new Pose2d(
                                     FieldConstants.FuelField.left_midline_corner,
                                     Rotation2d.fromDegrees(-105)))
-                            .withSpeed(0.6)
+                            .withSpeed(0.8)
                             .withRotationSpread(1.5)
                             .withRotationLead(2)
                             .withCommand(
@@ -539,8 +542,9 @@ public class RobotContainer {
                                         () -> intake.intakeVolts(8), intake::stop, intake)),
                         new PathBuilder.Target(
                                 new Pose2d(
-                                    FieldConstants.field_center, Rotation2d.fromDegrees(105)))
-                            .withSpeed(0.3)
+                                    FieldConstants.FuelField.right_midline_corner,
+                                    Rotation2d.fromDegrees(-105)))
+                            .withSpeed(0.8)
                             .withCommand(() -> Commands.runOnce(intake::stop, intake))),
                     PathBuilder.triggerWhenFar(
                         FieldConstants.Trench.left_trench_center,
@@ -549,7 +553,9 @@ public class RobotContainer {
                 Commands.deadline(
                     PathBuilder.path(
                         new PathBuilder.Target(
-                            new Pose2d(FieldConstants.field_center, Rotation2d.kCW_90deg)),
+                            new Pose2d(
+                                FieldConstants.FuelField.right_midline_corner,
+                                Rotation2d.kCW_90deg)),
                         new PathBuilder.Target(
                             new Pose2d(
                                 FieldConstants.FuelField.left_midline_corner, Rotation2d.kZero),

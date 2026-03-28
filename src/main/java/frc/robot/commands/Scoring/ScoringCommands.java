@@ -109,7 +109,7 @@ public class ScoringCommands {
 
   public static Command passShoot(Shooter shooter, Hopper hopper) {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(3100, 3100), shooter::stop, shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(4200, 4200), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
