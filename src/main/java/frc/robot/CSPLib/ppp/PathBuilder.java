@@ -50,7 +50,7 @@ public final class PathBuilder {
           Constants.DriveConstants.ANGLE_MAXACC * 0.8);
 
   private static double ROTATION_TOL_RAD = Math.toRadians(1);
-  private static double FOLLOW_ROTATION_SAMPLE_METERS = 1.5;
+  private static double FOLLOW_ROTATION_SAMPLE_METERS = 0.5;
   private static double PATH_CREATION_TOL = Units.inchesToMeters(1);
 
   private static boolean logged;

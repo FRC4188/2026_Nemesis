@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
@@ -584,6 +585,60 @@ public class RobotContainer {
     autoChooser.addOption("Climb Only Right", AutoCommands.climbRight(climber));
     autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
     autoChooser.addOption("Nothing", Commands.none());
+
+    autoChooser.addOption(
+        "Clockwise Counter 1002 Left",
+        Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg))),
+            PathBuilder.path(
+                new PathBuilder.Target(
+                    new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance,
+                        Rotation2d.kCW_90deg)),
+                new PathBuilder.Target(new Pose2d(8.451, 5.174, Rotation2d.kCW_90deg))),
+            new WaitCommand(2.5),
+            PathBuilder.path(
+                new PathBuilder.Target(new Pose2d(8.451, 5.174, Rotation2d.kCW_90deg))
+                    .withSpeed(0.7),
+                new PathBuilder.Target(new Pose2d(9.762, 5.496, Rotation2d.kCW_90deg))
+                    .withSpeed(0.7),
+                new PathBuilder.Target(new Pose2d(9.893, 6.544, Rotation2d.kCW_90deg))
+                    .withSpeed(0.7),
+                new PathBuilder.Target(new Pose2d(9.842, 7.149, Rotation2d.kCW_90deg))
+                    .withSpeed(0.7),
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg))
+                    .withSpeed(0.45),
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(-105)))
+                    .withSpeed(0.45)
+                    .withHeading(Rotation2d.kCW_90deg),
+                new PathBuilder.Target(
+                    new Pose2d(FieldConstants.FuelField.left_midline_corner, Rotation2d.kCW_90deg),
+                    1,
+                    1.5,
+                    2),
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_neutral_preentrance,
+                            Rotation2d.kZero))
+                    .withRotationMode(PathBuilder.Target.RotationMode.LINEAR)
+                    .withSpeed(1),
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.left_trench_alliance_preentrance,
+                            Rotation2d.kZero))
+                    .withRotationMode(PathBuilder.Target.RotationMode.SNAP),
+                new PathBuilder.Target(new Pose2d(2.143, 5.889, Rotation2d.fromDegrees(-45)))),
+            AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0)));
 
     // Set up SysId routines
     autoChooser.addOption(
