@@ -202,6 +202,7 @@ public class RobotContainer {
     climbChooser.addOption("Climb", AutoCommands.Climb.CLIMB);
     climbChooser.addOption("No Climb", AutoCommands.Climb.NONE);
     climbChooser.addOption("1.5 Neutral", AutoCommands.Climb.NZ);
+    climbChooser.addOption("2nd Swipe", AutoCommands.Climb.DOUBLE);
 
     autoChooser.addOption(
         "PsuedoBoard",
@@ -718,7 +719,10 @@ public class RobotContainer {
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
     pilot.a().whileTrue(ScoringCommands.passAim(hood));
-    pilot.x().whileTrue(ScoringCommands.manualAim(hood));
+    pilot
+        .x()
+        .or(() -> pilot.b().getAsBoolean())
+        .whileTrue(ScoringCommands.manualAim(hood, () -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
     pilot
         .getRightTButton()
@@ -728,7 +732,8 @@ public class RobotContainer {
                 Commands.either(
                     // ScoringCommands.dataShoot(shooter, hopper),
                     ScoringCommands.staticShoot(drive, shooter, hopper),
-                    ScoringCommands.manualShoot(shooter, hopper),
+                    ScoringCommands.manualShoot(
+                        shooter, hopper, () -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 

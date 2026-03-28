@@ -17,6 +17,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
@@ -74,17 +75,20 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
-  public static Command manualAim(Hood hood) {
+  public static Command manualAim(Hood hood, DoubleSupplier distance) {
     return Commands.runEnd(
-        () -> hood.setAngle(inclineHueristic(Units.feetToMeters(12.0))), hood::stow, hood);
+        () -> hood.setAngle(inclineHueristic(Units.feetToMeters(distance.getAsDouble()))),
+        hood::stow,
+        hood);
   }
 
-  public static Command manualShoot(Shooter shooter, Hopper hopper) {
+  public static Command manualShoot(Shooter shooter, Hopper hopper, DoubleSupplier distance) {
     return Commands.parallel(
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    RPMRegress(Units.feetToMeters(12.0)), RPMRegress(Units.feetToMeters(12.0))),
+                    RPMRegress(Units.feetToMeters(distance.getAsDouble())),
+                    RPMRegress(Units.feetToMeters(distance.getAsDouble()))),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
