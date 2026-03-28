@@ -17,6 +17,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
@@ -107,9 +108,14 @@ public class ScoringCommands {
     return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(40)), hood::stow, hood);
   }
 
-  public static Command passShoot(Shooter shooter, Hopper hopper) {
+  public static Command passShoot(Shooter shooter, Hopper hopper, BooleanSupplier full) {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(4200, 4200), shooter::stop, shooter),
+        Commands.runEnd(
+            () ->
+                shooter.setVelocityRPM(
+                    ((full.getAsBoolean()) ? 4200 : 3100), ((full.getAsBoolean()) ? 4200 : 3100)),
+            shooter::stop,
+            shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
