@@ -842,14 +842,14 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
-    Logger.recordOutput(
-        "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
+    // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
+    // Logger.recordOutput(
+    //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
     Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    Logger.recordOutput(
-        "Drive/Distance From Hub",
-        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    // Logger.recordOutput(
+    //     "Drive/Distance From Hub",
+    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {
