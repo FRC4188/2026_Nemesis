@@ -691,15 +691,12 @@ public class RobotContainer {
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
             drive,
-            () ->
-                -pilot.getCorrectedLeft(Scale.SQUARED).getY()
-                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () ->
-                -pilot.getCorrectedLeft(Scale.SQUARED).getX()
-                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () ->
-                -pilot.getCorrectedRight(Scale.SQUARED).getX()
-                    * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
+            //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
+            // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
+            () -> -pilot.getCorrectedRight(Scale.SQUARED).getX(),
+            //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 (pilot.a().getAsBoolean()
                     ? drive
