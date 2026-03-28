@@ -206,20 +206,22 @@ public class RobotContainer {
 
     autoChooser.addOption(
         "PsuedoBoard",
-        Commands.defer(
-            () ->
-                AutoCommands.pseudoBoard(
-                    startChooser.get(),
-                    swipeChooser.get(),
-                    climbChooser.get(),
-                    drive,
-                    shooter,
-                    hood,
-                    hopper,
-                    intake,
-                    wrist,
-                    climber),
-            Set.of(drive, shooter, hood, hopper, intake, wrist, climber)));
+        new WaitCommand(8.0)
+            .andThen(
+                Commands.defer(
+                    () ->
+                        AutoCommands.pseudoBoard(
+                            startChooser.get(),
+                            swipeChooser.get(),
+                            climbChooser.get(),
+                            drive,
+                            shooter,
+                            hood,
+                            hopper,
+                            intake,
+                            wrist,
+                            climber),
+                    Set.of(drive, shooter, hood, hopper, intake, wrist, climber))));
 
     // autoChooser.addOption(
     //     "testing drive idk",
@@ -592,6 +594,26 @@ public class RobotContainer {
     autoChooser.addOption("Climb Only Right", AutoCommands.climbRight(climber));
     autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
     autoChooser.addOption("Nothing", Commands.none());
+
+    // autoChooser.addOption("Preload right",
+    //     Commands.sequence(
+    //         PathBuilder.path(
+    //             new PathBuilder.Target(
+    //                 new Pose2d(
+    //                     FieldConstants.Trench.right_trench_alliance_preentrance,
+    //                       Rotation2d.fromDegrees(45)
+    //                     ),
+    //                 1,
+    //                 0.5),
+    //             new PathBuilder.Target(
+    //                 new Pose2d(
+    //                     1.981,
+    //                     1.150,
+    //                     Rotation2d.fromDegrees(45)),1)
+    //         )),
+    //     Commands.runOnce(() -> PathBuilder.stopTarget())
+    //         .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))
+    //         );
 
     autoChooser.addOption(
         "Clockwise Counter 1002 Left",
