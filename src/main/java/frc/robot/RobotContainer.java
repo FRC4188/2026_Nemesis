@@ -206,7 +206,7 @@ public class RobotContainer {
 
     autoChooser.addOption(
         "PsuedoBoard",
-        new WaitCommand(8.0)
+        new WaitCommand(7.0)
             .andThen(
                 Commands.defer(
                     () ->

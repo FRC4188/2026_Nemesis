@@ -215,32 +215,13 @@ public class AutoCommands {
                           case LEFT -> Rotation2d.fromRadians(-45);
                         }),
                     1))
-            // ,PathBuilder.triggerWhenClose(
-            //     switch (start) {
-            //       case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance;
-            //       case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance;
-            //     },
-            //     0.2,
-            //     Commands.runOnce(
-            //         () ->
-            //             PathBuilder.targetTranslation(
-            //                 () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)))),
-            // PathBuilder.triggerWhenClose(
-            //     new Translation2d(
-            //         1.981,
-            //         switch (start) {
-            //           case RIGHT -> 1.150;
-            //           case LEFT -> FieldConstants.field_width - 1.150;
-            //         }),
-            //     0.1,
-            //     Commands.runOnce(() -> PathBuilder.stopTarget()))
             ),
         Commands.runOnce(() -> PathBuilder.stopTarget())
             .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))
             .withTimeout(
                 switch (climb) {
                   case CLIMB -> 4.0;
-                  case NZ -> 7.0;
+                  case NZ -> 8.0;
                   case NONE -> 10.0;
                   case DOUBLE -> 5.0;
                 }),
