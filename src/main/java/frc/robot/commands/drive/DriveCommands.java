@@ -28,87 +28,17 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
+  private static final Drive drive = Drive.getInstance();
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
   private DriveCommands() {}
-  /**
-   * Field relative drive command using two joysticks (controlling linear and angular velocities).
-   */
-  public static Command joystickDrive(
-      Drive drive,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
-    return Commands.runEnd(
-        () -> {
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                  ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                  omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL);
 
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        drive::stop,
-        drive);
-  }
-
-  /**
-   * Field relative drive command using joystick for linear control and PID for angular control.
-   * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
-   * absolute rotation with a joystick.
-   */
-  public static Command joystickDriveAtAngle(
-      Drive drive,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      Supplier<Rotation2d> rotationSupplier) {
-
-    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
-
-    // Construct command
-    return Commands.runEnd(
-        () -> {
-          double omega =
-              angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians())
-                  + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
-
-          if (angleController.atGoal() && angleController.getSetpoint().velocity == 0.0) {
-            if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
-              drive.stopWithX();
-              return;
-            } else {
-              omega = 0.0;
-            }
-          }
-
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                  ySupplier.getAsDouble() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega);
-
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        drive::stop,
-        drive);
-
-    // Reset PID controller when command starts
-  }
 
   // making is seamless
   public static Command joystickCombined(
-      Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier,
@@ -123,6 +53,7 @@ public class DriveCommands {
           if (!lock.getAsBoolean()) {
             omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
             drive.acceptVision(true);
+            angleController.reset(drive.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
           } else {
             omega =
                 angleController.calculate(
@@ -136,7 +67,6 @@ public class DriveCommands {
                 return;
               }
               omega = 0.0;
-              Logger.recordOutput("Drive/Omega Allegedly", omega);
               drive.acceptVision(false);
             } else {
               drive.acceptVision(true);
@@ -157,39 +87,7 @@ public class DriveCommands {
           drive.stopWithX();
           drive.acceptVision(true);
         },
-        drive);
-  }
-
-  public static Command autonAtAngle(Drive drive, Supplier<Rotation2d> rotSupplier) {
-    ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
-
-    return Commands.runEnd(
-        () -> {
-          double omega = 0.0;
-          omega =
-              angleController.calculate(
-                      drive.getRotation().getRadians(), rotSupplier.get().getRadians())
-                  + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
-
-          if (angleController.atGoal()) {
-            drive.stopWithX();
-            drive.acceptVision(false);
-            return;
-          } else {
-            drive.acceptVision(true);
-          }
-
-          ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
-
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        () -> {
-          drive.stopWithX();
-          drive.acceptVision(true);
-        },
-        drive);
+        drive).beforeStarting(() -> angleController.reset(drive.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond));
   }
 
   /**
@@ -197,7 +95,7 @@ public class DriveCommands {
    *
    * <p>This command should only be used in voltage control mode.
    */
-  public static Command feedforwardCharacterization(Drive drive) {
+  public static Command feedforwardCharacterization() {
     List<Double> velocitySamples = new LinkedList<>();
     List<Double> voltageSamples = new LinkedList<>();
     Timer timer = new Timer();
@@ -256,7 +154,7 @@ public class DriveCommands {
   }
 
   /** Measures the robot's wheel radius by spinning in a circle. */
-  public static Command wheelRadiusCharacterization(Drive drive) {
+  public static Command wheelRadiusCharacterization() {
     SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
     WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
 

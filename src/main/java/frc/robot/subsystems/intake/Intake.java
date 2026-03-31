@@ -4,9 +4,22 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
+
+  private static Intake instance = null;
+  public static synchronized Intake getInstance() {
+    if (instance == null) instance = new Intake(
+      switch(Constants.Robot.currentMode) {
+      case REAL -> new IntakeIOReal();
+      case SIM -> new IntakeIOSim();
+      case REPLAY -> new IntakeIO() {};
+    });
+    return instance;
+  }
   private final IntakeIO io;
   private final IntakeIOInputsAutoLogged inputs;
   private final Alert intakeDisconnectedAlert;
