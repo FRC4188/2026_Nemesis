@@ -66,6 +66,62 @@ public final class PathBuilder {
   private static BooleanSupplier shouldFlip;
   private static Runnable stopDrive;
 
+  private static List<Pose2d> activeFollowSampled = Collections.emptyList();
+  private static double[] activeFollowCum = new double[0];
+  private static double activeFollowTotalLength = 0.0;
+  private static double activeFollowWaypointSlots = 1.0;
+  private static List<RotationSample> activeExplicitRotationSamples = Collections.emptyList();
+  private static List<FollowWindow> activeFollowWindows = Collections.emptyList();
+  private static boolean activeFollowEnabled = false;
+
+  private static final class RotationSample {
+    final double position;
+    final Rotation2d rotation;
+
+    RotationSample(double position, Rotation2d rotation) {
+      this.position = position;
+      this.rotation = rotation;
+    }
+  }
+
+  private static final class FollowWindow {
+    final double startArc;
+    final double endArc;
+    final double lookaheadMeters;
+    final double spread;
+    final double tangentWeight;
+    final double sampleMeters;
+
+    FollowWindow(
+        double startArc,
+        double endArc,
+        double lookaheadMeters,
+        double spread,
+        double tangentWeight,
+        double sampleMeters) {
+      this.startArc = startArc;
+      this.endArc = endArc;
+      this.lookaheadMeters = lookaheadMeters;
+      this.spread = spread;
+      this.tangentWeight = tangentWeight;
+      this.sampleMeters = sampleMeters;
+    }
+  }
+
+  private static final class FollowProfile {
+    final double leadMeters;
+    final double spread;
+    final double sampleMeters;
+    final double tangentWeight;
+
+    FollowProfile(double leadMeters, double spread, double sampleMeters, double tangentWeight) {
+      this.leadMeters = leadMeters;
+      this.spread = spread;
+      this.sampleMeters = sampleMeters;
+      this.tangentWeight = tangentWeight;
+    }
+  }
+
   public static void configurePathing(
       double pathCreationTolMeters, double rotationTolRadians, double followRotationMeters) {
     ROTATION_TOL_RAD = rotationTolRadians;
@@ -173,17 +229,17 @@ public final class PathBuilder {
                       getPose.get().getRotation().getRadians()
                           - rotationSupplier.get().getRadians())
                   < angleTol.getRadians()
-              && angleController.getSetpoint().velocity == 0.0) omega = 0.0;
+              && angleController.getSetpoint().velocity == 0.0) {
+            omega = 0.0;
+          }
 
           return omega;
         });
   }
 
-  /*
-   * Stops any current rotation tracking
-   */
+  /** Stops any current rotation tracking. */
   public static void stopTarget() {
-    PPHolonomicDriveController.clearRotationFeedbackOverride();
+    clearFollowRotationOverride();
   }
 
   /**
@@ -216,6 +272,7 @@ public final class PathBuilder {
     public final RotationMode rotationMode;
     public final Rotation2d heading;
     public final double tangentWeight;
+    public final double curveScale;
     public final BooleanSupplier condition;
     public final double toleranceMeters;
     public final Supplier<Command> command;
@@ -229,6 +286,7 @@ public final class PathBuilder {
           1.0,
           RotationMode.LINEAR,
           null,
+          1.0,
           1.0,
           PATH_CREATION_TOL,
           null,
@@ -245,6 +303,7 @@ public final class PathBuilder {
           RotationMode.LINEAR,
           null,
           1.0,
+          1.0,
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -259,6 +318,7 @@ public final class PathBuilder {
           1.0,
           RotationMode.LINEAR,
           null,
+          1.0,
           1.0,
           PATH_CREATION_TOL,
           null,
@@ -276,6 +336,7 @@ public final class PathBuilder {
           RotationMode.LINEAR,
           null,
           1.0,
+          1.0,
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -290,6 +351,7 @@ public final class PathBuilder {
         RotationMode rotationMode,
         Rotation2d heading,
         double tangentWeight,
+        double curveScale,
         double toleranceMeters,
         Supplier<Command> command,
         BooleanSupplier condition) {
@@ -306,8 +368,11 @@ public final class PathBuilder {
       if (!Double.isFinite(rotationSpread) || rotationSpread <= 0.0) {
         throw new IllegalArgumentException("rotationSpread must be finite and > 0");
       }
-      if (!Double.isFinite(tangentWeight)) {
-        throw new IllegalArgumentException("tangentWeight must be finite");
+      if (!Double.isFinite(tangentWeight) || tangentWeight < 0.0) {
+        throw new IllegalArgumentException("tangentWeight must be finite and >= 0");
+      }
+      if (!Double.isFinite(curveScale) || curveScale < 0.0 || curveScale > 1.0) {
+        throw new IllegalArgumentException("curveScale must be finite and between 0 and 1");
       }
       if (!Double.isFinite(toleranceMeters) || toleranceMeters < 0.0) {
         throw new IllegalArgumentException("toleranceMeters must be finite and >= 0");
@@ -320,6 +385,7 @@ public final class PathBuilder {
       this.rotationMode = rotationMode == null ? RotationMode.LINEAR : rotationMode;
       this.heading = heading;
       this.tangentWeight = tangentWeight;
+      this.curveScale = curveScale;
       this.toleranceMeters = toleranceMeters;
       this.command = command;
       this.condition = condition == null ? () -> true : condition;
@@ -335,6 +401,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -350,6 +417,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -365,6 +433,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -380,6 +449,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -395,6 +465,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -411,6 +482,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -426,6 +498,23 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withCurve(double curveScale) {
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -442,6 +531,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -457,6 +547,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -476,6 +567,7 @@ public final class PathBuilder {
           rotationMode,
           heading,
           tangentWeight,
+          curveScale,
           toleranceMeters,
           command,
           condition);
@@ -483,7 +575,6 @@ public final class PathBuilder {
   }
 
   // Way too much work into this
-
   public static Command path(Target... targets) {
     if (targets == null || targets.length == 0) {
       throw new IllegalArgumentException("Must supply at least one Target");
@@ -511,38 +602,54 @@ public final class PathBuilder {
     List<Pose2d> travelHeadingPoses = new ArrayList<>(poses.length);
     for (int i = 0; i < poses.length; i++) {
       Translation2d pos = poses[i].getTranslation();
-      Rotation2d heading;
+      Rotation2d splineHeading;
+
       if (poses.length == 1) {
-        heading = poses[i].getRotation();
+        splineHeading = poses[i].getRotation();
       } else if (i == 0) {
         Translation2d next = poses[i + 1].getTranslation();
-        heading =
+        splineHeading =
             safeHeading(next.getX() - pos.getX(), next.getY() - pos.getY(), poses[i].getRotation());
       } else if (i == poses.length - 1) {
         Translation2d prev = poses[i - 1].getTranslation();
-        heading =
+        splineHeading =
             safeHeading(pos.getX() - prev.getX(), pos.getY() - prev.getY(), poses[i].getRotation());
       } else {
         Translation2d prev = poses[i - 1].getTranslation();
         Translation2d next = poses[i + 1].getTranslation();
-        heading =
+        splineHeading =
+            safeHeading(
+                next.getX() - prev.getX(), next.getY() - prev.getY(), poses[i].getRotation());
+      }
+
+      Rotation2d straightHeading;
+      if (poses.length == 1) {
+        straightHeading = poses[i].getRotation();
+      } else if (i == 0) {
+        Translation2d next = poses[i + 1].getTranslation();
+        straightHeading =
+            safeHeading(next.getX() - pos.getX(), next.getY() - pos.getY(), poses[i].getRotation());
+      } else if (i == poses.length - 1) {
+        Translation2d prev = poses[i - 1].getTranslation();
+        straightHeading =
+            safeHeading(pos.getX() - prev.getX(), pos.getY() - prev.getY(), poses[i].getRotation());
+      } else {
+        Translation2d prev = poses[i - 1].getTranslation();
+        Translation2d next = poses[i + 1].getTranslation();
+        straightHeading =
             safeHeading(
                 next.getX() - prev.getX(), next.getY() - prev.getY(), poses[i].getRotation());
       }
 
       Target target = activeTargets.get(i);
-      Rotation2d preferredHeading =
-          target.heading != null ? target.heading : poses[i].getRotation();
-      double tangentWeight = Math.max(0.0, Math.min(1.0, target.tangentWeight));
-      double blendedHeadingRadians =
-          preferredHeading.getRadians()
-              + normalizeAngle(heading.getRadians() - preferredHeading.getRadians())
-                  * tangentWeight;
+      double curveScale = clamp01(target.curveScale);
 
-      travelHeadingPoses.add(new Pose2d(pos, new Rotation2d(blendedHeadingRadians)));
+      Rotation2d finalHeading = interpolateRotation(straightHeading, splineHeading, curveScale);
+
+      travelHeadingPoses.add(new Pose2d(pos, finalHeading));
     }
 
-    List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(travelHeadingPoses);
+    List<Waypoint> waypoints = waypointsFromPosesWithCurve(travelHeadingPoses, activeTargets);
     final int waypointSlots = Math.max(1, waypoints.size() - 1);
 
     List<RotationTarget> emptyRotationTargets = Collections.<RotationTarget>emptyList();
@@ -632,6 +739,8 @@ public final class PathBuilder {
               null,
               finalGoal,
               false);
+
+      clearFollowRotationOverride();
       return AutoBuilder.followPath(fallback);
     }
 
@@ -753,7 +862,11 @@ public final class PathBuilder {
     }
 
     List<RotationTarget> rotationTargets = new ArrayList<>();
+    List<RotationSample> rotationSamples = new ArrayList<>();
+    List<FollowWindow> followWindows = new ArrayList<>();
+
     rotationTargets.add(new RotationTarget(0.0, poses[0].getRotation()));
+    rotationSamples.add(new RotationSample(0.0, poses[0].getRotation()));
     Rotation2d lastRotation = poses[0].getRotation();
     final double PRE_OFFSET_ARC = Math.max(1e-3, totalLength * 1e-6);
 
@@ -762,47 +875,48 @@ public final class PathBuilder {
     for (int t = 1; t < nTargets; t++) {
       Target target = activeTargets.get(t);
       double arc = targetArcs[t];
+      double waypointPos = (arc / totalLength) * waypointSlots;
 
       if (target.command != null) {
-        double markerPos = (arc / totalLength) * waypointSlots;
         eventMarkers.add(
             new EventMarker(
-                "target_" + t, markerPos, Commands.defer(target.command, Collections.emptySet())));
+                "target_" + t,
+                waypointPos,
+                Commands.defer(target.command, Collections.emptySet())));
       }
 
       switch (target.rotationMode) {
         case FOLLOW:
           {
-            Rotation2d offset = poses[t].getRotation();
+            FollowProfile profile = computeFollowProfile(sampled, cum, arc, totalLength, target);
 
-            double leadMeters = target.rotationLeadMeters;
-            double rotationStartArc = arc - leadMeters;
-            rotationStartArc = Math.max(0.0, Math.min(rotationStartArc, totalLength));
+            double activation = Math.max(profile.leadMeters, profile.sampleMeters);
+            double startArc = Math.max(0.0, arc - activation);
+            double endArc = Math.min(totalLength, arc + activation * profile.spread);
 
-            double baseEndArc = (leadMeters >= 0.0) ? arc : (arc - leadMeters);
-            baseEndArc = Math.max(0.0, Math.min(baseEndArc, totalLength));
+            followWindows.add(
+                new FollowWindow(
+                    startArc,
+                    endArc,
+                    profile.leadMeters,
+                    profile.spread,
+                    profile.tangentWeight,
+                    profile.sampleMeters));
 
-            double baseWindow = Math.abs(baseEndArc - rotationStartArc);
-            if (baseWindow < 1e-12) baseWindow = PRE_OFFSET_ARC;
-
-            double spread = target.rotationSpread;
-            if (!Double.isFinite(spread) || spread <= 0.0) spread = 1.0;
-
-            double spreadWindow = baseWindow * spread;
-            double rotationEndArc = rotationStartArc + spreadWindow;
-            rotationEndArc = Math.max(0.0, Math.min(rotationEndArc, totalLength));
+            Rotation2d followHeading =
+                getBiasedTangentAtArc(sampled, cum, arc, totalLength, profile.sampleMeters);
 
             lastRotation =
-                addDenseFollowRotationTargets(
+                emitRotationTarget(
                     rotationTargets,
-                    sampled,
-                    cum,
-                    totalLength,
-                    rotationStartArc,
-                    rotationEndArc,
-                    offset,
+                    arc,
+                    followHeading,
                     lastRotation,
-                    waypointSlots);
+                    totalLength,
+                    waypointSlots,
+                    false);
+
+            rotationSamples.add(new RotationSample(waypointPos, followHeading));
             break;
           }
 
@@ -818,6 +932,7 @@ public final class PathBuilder {
             double angDiff =
                 Math.abs(normalizeAngle(desired.getRadians() - lastRotation.getRadians()));
             if (target.rotationMode != Target.RotationMode.SNAP && angDiff <= ROTATION_TOL_RAD) {
+              rotationSamples.add(new RotationSample(waypointPos, desired));
               break;
             }
 
@@ -852,7 +967,11 @@ public final class PathBuilder {
             }
 
             rotationTargets.add(new RotationTarget(preWaypointPos, lastRotation));
+            rotationSamples.add(new RotationSample(preWaypointPos, lastRotation));
+
             rotationTargets.add(new RotationTarget(finalWaypointPos, desired));
+            rotationSamples.add(new RotationSample(finalWaypointPos, desired));
+
             lastRotation = desired;
             break;
           }
@@ -863,7 +982,6 @@ public final class PathBuilder {
 
     for (int i = 0; i < nTargets - 1; i++) {
       Target current = activeTargets.get(i);
-      Target next = activeTargets.get(i + 1);
 
       double startArc = targetArcs[i];
       double endArc = targetArcs[i + 1];
@@ -909,53 +1027,275 @@ public final class PathBuilder {
             finalGoal,
             false);
 
-    return AutoBuilder.followPath(finalPath);
+    activeFollowSampled = sampled;
+    activeFollowCum = cum;
+    activeFollowTotalLength = totalLength;
+    activeFollowWaypointSlots = waypointSlots;
+    activeExplicitRotationSamples = rotationSamples;
+    activeFollowWindows = followWindows;
+    activeFollowEnabled = !followWindows.isEmpty();
+
+    Command followCmd = AutoBuilder.followPath(finalPath);
+
+    if (!activeFollowEnabled) {
+      clearFollowRotationOverride();
+      return followCmd;
+    }
+
+    return Commands.sequence(
+            Commands.runOnce(PathBuilder::installFollowRotationOverride), followCmd)
+        .finallyDo(PathBuilder::clearFollowRotationOverride);
   }
 
-  private static Rotation2d addDenseFollowRotationTargets(
-      List<RotationTarget> rotationTargets,
-      List<Pose2d> sampled,
-      double[] cum,
-      double totalLength,
-      double startArc,
-      double endArc,
-      Rotation2d offset,
-      Rotation2d lastRotation,
-      double waypointSlots) {
+  private static List<Waypoint> waypointsFromPosesWithCurve(
+      List<Pose2d> poses, List<Target> targets) {
+    List<Waypoint> waypoints = new ArrayList<>(poses.size());
 
-    if (endArc < startArc) {
-      double tmp = startArc;
-      startArc = endArc;
-      endArc = tmp;
+    for (int i = 0; i < poses.size(); i++) {
+      Pose2d pose = poses.get(i);
+      Translation2d anchor = pose.getTranslation();
+      Rotation2d travelHeading = pose.getRotation();
+
+      double curveScale = clamp01(targets.get(i).curveScale);
+
+      Translation2d prevControl = anchor;
+      Translation2d nextControl = anchor;
+
+      if (poses.size() > 1) {
+        Translation2d dir = new Translation2d(travelHeading.getCos(), travelHeading.getSin());
+
+        double prevDist = 0.0;
+        double nextDist = 0.0;
+
+        if (i > 0) {
+          prevDist = anchor.getDistance(poses.get(i - 1).getTranslation()) * 0.33 * curveScale;
+        }
+        if (i < poses.size() - 1) {
+          nextDist = anchor.getDistance(poses.get(i + 1).getTranslation()) * 0.33 * curveScale;
+        }
+
+        prevControl = anchor.minus(dir.times(prevDist));
+        nextControl = anchor.plus(dir.times(nextDist));
+      }
+
+      waypoints.add(new Waypoint(prevControl, anchor, nextControl));
     }
 
-    startArc = Math.max(0.0, Math.min(startArc, totalLength));
-    endArc = Math.max(0.0, Math.min(endArc, totalLength));
+    return waypoints;
+  }
 
-    double window = endArc - startArc;
-    if (window < 1e-9) {
-      Rotation2d desired = getBiasedTangentAtArc(sampled, cum, startArc, totalLength).plus(offset);
-      return emitRotationTarget(
-          rotationTargets, startArc, desired, lastRotation, totalLength, waypointSlots, true);
+  private static void installFollowRotationOverride() {
+    PPHolonomicDriveController.clearRotationFeedbackOverride();
+
+    if (!activeFollowEnabled) {
+      return;
     }
 
-    double stepMeters = Math.min(FOLLOW_ROTATION_SAMPLE_METERS, Math.max(0.10, window / 4.0));
+    PPHolonomicDriveController.overrideRotationFeedback(
+        () -> {
+          if (activeFollowSampled == null || activeFollowSampled.isEmpty()) {
+            return 0.0;
+          }
 
-    double arc = startArc;
-    while (arc < endArc - 1e-9) {
-      Rotation2d tangent = getBiasedTangentAtArc(sampled, cum, arc, totalLength);
-      Rotation2d desired = tangent.plus(offset);
+          Pose2d pose = getPose.get();
+          Rotation2d desired = getRuntimeDesiredRotation(pose);
 
-      lastRotation =
-          emitRotationTarget(
-              rotationTargets, arc, desired, lastRotation, totalLength, waypointSlots, false);
+          angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-      arc += stepMeters;
+          if (logged) {
+            Logger.recordOutput("PathBuilder/Track Target Angle", desired.getRadians());
+            Logger.recordOutput("PathBuilder/Track Current Angle", pose.getRotation().getRadians());
+          }
+
+          double omega =
+              angleController.calculate(pose.getRotation().getRadians(), desired.getRadians())
+                  + angleController.getSetpoint().velocity * angleFF;
+
+          if (Math.abs(normalizeAngle(pose.getRotation().getRadians() - desired.getRadians()))
+                  < angleTol.getRadians()
+              && angleController.getSetpoint().velocity == 0.0) {
+            omega = 0.0;
+          }
+
+          return omega;
+        });
+  }
+
+  private static void clearFollowRotationOverride() {
+    PPHolonomicDriveController.clearRotationFeedbackOverride();
+    activeFollowEnabled = false;
+    activeFollowWindows = Collections.emptyList();
+    activeExplicitRotationSamples = Collections.emptyList();
+    activeFollowSampled = Collections.emptyList();
+    activeFollowCum = new double[0];
+    activeFollowTotalLength = 0.0;
+    activeFollowWaypointSlots = 1.0;
+  }
+
+  private static Rotation2d getRuntimeDesiredRotation(Pose2d pose) {
+    double arc = getClosestArc(pose.getTranslation(), activeFollowSampled, activeFollowCum);
+
+    FollowWindow window = getBestFollowWindow(arc);
+    if (window != null) {
+      Rotation2d tangent =
+          getLookaheadTangentAtArc(arc, window.lookaheadMeters, window.spread, window.sampleMeters);
+      Rotation2d explicit = getExplicitRotationAtArc(arc);
+      double blend = smoothstep(window.startArc, window.endArc, arc) * window.tangentWeight;
+      return interpolateRotation(explicit, tangent, blend);
     }
 
-    Rotation2d endDesired = getBiasedTangentAtArc(sampled, cum, endArc, totalLength).plus(offset);
-    return emitRotationTarget(
-        rotationTargets, endArc, endDesired, lastRotation, totalLength, waypointSlots, true);
+    return getExplicitRotationAtArc(arc);
+  }
+
+  private static FollowWindow getBestFollowWindow(double arc) {
+    FollowWindow best = null;
+    double bestScore = Double.POSITIVE_INFINITY;
+
+    for (FollowWindow window : activeFollowWindows) {
+      if (arc + 1e-9 < window.startArc || arc - 1e-9 > window.endArc) {
+        continue;
+      }
+
+      double center = 0.5 * (window.startArc + window.endArc);
+      double score = Math.abs(arc - center);
+      if (score < bestScore) {
+        bestScore = score;
+        best = window;
+      }
+    }
+
+    return best;
+  }
+
+  private static FollowProfile computeFollowProfile(
+      List<Pose2d> sampled, double[] cum, double arc, double totalLength, Target target) {
+    double curvature = estimateLocalCurvature(sampled, cum, arc, totalLength);
+
+    double speed = 0.0;
+    if (getChassisSpeeds != null) {
+      ChassisSpeeds chassisSpeeds = getChassisSpeeds.get();
+      speed = Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+    }
+
+    double baseLead =
+        Math.max(
+            0.15,
+            Math.abs(target.rotationLeadMeters) > 1e-9
+                ? target.rotationLeadMeters
+                : FOLLOW_ROTATION_SAMPLE_METERS * 0.85);
+
+    double lead = baseLead + (speed * 0.15) + (curvature * 0.45);
+    double spread = Math.max(1.0, target.rotationSpread) + (curvature * 1.6) + (speed * 0.08);
+
+    double sampleMeters =
+        FOLLOW_ROTATION_SAMPLE_METERS / (1.0 + (curvature * 2.2) + (speed * 0.05));
+
+    double tangentWeight = clamp01(Math.max(0.0, target.tangentWeight));
+
+    return new FollowProfile(
+        clamp(lead, 0.15, Math.max(0.15, totalLength * 0.25)),
+        clamp(spread, 1.0, 4.0),
+        clamp(sampleMeters, 0.08, 0.80),
+        tangentWeight);
+  }
+
+  private static Rotation2d getLookaheadTangentAtArc(
+      double arc, double lookaheadMeters, double spread, double sampleMeters) {
+
+    double speedLead = 0.0;
+    if (getChassisSpeeds != null) {
+      ChassisSpeeds speeds = getChassisSpeeds.get();
+      speedLead = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) * 0.15;
+    }
+
+    double curvatureLead =
+        estimateLocalCurvature(activeFollowSampled, activeFollowCum, arc, activeFollowTotalLength)
+            * 0.35;
+
+    double lead =
+        clamp(
+            Math.max(lookaheadMeters, 0.15) + speedLead + curvatureLead,
+            0.15,
+            Math.max(0.15, activeFollowTotalLength * 0.25));
+
+    double sampleWindow = clamp(sampleMeters, 0.08, Math.max(0.08, activeFollowTotalLength * 0.10));
+
+    double behind = Math.max(0.0, arc - lead * (0.25 / Math.max(1.0, spread)));
+    double ahead = Math.min(activeFollowTotalLength, arc + lead);
+
+    Translation2d p0 = sampleAtArc(activeFollowSampled, activeFollowCum, behind);
+    Translation2d p1 = sampleAtArc(activeFollowSampled, activeFollowCum, ahead);
+
+    Translation2d q0 =
+        sampleAtArc(activeFollowSampled, activeFollowCum, Math.max(0.0, arc - sampleWindow));
+    Translation2d q1 =
+        sampleAtArc(
+            activeFollowSampled,
+            activeFollowCum,
+            Math.min(activeFollowTotalLength, arc + sampleWindow));
+
+    double dx = (p1.getX() - p0.getX()) * 0.7 + (q1.getX() - q0.getX()) * 0.3;
+    double dy = (p1.getY() - p0.getY()) * 0.7 + (q1.getY() - q0.getY()) * 0.3;
+
+    return safeHeading(
+        dx, dy, activeFollowSampled.get(activeFollowSampled.size() - 1).getRotation());
+  }
+
+  private static double estimateLocalCurvature(
+      List<Pose2d> sampled, double[] cum, double arc, double totalLength) {
+    if (sampled == null || sampled.size() < 3) {
+      return 0.0;
+    }
+
+    double delta = Math.max(0.08, FOLLOW_ROTATION_SAMPLE_METERS * 0.4);
+    double a0 = Math.max(0.0, arc - delta);
+    double a1 = arc;
+    double a2 = Math.min(totalLength, arc + delta);
+
+    Translation2d p0 = sampleAtArc(sampled, cum, a0);
+    Translation2d p1 = sampleAtArc(sampled, cum, a1);
+    Translation2d p2 = sampleAtArc(sampled, cum, a2);
+
+    Rotation2d h1 = safeHeading(p1.getX() - p0.getX(), p1.getY() - p0.getY(), p1.getAngle());
+    Rotation2d h2 = safeHeading(p2.getX() - p1.getX(), p2.getY() - p1.getY(), p2.getAngle());
+
+    return Math.abs(normalizeAngle(h2.getRadians() - h1.getRadians()));
+  }
+
+  private static Rotation2d getExplicitRotationAtArc(double arc) {
+    if (activeExplicitRotationSamples == null || activeExplicitRotationSamples.isEmpty()) {
+      if (activeFollowSampled != null && !activeFollowSampled.isEmpty()) {
+        return activeFollowSampled.get(activeFollowSampled.size() - 1).getRotation();
+      }
+      return Rotation2d.fromDegrees(0.0);
+    }
+
+    double pos =
+        (activeFollowTotalLength <= 1e-9)
+            ? 0.0
+            : (arc / activeFollowTotalLength) * activeFollowWaypointSlots;
+    pos = Math.max(0.0, Math.min(activeFollowWaypointSlots, pos));
+
+    RotationSample prev = activeExplicitRotationSamples.get(0);
+    if (pos <= prev.position) {
+      return prev.rotation;
+    }
+
+    for (int i = 1; i < activeExplicitRotationSamples.size(); i++) {
+      RotationSample next = activeExplicitRotationSamples.get(i);
+      if (pos <= next.position + 1e-9) {
+        double span = next.position - prev.position;
+        if (span < 1e-9) {
+          return next.rotation;
+        }
+
+        double t = (pos - prev.position) / span;
+        return interpolateRotation(prev.rotation, next.rotation, t);
+      }
+      prev = next;
+    }
+
+    return activeExplicitRotationSamples.get(activeExplicitRotationSamples.size() - 1).rotation;
   }
 
   private static Rotation2d emitRotationTarget(
@@ -988,9 +1328,9 @@ public final class PathBuilder {
   }
 
   private static Rotation2d getBiasedTangentAtArc(
-      List<Pose2d> sampled, double[] cum, double arc, double totalLength) {
+      List<Pose2d> sampled, double[] cum, double arc, double totalLength, double sampleMeters) {
 
-    double lookahead = 0.4; // meters (0.2–0.8 is typical)
+    double lookahead = clamp(sampleMeters, 0.08, 0.80);
 
     double aheadArc = Math.min(totalLength, arc + lookahead);
     double behindArc = Math.max(0.0, arc - lookahead * 0.25);
@@ -1020,6 +1360,52 @@ public final class PathBuilder {
     return sampled.get(sampled.size() - 1).getTranslation();
   }
 
+  private static double getClosestArc(Translation2d point, List<Pose2d> sampled, double[] cum) {
+    if (sampled == null || sampled.isEmpty()) {
+      return 0.0;
+    }
+    if (sampled.size() == 1) {
+      return 0.0;
+    }
+
+    double bestDist = Double.POSITIVE_INFINITY;
+    double bestArc = 0.0;
+
+    for (int i = 0; i < sampled.size() - 1; i++) {
+      Translation2d a = sampled.get(i).getTranslation();
+      Translation2d b = sampled.get(i + 1).getTranslation();
+
+      double ax = a.getX();
+      double ay = a.getY();
+      double bx = b.getX();
+      double by = b.getY();
+      double dx = bx - ax;
+      double dy = by - ay;
+      double segLenSq = dx * dx + dy * dy;
+
+      double u = 0.0;
+      if (segLenSq > 1e-12) {
+        double tx = point.getX() - ax;
+        double ty = point.getY() - ay;
+        u = (tx * dx + ty * dy) / segLenSq;
+        if (u < 0.0) u = 0.0;
+        else if (u > 1.0) u = 1.0;
+      }
+
+      double projX = ax + u * dx;
+      double projY = ay + u * dy;
+      double dist = Math.hypot(point.getX() - projX, point.getY() - projY);
+
+      if (dist < bestDist) {
+        bestDist = dist;
+        double segLen = Math.hypot(dx, dy);
+        bestArc = cum[i] + segLen * u;
+      }
+    }
+
+    return bestArc;
+  }
+
   private static List<ConstraintsZone> mergeConstraintsZones(List<ConstraintsZone> zones) {
     if (zones == null || zones.size() <= 1) return zones;
     zones.sort(Comparator.comparingDouble(ConstraintsZone::minPosition));
@@ -1047,12 +1433,35 @@ public final class PathBuilder {
     return Math.atan2(Math.sin(a), Math.cos(a));
   }
 
+  private static double clamp01(double value) {
+    if (!Double.isFinite(value)) return 0.0;
+    return Math.max(0.0, Math.min(1.0, value));
+  }
+
+  private static double clamp(double value, double min, double max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  private static double smoothstep(double edge0, double edge1, double x) {
+    if (edge1 <= edge0) {
+      return clamp01(x >= edge0 ? 1.0 : 0.0);
+    }
+    double t = clamp01((x - edge0) / (edge1 - edge0));
+    return t * t * (3.0 - 2.0 * t);
+  }
+
   private static Rotation2d safeHeading(double dx, double dy, Rotation2d fallback) {
     final double EPS = 1e-6;
     if (Math.abs(dx) < EPS && Math.abs(dy) < EPS) {
       return fallback != null ? fallback : Rotation2d.fromDegrees(0.0);
     }
     return new Rotation2d(dx, dy);
+  }
+
+  private static Rotation2d interpolateRotation(Rotation2d from, Rotation2d to, double t) {
+    t = clamp01(t);
+    double delta = normalizeAngle(to.getRadians() - from.getRadians());
+    return new Rotation2d(from.getRadians() + delta * t);
   }
 
   // My own auto triggers :) very simple Commands but maintains a uniform structure through the
