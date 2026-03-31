@@ -16,8 +16,8 @@ import java.util.function.Supplier;
 public class DriveToPose extends Command {
   private final ProfiledPIDController driveController;
   private final ProfiledPIDController thetaController;
-
-  private Drive driveSubsystem;
+  private final Drive driveSubsystem = Drive.getInstance();
+  
   private Supplier<Pose2d> poseSupplier;
   private Translation2d lastSetpointTranslation;
   private double driveErrorAbs;
@@ -25,12 +25,11 @@ public class DriveToPose extends Command {
   private double thetaVelocity = 0;
   private double ffMinRadius = 0.2, ffMaxRadius = 0.8;
 
-  public DriveToPose(Drive driveSubsystem, Supplier<Pose2d> poseSupplier) {
+  public DriveToPose(Supplier<Pose2d> poseSupplier) {
     driveController = Constants.DriveConstants.DRIVE_PID;
     thetaController = Constants.DriveConstants.ANGLE_PID;
 
     this.poseSupplier = poseSupplier;
-    this.driveSubsystem = driveSubsystem;
     addRequirements(driveSubsystem);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
   }

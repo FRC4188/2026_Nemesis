@@ -19,19 +19,28 @@ import frc.robot.util.FieldConstants;
 
 public class AutoCommands {
 
-  public static Command autoShoot(
-      Drive drive, Intake intake, Hood hood, Shooter shooter, Hopper hopper, Wrist wrist) {
+  private static final Drive drive = Drive.getInstance();
+  private static final Intake intake = Intake.getInstance();
+  private static final Hood hood = Hood.getInstance();
+  private static final Shooter shooter = Shooter.getInstance();
+  private static final Hopper hopper = Hopper.getInstance();
+  private static final Wrist wrist = Wrist.getInstance();
+  private static final Climber climber = Climber.getInstance();
+
+  public static Command autoShoot() {
     return Commands.parallel(
-        DriveCommands.autonAtAngle(
-            drive,
+        DriveCommands.joystickCombined(
+          () -> 0.0,
+          () -> 0.0,
+          () -> 0.0,
             () ->
                 AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                     .minus(drive.getPose().getTranslation())
-                    .getAngle()),
+                    .getAngle(), () -> true),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
-        ScoringCommands.staticAim(drive, hood),
-        ScoringCommands.staticShoot(drive, shooter, hopper),
-        ScoringCommands.shake(wrist));
+        ScoringCommands.staticAim(),
+        ScoringCommands.staticShoot(),
+        ScoringCommands.shake());
   }
 
   public static enum Swipe {
@@ -54,14 +63,7 @@ public class AutoCommands {
   public static Command pseudoBoard(
       Start start,
       Swipe swipe,
-      Climb climb,
-      Drive drive,
-      Shooter shooter,
-      Hood hood,
-      Hopper hopper,
-      Intake intake,
-      Wrist wrist,
-      Climber climber) {
+      Climb climb) {
     return Commands.sequence(
         Commands.runOnce(
             () ->
@@ -142,7 +144,7 @@ public class AutoCommands {
                   case RIGHT -> FieldConstants.Trench.right_trench_center;
                 },
                 0.25,
-                ScoringCommands.forceDown(wrist)),
+                ScoringCommands.forceDown()),
             PathBuilder.triggerWhenClose(
                 switch (start) {
                   case LEFT -> switch (swipe) {
@@ -216,7 +218,7 @@ public class AutoCommands {
                         }),
                     1))),
         Commands.runOnce(() -> PathBuilder.stopTarget())
-            .andThen(AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist))
+            .andThen(AutoCommands.autoShoot())
             .withTimeout(
                 switch (climb) {
                   case CLIMB -> 4.0;
@@ -383,7 +385,7 @@ public class AutoCommands {
                             case RIGHT -> FieldConstants.Trench.right_trench_center;
                           },
                           0.25,
-                          ScoringCommands.forceDown(wrist)),
+                          ScoringCommands.forceDown()),
                       PathBuilder.triggerWhenClose(
                           new Pose2d(
                                   FieldConstants.field_length - 10.7,
@@ -454,7 +456,7 @@ public class AutoCommands {
                                     case LEFT -> Rotation2d.fromRadians(-45);
                                   }),
                               1))))
-              .andThen(autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0));
+              .andThen(autoShoot().withTimeout(10.0));
         });
   }
 

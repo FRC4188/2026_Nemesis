@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.PathBuilder;
@@ -24,42 +23,15 @@ import frc.robot.CSPLib.ppp.PathBuilder.Target.RotationMode;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOReal;
-import frc.robot.subsystems.climber.ClimberIOSim;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.hood.Hood;
-import frc.robot.subsystems.hood.HoodIO;
-import frc.robot.subsystems.hood.HoodIOReal;
-import frc.robot.subsystems.hood.HoodIOSim;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIO;
-import frc.robot.subsystems.hopper.HopperIOReal;
-import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOReal;
-import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOReal;
-import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
-import frc.robot.subsystems.vision.VisConstants;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhoton;
 import frc.robot.subsystems.wrist.Wrist;
-import frc.robot.subsystems.wrist.WristIO;
-import frc.robot.subsystems.wrist.WristIOReal;
-import frc.robot.subsystems.wrist.WristIOSim;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
@@ -83,7 +55,7 @@ public class RobotContainer {
   private final Wrist wrist;
   private final Climber climber;
   private final Vision vis;
-  private SimulationVisualizer simvis;
+  private final SimulationVisualizer simvis;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -96,84 +68,22 @@ public class RobotContainer {
   private final LoggedDashboardChooser<AutoCommands.Climb> climbChooser;
 
   public RobotContainer() {
-    switch (Constants.Robot.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-
-        vis =
-            new Vision(
-                drive::accept,
-                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
-                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
-
-        hood = new Hood(new HoodIOReal());
-        shooter = new Shooter(new ShooterIOReal());
-        hopper = new Hopper(new HopperIOReal());
-        intake = new Intake(new IntakeIOReal());
-        wrist = new Wrist(new WristIOReal());
-        climber = new Climber(new ClimberIOReal());
-
-        break;
-
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-
-        vis = new Vision(drive::accept, new VisionIO() {});
-
-        hood = new Hood(new HoodIOSim());
-        shooter = new Shooter(new ShooterIOSim());
-        hopper = new Hopper(new HopperIOSim());
-        intake = new Intake(new IntakeIOSim());
-        wrist = new Wrist(new WristIOSim());
-        climber = new Climber(new ClimberIOSim());
-
-        simvis =
-            new SimulationVisualizer(
+    drive = Drive.getInstance();
+    vis = Vision.getInstance();
+    hood = Hood.getInstance();
+    shooter = Shooter.getInstance();
+    hopper = Hopper.getInstance();
+    intake = Intake.getInstance();
+    wrist = Wrist.getInstance();
+    climber = Climber.getInstance();
+    simvis = new SimulationVisualizer(
                 "Models",
                 () -> Units.degreesToRadians(wrist.getAngle()),
                 () -> Units.degreesToRadians(hood.getAngle()),
-                () -> climber.getHeight());
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-
-        vis = new Vision(drive::accept, new VisionIO() {});
-
-        hood = new Hood(new HoodIO() {});
-        shooter = new Shooter(new ShooterIO() {});
-        hopper = new Hopper(new HopperIO() {});
-        intake = new Intake(new IntakeIO() {});
-        wrist = new Wrist(new WristIO() {});
-        climber = new Climber(new ClimberIO() {});
-        break;
-    }
+                () -> Units.inchesToMeters(climber.getHeight()));
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
-
     PathBuilder.configureDrive(
         true,
         2,
@@ -272,20 +182,20 @@ public class RobotContainer {
                             Rotation2d.kZero)))));
 
     // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    // autoChooser.addOption(
+    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Forward)",
+    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Reverse)",
+    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -345,7 +255,6 @@ public class RobotContainer {
 
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
-            drive,
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
             //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
@@ -369,27 +278,27 @@ public class RobotContainer {
                         .getAngle()),
             () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
 
-    pilot.rightBumper().whileTrue(ScoringCommands.staticAim(drive, hood));
-    pilot.a().whileTrue(ScoringCommands.passAim(hood));
+    pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
+    pilot.a().whileTrue(ScoringCommands.passAim());
     pilot
         .x()
         .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(ScoringCommands.manualAim(hood, () -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
+        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
     pilot
         .getRightTButton()
         .whileTrue(
             Commands.either(
-                ScoringCommands.passShoot(shooter, hopper),
+                ScoringCommands.passShoot(),
                 Commands.either(
                     // ScoringCommands.dataShoot(shooter, hopper),
-                    ScoringCommands.staticShoot(drive, shooter, hopper),
+                    ScoringCommands.staticShoot(),
                     ScoringCommands.manualShoot(
-                        shooter, hopper, () -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
+                        () -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    pilot.getRightTButton().whileTrue(ScoringCommands.shake(wrist));
+    pilot.getRightTButton().whileTrue(ScoringCommands.shake());
 
     pilot
         .getLeftTButton()
@@ -419,11 +328,11 @@ public class RobotContainer {
                 wrist::stop,
                 wrist));
 
-    copilot.x().onTrue(ScoringCommands.downNoStall(wrist));
-    copilot.a().onTrue(ScoringCommands.goodStow(wrist));
+    copilot.x().onTrue(ScoringCommands.downNoStall());
+    copilot.a().onTrue(ScoringCommands.goodStow());
 
-    copilot.leftBumper().whileTrue(ScoringCommands.shake(wrist));
-    copilot.rightBumper().onTrue(ScoringCommands.forceDown(wrist));
+    copilot.leftBumper().whileTrue(ScoringCommands.shake());
+    copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
     copilot
         .getLeftTButton()

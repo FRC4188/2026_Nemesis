@@ -21,10 +21,15 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
+private static final Shooter shooter = Shooter.getInstance();
+private static final Hopper hopper = Hopper.getInstance();
+private static final Drive drive = Drive.getInstance();
+private static final Hood hood = Hood.getInstance();
+private static final Wrist wrist = Wrist.getInstance();
 
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
-  public static Command dataShoot(Shooter shooter, Hopper hopper) {
+  public static Command dataShoot() {
     return Commands.parallel(
         Commands.runEnd(
             () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
@@ -40,7 +45,7 @@ public class ScoringCommands {
             .finallyDo(hopper::stop));
   }
 
-  public static Command staticAim(Drive drive, Hood hood) {
+  public static Command staticAim() {
     return Commands.runEnd(
         () ->
             hood.setAngle(
@@ -52,7 +57,7 @@ public class ScoringCommands {
         hood);
   }
 
-  public static Command staticShoot(Drive drive, Shooter shooter, Hopper hopper) {
+  public static Command staticShoot() {
     return Commands.parallel(
         Commands.runEnd(
             () ->
@@ -75,14 +80,14 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
-  public static Command manualAim(Hood hood, DoubleSupplier distance) {
+  public static Command manualAim(DoubleSupplier distance) {
     return Commands.runEnd(
         () -> hood.setAngle(inclineHueristic(Units.feetToMeters(distance.getAsDouble()))),
         hood::stow,
         hood);
   }
 
-  public static Command manualShoot(Shooter shooter, Hopper hopper, DoubleSupplier distance) {
+  public static Command manualShoot(DoubleSupplier distance) {
     return Commands.parallel(
         Commands.runEnd(
             () ->
@@ -107,11 +112,11 @@ public class ScoringCommands {
     return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7.0 / distance));
   }
 
-  public static Command passAim(Hood hood) {
+  public static Command passAim() {
     return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(40)), hood::stow, hood);
   }
 
-  public static Command passShoot(Shooter shooter, Hopper hopper) {
+  public static Command passShoot() {
     return Commands.parallel(
         Commands.runEnd(() -> shooter.setVelocityRPM(3100, 3100), shooter::stop, shooter),
         new WaitCommand(0.1)
@@ -122,7 +127,7 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
-  public static Command shake(Wrist wrist) {
+  public static Command shake() {
     return Commands.either(
         Commands.repeatingSequence(
                 Commands.run(() -> wrist.runWristVolts(5), wrist).withTimeout(0.2),
@@ -133,13 +138,13 @@ public class ScoringCommands {
         () -> wrist.shakeEnable);
   }
 
-  public static Command downNoStall(Wrist wrist) {
+  public static Command downNoStall() {
     return Commands.run(() -> wrist.runWristVolts(-4), wrist)
         .until(() -> wrist.getAngle() < 30)
         .finallyDo(wrist::stop);
   }
 
-  public static Command forceDown(Wrist wrist) {
+  public static Command forceDown() {
 
     return Commands.sequence(
         Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.12),
@@ -149,32 +154,9 @@ public class ScoringCommands {
             .finallyDo(wrist::stop));
   }
 
-  public static Command goodStow(Wrist wrist) {
+  public static Command goodStow() {
     return Commands.run(() -> wrist.runWristVolts(6), wrist)
         .until(() -> wrist.getAngle() > 120)
         .finallyDo(wrist::stop);
-  }
-
-  // TODO: add poses
-  public static Command goToClimb(Drive drive, Climber climb) {
-    return Commands.sequence(
-        Commands.runOnce(climb::lower),
-        new DriveToPose(
-            drive,
-            () ->
-                drive
-                    .getPose()
-                    .nearest(
-                        List.of(
-                            AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))),
-        Commands.runOnce(climb::raise),
-        new DriveToPose(
-            drive,
-            () ->
-                drive
-                    .getPose()
-                    .nearest(
-                        List.of(
-                            AllianceFlip.apply(Pose2d.kZero), AllianceFlip.apply(Pose2d.kZero)))));
   }
 }

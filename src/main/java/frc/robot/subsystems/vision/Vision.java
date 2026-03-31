@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -23,6 +25,21 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
+  private static Vision instance = null;
+  public static synchronized Vision getInstance() {
+    if (instance == null) {
+      instance = 
+      switch(Constants.Robot.currentMode) {
+        case REAL ->new Vision(Drive.getInstance()::accept,
+                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+        case SIM -> new Vision(Drive.getInstance()::accept, new VisionIO() {});
+        case REPLAY ->new Vision(Drive.getInstance()::accept, new VisionIO() {});
+      };
+    }
+    return instance;
+  }
+
   @AutoLogOutput(key = "Vision/Vision Enabled?")
   private boolean updateVision = true;
 
