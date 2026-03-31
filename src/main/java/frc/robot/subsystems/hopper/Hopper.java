@@ -5,20 +5,23 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Hopper extends SubsystemBase {
   private static Hopper instance = null;
+
   public static synchronized Hopper getInstance() {
-    if (instance == null) instance = new Hopper(
-      switch(Constants.Robot.currentMode) {
-      case REAL -> new HopperIOReal();
-      case SIM -> new HopperIOSim();
-      case REPLAY -> new HopperIO() {};
-    });
+    if (instance == null)
+      instance =
+          new Hopper(
+              switch (Constants.Robot.currentMode) {
+                case REAL -> new HopperIOReal();
+                case SIM -> new HopperIOSim();
+                case REPLAY -> new HopperIO() {};
+              });
     return instance;
   }
+
   private final HopperIO io;
   private final HopperIOInputsAutoLogged inputs;
 

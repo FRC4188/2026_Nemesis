@@ -10,13 +10,16 @@ import org.littletonrobotics.junction.Logger;
 
 public class Wrist extends SubsystemBase {
   private static Wrist instance = null;
+
   public static synchronized Wrist getInstance() {
-    if (instance == null) instance = new Wrist(
-      switch(Constants.Robot.currentMode) {
-      case REAL -> new WristIOReal();
-      case SIM -> new WristIOSim();
-      case REPLAY -> new WristIO() {};
-    });
+    if (instance == null)
+      instance =
+          new Wrist(
+              switch (Constants.Robot.currentMode) {
+                case REAL -> new WristIOReal();
+                case SIM -> new WristIOSim();
+                case REPLAY -> new WristIO() {};
+              });
     return instance;
   }
 

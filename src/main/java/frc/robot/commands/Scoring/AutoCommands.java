@@ -30,13 +30,14 @@ public class AutoCommands {
   public static Command autoShoot() {
     return Commands.parallel(
         DriveCommands.joystickCombined(
-          () -> 0.0,
-          () -> 0.0,
-          () -> 0.0,
+            () -> 0.0,
+            () -> 0.0,
+            () -> 0.0,
             () ->
                 AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                     .minus(drive.getPose().getTranslation())
-                    .getAngle(), () -> true),
+                    .getAngle(),
+            () -> true),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
@@ -60,10 +61,7 @@ public class AutoCommands {
     DOUBLE
   }
 
-  public static Command pseudoBoard(
-      Start start,
-      Swipe swipe,
-      Climb climb) {
+  public static Command pseudoBoard(Start start, Swipe swipe, Climb climb) {
     return Commands.sequence(
         Commands.runOnce(
             () ->
@@ -528,9 +526,7 @@ public class AutoCommands {
                         .withSpeed(0.8)
                         .withCommand(() -> Commands.runOnce(intake::stop, intake))),
                 PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.right_trench_center,
-                    0.4,
-                    ScoringCommands.forceDown(wrist))),
+                    FieldConstants.Trench.right_trench_center, 0.4, ScoringCommands.forceDown())),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
@@ -560,8 +556,7 @@ public class AutoCommands {
                             PathBuilder.targetTranslation(
                                 () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
             Commands.runOnce(() -> PathBuilder.stopTarget()))
-        .andThen(
-            AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0));
+        .andThen(AutoCommands.autoShoot().withTimeout(10.0));
   }
 
   public static Command leftDisrupt(
@@ -598,9 +593,7 @@ public class AutoCommands {
                         .withSpeed(0.8)
                         .withCommand(() -> Commands.runOnce(intake::stop, intake))),
                 PathBuilder.triggerWhenFar(
-                    FieldConstants.Trench.left_trench_center,
-                    0.4,
-                    ScoringCommands.forceDown(wrist))),
+                    FieldConstants.Trench.left_trench_center, 0.4, ScoringCommands.forceDown())),
             Commands.deadline(
                 PathBuilder.path(
                     new PathBuilder.Target(
@@ -632,7 +625,6 @@ public class AutoCommands {
                             PathBuilder.targetTranslation(
                                 () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))))),
             Commands.runOnce(() -> PathBuilder.stopTarget()))
-        .andThen(
-            AutoCommands.autoShoot(drive, intake, hood, shooter, hopper, wrist).withTimeout(10.0));
+        .andThen(AutoCommands.autoShoot().withTimeout(10.0));
   }
 }

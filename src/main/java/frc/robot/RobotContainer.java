@@ -35,7 +35,6 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
-import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -76,11 +75,12 @@ public class RobotContainer {
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
     climber = Climber.getInstance();
-    simvis = new SimulationVisualizer(
-                "Models",
-                () -> Units.degreesToRadians(wrist.getAngle()),
-                () -> Units.degreesToRadians(hood.getAngle()),
-                () -> Units.inchesToMeters(climber.getHeight()));
+    simvis =
+        new SimulationVisualizer(
+            "Models",
+            () -> Units.degreesToRadians(wrist.getAngle()),
+            () -> Units.degreesToRadians(hood.getAngle()),
+            () -> Units.inchesToMeters(climber.getHeight()));
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
@@ -116,20 +116,7 @@ public class RobotContainer {
 
     autoChooser.addOption(
         "PsuedoBoard",
-        Commands.defer(
-            () ->
-                AutoCommands.pseudoBoard(
-                    startChooser.get(),
-                    swipeChooser.get(),
-                    climbChooser.get(),
-                    drive,
-                    shooter,
-                    hood,
-                    hopper,
-                    intake,
-                    wrist,
-                    climber),
-            Set.of(drive, shooter, hood, hopper, intake, wrist, climber)));
+        AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), climbChooser.get()));
 
     // autoChooser.addOption(
     //     "testing drive idk",
@@ -293,8 +280,7 @@ public class RobotContainer {
                 Commands.either(
                     // ScoringCommands.dataShoot(shooter, hopper),
                     ScoringCommands.staticShoot(),
-                    ScoringCommands.manualShoot(
-                        () -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
+                    ScoringCommands.manualShoot(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 

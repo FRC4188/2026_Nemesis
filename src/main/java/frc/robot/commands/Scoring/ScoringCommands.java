@@ -1,14 +1,11 @@
 package frc.robot.commands.Scoring;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.commands.drive.DriveToPose;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -16,16 +13,15 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-import java.util.List;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ScoringCommands {
-private static final Shooter shooter = Shooter.getInstance();
-private static final Hopper hopper = Hopper.getInstance();
-private static final Drive drive = Drive.getInstance();
-private static final Hood hood = Hood.getInstance();
-private static final Wrist wrist = Wrist.getInstance();
+  private static final Shooter shooter = Shooter.getInstance();
+  private static final Hopper hopper = Hopper.getInstance();
+  private static final Drive drive = Drive.getInstance();
+  private static final Hood hood = Hood.getInstance();
+  private static final Wrist wrist = Wrist.getInstance();
 
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 

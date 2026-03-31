@@ -5,20 +5,22 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
 
   private static Shooter instance = null;
+
   public static synchronized Shooter getInstance() {
-    if (instance == null) instance = new Shooter(
-      switch(Constants.Robot.currentMode) {
-      case REAL -> new ShooterIOReal();
-      case SIM -> new ShooterIOSim();
-      case REPLAY -> new ShooterIO() {};
-    });
+    if (instance == null)
+      instance =
+          new Shooter(
+              switch (Constants.Robot.currentMode) {
+                case REAL -> new ShooterIOReal();
+                case SIM -> new ShooterIOSim();
+                case REPLAY -> new ShooterIO() {};
+              });
     return instance;
   }
 

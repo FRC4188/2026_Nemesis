@@ -26,16 +26,18 @@ import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
   private static Vision instance = null;
+
   public static synchronized Vision getInstance() {
     if (instance == null) {
-      instance = 
-      switch(Constants.Robot.currentMode) {
-        case REAL ->new Vision(Drive.getInstance()::accept,
+      instance =
+          switch (Constants.Robot.currentMode) {
+            case REAL -> new Vision(
+                Drive.getInstance()::accept,
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
                 new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
-        case SIM -> new Vision(Drive.getInstance()::accept, new VisionIO() {});
-        case REPLAY ->new Vision(Drive.getInstance()::accept, new VisionIO() {});
-      };
+            case SIM -> new Vision(Drive.getInstance()::accept, new VisionIO() {});
+            case REPLAY -> new Vision(Drive.getInstance()::accept, new VisionIO() {});
+          };
     }
     return instance;
   }

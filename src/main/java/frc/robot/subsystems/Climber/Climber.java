@@ -6,21 +6,24 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
 
   private static Climber instance = null;
+
   public static synchronized Climber getInstance() {
-    if (instance == null) instance = new Climber(
-      switch(Constants.Robot.currentMode) {
-      case REAL -> new ClimberIOReal();
-      case SIM -> new ClimberIOSim();
-      case REPLAY -> new ClimberIO() {};
-    });
+    if (instance == null)
+      instance =
+          new Climber(
+              switch (Constants.Robot.currentMode) {
+                case REAL -> new ClimberIOReal();
+                case SIM -> new ClimberIOSim();
+                case REPLAY -> new ClimberIO() {};
+              });
     return instance;
   }
+
   private final ClimberIO io;
   private final ClimberIOInputsAutoLogged inputs;
 
@@ -67,7 +70,7 @@ public class Climber extends SubsystemBase {
         && inputs.velRots < 0.1;
   }
 
-  //@AutoLogOutput(key = "Climber/Height Inches")
+  // @AutoLogOutput(key = "Climber/Height Inches")
   public double getHeight() {
     return Units.metersToInches(inputs.posRots / Constants.ClimberConstants.kConversion);
   }

@@ -6,20 +6,22 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Hood extends SubsystemBase {
-private static Hood instance = null;
+  private static Hood instance = null;
+
   public static synchronized Hood getInstance() {
-    if (instance == null) instance = new Hood(
-      switch(Constants.Robot.currentMode) {
-      case REAL -> new HoodIOReal();
-      case SIM -> new HoodIOSim();
-      case REPLAY -> new HoodIO() {};
-    });
+    if (instance == null)
+      instance =
+          new Hood(
+              switch (Constants.Robot.currentMode) {
+                case REAL -> new HoodIOReal();
+                case SIM -> new HoodIOSim();
+                case REPLAY -> new HoodIO() {};
+              });
     return instance;
   }
 

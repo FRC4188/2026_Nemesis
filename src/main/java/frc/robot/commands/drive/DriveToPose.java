@@ -17,7 +17,7 @@ public class DriveToPose extends Command {
   private final ProfiledPIDController driveController;
   private final ProfiledPIDController thetaController;
   private final Drive driveSubsystem = Drive.getInstance();
-  
+
   private Supplier<Pose2d> poseSupplier;
   private Translation2d lastSetpointTranslation;
   private double driveErrorAbs;
