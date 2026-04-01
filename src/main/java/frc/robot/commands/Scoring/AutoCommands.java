@@ -19,6 +19,8 @@ import frc.robot.util.FieldConstants;
 
 public class AutoCommands {
 
+  public AutoCommands() {}
+
   private static final Drive drive = Drive.getInstance();
   private static final Intake intake = Intake.getInstance();
   private static final Hood hood = Hood.getInstance();

@@ -45,7 +45,7 @@ public class VisionIOPhoton implements VisionIO {
     // return true;
     if (DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-      return !(id > 16 || id == 13 || id == 14);
+      return !(id > 16);
     } else {
       return !(id < 17);
     }

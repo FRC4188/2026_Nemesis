@@ -35,6 +35,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -116,7 +117,11 @@ public class RobotContainer {
 
     autoChooser.addOption(
         "PsuedoBoard",
-        AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), climbChooser.get()));
+        Commands.defer(
+            () ->
+                AutoCommands.pseudoBoard(
+                    startChooser.get(), swipeChooser.get(), climbChooser.get()),
+            Set.of(shooter, climber, hopper, wrist, intake, hood)));
 
     // autoChooser.addOption(
     //     "testing drive idk",
@@ -278,7 +283,7 @@ public class RobotContainer {
             Commands.either(
                 ScoringCommands.passShoot(),
                 Commands.either(
-                    // ScoringCommands.dataShoot(shooter, hopper),
+                    // ScoringCommands.dataShoot(),
                     ScoringCommands.staticShoot(),
                     ScoringCommands.manualShoot(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
                     () -> pilot.rightBumper().getAsBoolean()),
@@ -405,9 +410,9 @@ public class RobotContainer {
     //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
     Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
 
-    // Logger.recordOutput(
-    //     "Drive/Distance From Hub",
-    //     FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+    Logger.recordOutput(
+        "Drive/Distance From Hub",
+        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
   }
 
   public void displaySimFieldToAdvantageScope() {

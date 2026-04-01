@@ -46,54 +46,54 @@ public class DriveCommands {
     ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
 
     return Commands.runEnd(
-            () -> {
-              double omega = 0.0;
-              if (!lock.getAsBoolean()) {
-                omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
-                drive.acceptVision(true);
-                angleController.reset(
-                    drive.getRotation().getRadians(),
-                    drive.getChassisSpeeds().omegaRadiansPerSecond);
-              } else {
-                omega =
-                    angleController.calculate(
-                            drive.getRotation().getRadians(), rotSupplier.get().getRadians())
-                        + angleController.getSetpoint().velocity
-                            * Constants.DriveConstants.ANGLE_FF;
+        () -> {
+          double omega = 0.0;
+          if (!lock.getAsBoolean()) {
+            omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
+            drive.acceptVision(true);
+            // angleController.reset(
+            //     drive.getRotation().getRadians(),
+            //     drive.getChassisSpeeds().omegaRadiansPerSecond);
+          } else {
+            omega =
+                angleController.calculate(
+                        drive.getRotation().getRadians(),
+                        rotSupplier.get().minus(Constants.DriveConstants.local_offset).getRadians())
+                    + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
 
-                if (angleController.atGoal()) {
-                  if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
-                    drive.stopWithX();
-                    drive.acceptVision(false);
-                    return;
-                  }
-                  omega = 0.0;
-                  drive.acceptVision(false);
-                } else {
-                  drive.acceptVision(true);
-                }
+            if (angleController.atGoal()) {
+              if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
+                drive.stopWithX();
+                drive.acceptVision(false);
+                return;
               }
-
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      omega);
-
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlip.apply(drive.getRotation())));
-            },
-            () -> {
-              drive.stopWithX();
+              omega = 0.0;
+              drive.acceptVision(false);
+            } else {
               drive.acceptVision(true);
-            },
-            drive)
-        .beforeStarting(
-            () ->
-                angleController.reset(
-                    drive.getRotation().getRadians(),
-                    drive.getChassisSpeeds().omegaRadiansPerSecond));
+            }
+          }
+
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                  omega);
+
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds, AllianceFlip.apply(drive.getRotation())));
+        },
+        () -> {
+          drive.stopWithX();
+          drive.acceptVision(true);
+        },
+        drive);
+    // .beforeStarting(
+    //     () ->
+    //         angleController.reset(
+    //             drive.getRotation().getRadians(),
+    //             drive.getChassisSpeeds().omegaRadiansPerSecond));
   }
 
   /**

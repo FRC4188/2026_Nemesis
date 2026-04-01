@@ -2,6 +2,7 @@ package frc.robot.commands.Scoring;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -33,12 +34,10 @@ public class ScoringCommands {
             shooter),
         new WaitCommand(0.1)
             .andThen(
-                Commands.repeatingSequence(
-                    new WaitUntilCommand(() -> shooter.atGoal()),
-                    Commands.runOnce(() -> hopper.runHopperVolts(6.0, 4.0), hopper),
-                    new WaitUntilCommand(() -> !shooter.atGoal()),
-                    Commands.runOnce(() -> hopper.runHopperVolts(0.0, 0.0), hopper)))
-            .finallyDo(hopper::stop));
+                new WaitUntilCommand(() -> shooter.atGoal())
+                    .andThen(
+                        Commands.runEnd(
+                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
@@ -101,11 +100,15 @@ public class ScoringCommands {
   }
 
   public static double RPMRegress(double distance) {
-    return 145.557 * distance + 1806.67131;
+    // return 145.557 * distance + 1806.67131;
+    return (11.94806 * Math.pow(distance, 3))
+        - (92.62501 * Math.pow(distance, 2))
+        + 351.50335 * distance
+        + 1736.74591;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
-    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7.0 / distance));
+    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(8.5 / distance));
   }
 
   public static Command passAim() {
@@ -123,13 +126,23 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
+  public static Timer timer = new Timer();
+
   public static Command shake() {
     return Commands.either(
-        Commands.repeatingSequence(
-                Commands.run(() -> wrist.runWristVolts(5), wrist).withTimeout(0.2),
-                Commands.run(() -> wrist.runWristVolts(-5), wrist).withTimeout(0.2))
-            .until(() -> wrist.getAngle() > 120.0)
-            .finallyDo(wrist::stop),
+        Commands.sequence(
+            Commands.runOnce(() -> timer.restart()),
+            Commands.repeatingSequence(
+                    Commands.run(
+                            () -> wrist.runWristVolts(5 + Math.min(2 * timer.get() / 5.0, 2.5)),
+                            wrist)
+                        .withTimeout(0.25),
+                    Commands.run(
+                            () -> wrist.runWristVolts(-5 - Math.min(2 * timer.get() / 5.0, 2.5)),
+                            wrist)
+                        .withTimeout(0.25))
+                .until(() -> wrist.getAngle() > 120.0)
+                .finallyDo(wrist::stop)),
         Commands.none(),
         () -> wrist.shakeEnable);
   }
