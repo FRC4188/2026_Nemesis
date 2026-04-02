@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -19,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.CSPLib.ppp.PathBuilder;
-import frc.robot.CSPLib.ppp.PathBuilder.Target.RotationMode;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
@@ -141,8 +141,6 @@ public class RobotContainer {
     autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
     autoChooser.addOption("Nothing", Commands.none());
 
-    autoChooser.addOption("pathbuilder test 2", testCirclePath().repeatedly());
-
     autoChooser.addOption(
         "pathbuilder test 3",
         Commands.runOnce(
@@ -153,25 +151,38 @@ public class RobotContainer {
                 Commands.sequence(
                     PathBuilder.path(
                         new PathBuilder.Target(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_center, Rotation2d.kZero)),
-                        new PathBuilder.Target(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_neutral_preentrance,
-                                Rotation2d.kZero)),
-                        new PathBuilder.Target(new Pose2d(7.216, 2.050, Rotation2d.kZero))
-                            .withRotationMode(RotationMode.FOLLOW),
-                        new PathBuilder.Target(new Pose2d(7.033, 3.040, Rotation2d.kZero))
-                            .withRotationMode(RotationMode.FOLLOW),
-                        new PathBuilder.Target(new Pose2d(6.172, 3.276, Rotation2d.kZero))
-                            .withRotationMode(RotationMode.FOLLOW),
-                        new PathBuilder.Target(new Pose2d(6.000, 1.921, Rotation2d.kZero))
-                            .withRotationMode(RotationMode.FOLLOW))),
+                                new Pose2d(
+                                    FieldConstants.Trench.right_trench_center, Rotation2d.kZero))
+                            .withStartingSpeed(5)
+                            .withStartingRotation(Rotation2d.kZero)
+                            .withOverrideRotations(
+                                new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
+                                new RotationTarget(0.60, Rotation2d.fromDegrees(0)),
+                                new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
+                                new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
+                                new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
+                            .withHeading(Rotation2d.fromDegrees(61.763))
+                            .withControlDistances(0, 0.250),
+                        new PathBuilder.Target(new Pose2d(7.355, 1.523, new Rotation2d()))
+                            .withHeading(Rotation2d.fromDegrees(66.360))
+                            .withControlDistances(1.517, 0.476),
+                        new PathBuilder.Target(new Pose2d(7.614, 3.051, new Rotation2d()))
+                            .withHeading(Rotation2d.fromDegrees(120.689))
+                            .withControlDistances(0.288, 1.250),
+                        new PathBuilder.Target(new Pose2d(5.968, 3.051, new Rotation2d()))
+                            .withHeading(Rotation2d.fromDegrees(-104.349))
+                            .withControlDistances(0.955, 0.310),
+                        new PathBuilder.Target(new Pose2d(5.968, 0.608, new Rotation2d()))
+                            .withHeading(Rotation2d.fromDegrees(99.792))
+                            .withControlDistances(0.250, 0)
+                            .withEndingRotation(Rotation2d.kZero)
+                            .withEndingSpeed(2))),
                 PathBuilder.path(
-                    new PathBuilder.Target(new Pose2d(6.000, 1.921, Rotation2d.kZero)).withCurve(1),
+                    new PathBuilder.Target(new Pose2d(5.968, 0.608, Rotation2d.kZero)).withCurve(1),
                     new PathBuilder.Target(
                         new Pose2d(
-                            FieldConstants.Trench.right_trench_neutral_preentrance,
+                            FieldConstants.Trench.right_trench_alliance_preentrance.plus(
+                                new Translation2d(0, 0.2)),
                             Rotation2d.kZero)))));
 
     // Set up SysId routines
@@ -192,37 +203,6 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
-  }
-
-  public static Command testCirclePath() {
-    double cx = 5.0;
-    double cy = 5.0;
-    double r = 1.0;
-
-    return PathBuilder.path(
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx + r, cy), Rotation2d.fromDegrees(90)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx + 0.707, cy + 0.707), Rotation2d.fromDegrees(135)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx, cy + r), Rotation2d.fromDegrees(180)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx - 0.707, cy + 0.707), Rotation2d.fromDegrees(225)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx - r, cy), Rotation2d.fromDegrees(270)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx - 0.707, cy - 0.707), Rotation2d.fromDegrees(315)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(new Pose2d(new Translation2d(cx, cy - r), Rotation2d.fromDegrees(0)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW),
-        new PathBuilder.Target(
-                new Pose2d(new Translation2d(cx + 0.707, cy - 0.707), Rotation2d.fromDegrees(45)))
-            .withRotationMode(PathBuilder.Target.RotationMode.FOLLOW));
   }
 
   private void configureButtonBindings() {
