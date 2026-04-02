@@ -248,6 +248,12 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     }
   }
 
+  public void setModuleStates(double speed, Rotation2d angle) {
+    for (int i = 0; i < modules.length; i++) {
+      modules[i].runSetpoint(new SwerveModuleState(speed, angle));
+    }
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {

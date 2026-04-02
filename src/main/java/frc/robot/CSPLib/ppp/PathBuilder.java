@@ -7,6 +7,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.ConstraintsZone;
 import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PointTowardsZone;
@@ -39,6 +40,8 @@ import org.littletonrobotics.junction.Logger;
  * and get drive properties based on the robot mode.
  */
 public final class PathBuilder {
+  private static final double ROTATION_POSITION_EPS = 1e-6;
+
   private static Drive drive;
 
   // prob too fast
@@ -57,13 +60,9 @@ public final class PathBuilder {
   private static double angleFF;
   private static Rotation2d angleTol;
   private static Supplier<Pose2d> getPose;
-  private static Consumer<Pose2d> setPose;
   private static Supplier<ChassisSpeeds> getChassisSpeeds;
-  private static Consumer<ChassisSpeeds> runVelocity;
   private static ProfiledPIDController driveController;
   private static ProfiledPIDController angleController;
-  private static RobotConfig robotConfig;
-  private static BooleanSupplier shouldFlip;
   private static Runnable stopDrive;
 
   private static List<Pose2d> activeFollowSampled = Collections.emptyList();
@@ -153,13 +152,9 @@ public final class PathBuilder {
     stopDrive = stopDrive_;
     logged = logged_;
     getPose = getPose_;
-    setPose = setPose_;
     getChassisSpeeds = getChassisSpeeds_;
-    runVelocity = runVelocity_;
     driveController = driveController_;
     angleController = angleController_;
-    robotConfig = robotConfig_;
-    shouldFlip = shouldFlip_;
     drive = drive_;
     angleFF = angleFF_;
     angleTol = angleTol_;
@@ -180,14 +175,11 @@ public final class PathBuilder {
 
     if (logged) {
       PathPlannerLogging.setLogActivePathCallback(
-          (activePath) -> {
-            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
-          });
+          (activePath) ->
+              Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0])));
 
       PathPlannerLogging.setLogTargetPoseCallback(
-          (targetPose) -> {
-            Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-          });
+          (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
     }
   }
 
@@ -273,6 +265,13 @@ public final class PathBuilder {
     public final Rotation2d heading;
     public final double tangentWeight;
     public final double curveScale;
+    public final RotationTarget[] overrideRotations;
+    public final Rotation2d startingRotation;
+    public final Rotation2d endingRotation;
+    public final Double controlDistanceBeforeMeters;
+    public final Double controlDistanceAfterMeters;
+    public final Double startingSpeedMetersPerSecond;
+    public final Double endingSpeedMetersPerSecond;
     public final BooleanSupplier condition;
     public final double toleranceMeters;
     public final Supplier<Command> command;
@@ -288,6 +287,13 @@ public final class PathBuilder {
           null,
           1.0,
           1.0,
+          null, // overrideRotations
+          null, // startingRotation
+          null, // endingRotation
+          null, // controlDistanceBeforeMeters
+          null, // controlDistanceAfterMeters
+          null, // startingSpeedMetersPerSecond
+          null, // endingSpeedMetersPerSecond
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -304,6 +310,13 @@ public final class PathBuilder {
           null,
           1.0,
           1.0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -320,6 +333,13 @@ public final class PathBuilder {
           null,
           1.0,
           1.0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -337,6 +357,13 @@ public final class PathBuilder {
           null,
           1.0,
           1.0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
           PATH_CREATION_TOL,
           null,
           () -> true);
@@ -352,10 +379,20 @@ public final class PathBuilder {
         Rotation2d heading,
         double tangentWeight,
         double curveScale,
+        RotationTarget[] overrideRotations,
+        Rotation2d startingRotation,
+        Rotation2d endingRotation,
+        Double controlDistanceBeforeMeters,
+        Double controlDistanceAfterMeters,
+        Double startingSpeedMetersPerSecond,
+        Double endingSpeedMetersPerSecond,
         double toleranceMeters,
         Supplier<Command> command,
         BooleanSupplier condition) {
-      if (pose == null) throw new IllegalArgumentException("pose cannot be null");
+
+      if (pose == null) {
+        throw new IllegalArgumentException("pose cannot be null");
+      }
       if (!Double.isFinite(speedMultiplier) || speedMultiplier <= 0.0) {
         throw new IllegalArgumentException("speedMultiplier must be finite and > 0");
       }
@@ -374,9 +411,34 @@ public final class PathBuilder {
       if (!Double.isFinite(curveScale) || curveScale < 0.0 || curveScale > 1.0) {
         throw new IllegalArgumentException("curveScale must be finite and between 0 and 1");
       }
+      if (overrideRotations != null) {
+        for (RotationTarget target : overrideRotations) {
+          if (target == null) {
+            throw new IllegalArgumentException("overrideRotations cannot contain null");
+          }
+        }
+      }
+      if (controlDistanceBeforeMeters != null
+          && (!Double.isFinite(controlDistanceBeforeMeters) || controlDistanceBeforeMeters < 0.0)) {
+        throw new IllegalArgumentException("controlDistanceBeforeMeters must be finite and >= 0");
+      }
+      if (controlDistanceAfterMeters != null
+          && (!Double.isFinite(controlDistanceAfterMeters) || controlDistanceAfterMeters < 0.0)) {
+        throw new IllegalArgumentException("controlDistanceAfterMeters must be finite and >= 0");
+      }
+      if (startingSpeedMetersPerSecond != null
+          && (!Double.isFinite(startingSpeedMetersPerSecond)
+              || startingSpeedMetersPerSecond < 0.0)) {
+        throw new IllegalArgumentException("startingSpeedMetersPerSecond must be finite and >= 0");
+      }
+      if (endingSpeedMetersPerSecond != null
+          && (!Double.isFinite(endingSpeedMetersPerSecond) || endingSpeedMetersPerSecond < 0.0)) {
+        throw new IllegalArgumentException("endingSpeedMetersPerSecond must be finite and >= 0");
+      }
       if (!Double.isFinite(toleranceMeters) || toleranceMeters < 0.0) {
         throw new IllegalArgumentException("toleranceMeters must be finite and >= 0");
       }
+
       this.pose = pose;
       this.speedMultiplier = speedMultiplier;
       this.rotationSpeedMultiplier = rotationSpeedMultiplier;
@@ -386,6 +448,13 @@ public final class PathBuilder {
       this.heading = heading;
       this.tangentWeight = tangentWeight;
       this.curveScale = curveScale;
+      this.overrideRotations = overrideRotations == null ? null : overrideRotations.clone();
+      this.startingRotation = startingRotation;
+      this.endingRotation = endingRotation;
+      this.controlDistanceBeforeMeters = controlDistanceBeforeMeters;
+      this.controlDistanceAfterMeters = controlDistanceAfterMeters;
+      this.startingSpeedMetersPerSecond = startingSpeedMetersPerSecond;
+      this.endingSpeedMetersPerSecond = endingSpeedMetersPerSecond;
       this.toleranceMeters = toleranceMeters;
       this.command = command;
       this.condition = condition == null ? () -> true : condition;
@@ -402,6 +471,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -418,6 +494,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -434,6 +517,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -450,6 +540,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -466,13 +563,23 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
     }
 
     public Target withHeading(Rotation2d heading) {
-      if (heading == null) throw new IllegalArgumentException("heading cannot be null");
+      if (heading == null) {
+        throw new IllegalArgumentException("heading cannot be null");
+      }
+
       return new Target(
           pose,
           speedMultiplier,
@@ -483,6 +590,178 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withControlDistances(double beforeMeters, double afterMeters) {
+      if (!Double.isFinite(beforeMeters) || beforeMeters < 0.0) {
+        throw new IllegalArgumentException("beforeMeters must be finite and >= 0");
+      }
+      if (!Double.isFinite(afterMeters) || afterMeters < 0.0) {
+        throw new IllegalArgumentException("afterMeters must be finite and >= 0");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          beforeMeters,
+          afterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withStartingSpeed(double startingSpeedMetersPerSecond) {
+      if (!Double.isFinite(startingSpeedMetersPerSecond) || startingSpeedMetersPerSecond < 0.0) {
+        throw new IllegalArgumentException("startingSpeedMetersPerSecond must be finite and >= 0");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withEndingSpeed(double endingSpeedMetersPerSecond) {
+      if (!Double.isFinite(endingSpeedMetersPerSecond) || endingSpeedMetersPerSecond < 0.0) {
+        throw new IllegalArgumentException("endingSpeedMetersPerSecond must be finite and >= 0");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withOverrideRotations(RotationTarget... overrideRotations) {
+      if (overrideRotations == null) {
+        throw new IllegalArgumentException("overrideRotations cannot be null");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withStartingRotation(Rotation2d startingRotation) {
+      if (startingRotation == null) {
+        throw new IllegalArgumentException("startingRotation cannot be null");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
+          toleranceMeters,
+          command,
+          condition);
+    }
+
+    public Target withEndingRotation(Rotation2d endingRotation) {
+      if (endingRotation == null) {
+        throw new IllegalArgumentException("endingRotation cannot be null");
+      }
+
+      return new Target(
+          pose,
+          speedMultiplier,
+          rotationSpeedMultiplier,
+          rotationLeadMeters,
+          rotationSpread,
+          rotationMode,
+          heading,
+          tangentWeight,
+          curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -499,6 +778,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -515,13 +801,23 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
     }
 
     public Target onlyIf(BooleanSupplier condition) {
-      if (condition == null) throw new IllegalArgumentException("condition cannot be null");
+      if (condition == null) {
+        throw new IllegalArgumentException("condition cannot be null");
+      }
+
       return new Target(
           pose,
           speedMultiplier,
@@ -532,6 +828,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -548,6 +851,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -568,6 +878,13 @@ public final class PathBuilder {
           heading,
           tangentWeight,
           curveScale,
+          overrideRotations,
+          startingRotation,
+          endingRotation,
+          controlDistanceBeforeMeters,
+          controlDistanceAfterMeters,
+          startingSpeedMetersPerSecond,
+          endingSpeedMetersPerSecond,
           toleranceMeters,
           command,
           condition);
@@ -597,14 +914,21 @@ public final class PathBuilder {
     }
 
     Pose2d[] poses = new Pose2d[activeTargets.size()];
-    for (int i = 0; i < activeTargets.size(); i++) poses[i] = activeTargets.get(i).pose;
+    for (int i = 0; i < activeTargets.size(); i++) {
+      poses[i] = activeTargets.get(i).pose;
+    }
 
     List<Pose2d> travelHeadingPoses = new ArrayList<>(poses.length);
     for (int i = 0; i < poses.length; i++) {
       Translation2d pos = poses[i].getTranslation();
-      Rotation2d splineHeading;
+      Target target = activeTargets.get(i);
 
-      if (poses.length == 1) {
+      Rotation2d splineHeading;
+      Rotation2d requestedHeading = target.heading;
+
+      if (requestedHeading != null) {
+        splineHeading = requestedHeading;
+      } else if (poses.length == 1) {
         splineHeading = poses[i].getRotation();
       } else if (i == 0) {
         Translation2d next = poses[i + 1].getTranslation();
@@ -623,7 +947,9 @@ public final class PathBuilder {
       }
 
       Rotation2d straightHeading;
-      if (poses.length == 1) {
+      if (requestedHeading != null) {
+        straightHeading = requestedHeading;
+      } else if (poses.length == 1) {
         straightHeading = poses[i].getRotation();
       } else if (i == 0) {
         Translation2d next = poses[i + 1].getTranslation();
@@ -641,9 +967,7 @@ public final class PathBuilder {
                 next.getX() - prev.getX(), next.getY() - prev.getY(), poses[i].getRotation());
       }
 
-      Target target = activeTargets.get(i);
       double curveScale = clamp01(target.curveScale);
-
       Rotation2d finalHeading = interpolateRotation(straightHeading, splineHeading, curveScale);
 
       travelHeadingPoses.add(new Pose2d(pos, finalHeading));
@@ -659,7 +983,27 @@ public final class PathBuilder {
 
     PathConstraints globalConstraints = getConstraints();
 
-    GoalEndState tmpGoal = new GoalEndState(0.0, poses[poses.length - 1].getRotation());
+    Double startingSpeedMps = activeTargets.get(0).startingSpeedMetersPerSecond;
+    Double endingSpeedMps = activeTargets.get(activeTargets.size() - 1).endingSpeedMetersPerSecond;
+
+    Target overrideSource = getFirstOverrideTarget(activeTargets);
+
+    Rotation2d startRotationForPath =
+        overrideSource != null && overrideSource.startingRotation != null
+            ? overrideSource.startingRotation
+            : poses[0].getRotation();
+
+    Rotation2d endRotationForPath =
+        overrideSource != null && overrideSource.endingRotation != null
+            ? overrideSource.endingRotation
+            : poses[poses.length - 1].getRotation();
+
+    IdealStartingState idealStartingState =
+        startingSpeedMps != null
+            ? new IdealStartingState(startingSpeedMps, startRotationForPath)
+            : null;
+
+    GoalEndState tmpGoal = new GoalEndState(0.0, endRotationForPath);
     PathPlannerPath tempPath =
         new PathPlannerPath(
             waypoints,
@@ -668,66 +1012,76 @@ public final class PathBuilder {
             emptyConstraintsZones,
             emptyEventMarkers,
             globalConstraints,
-            null,
+            idealStartingState,
             tmpGoal,
             false);
 
     List<Pose2d> sampled = tempPath.getPathPoses();
+
     if (sampled == null || sampled.isEmpty()) {
       List<RotationTarget> fallbackRT = new ArrayList<>();
       List<EventMarker> fallbackMarkers = new ArrayList<>();
       int n = poses.length;
 
-      fallbackRT.add(new RotationTarget(0.0, poses[0].getRotation()));
-      Rotation2d lastFallbackRotation = poses[0].getRotation();
+      if (overrideSource != null) {
+        fallbackRT =
+            buildOverrideRotationTargets(
+                activeTargets, waypointSlots, startRotationForPath, endRotationForPath);
+      } else {
+        fallbackRT.add(new RotationTarget(0.0, poses[0].getRotation()));
+        Rotation2d lastFallbackRotation = poses[0].getRotation();
 
-      for (int i = 1; i < n; i++) {
-        double pct = (n == 1) ? 0.0 : ((double) i) / (n - 1);
-        Target target = activeTargets.get(i);
+        for (int i = 1; i < n; i++) {
+          double pct = (n == 1) ? 0.0 : ((double) i) / (n - 1);
+          Target target = activeTargets.get(i);
 
-        if (target.command != null) {
-          fallbackMarkers.add(
-              new EventMarker(
-                  "target_" + i,
-                  pct * waypointSlots,
-                  Commands.defer(target.command, Collections.emptySet())));
-        }
-
-        Rotation2d desired;
-        switch (target.rotationMode) {
-          case FOLLOW:
-            desired = travelHeadingPoses.get(i).getRotation();
-            break;
-          case HOLD:
-            desired = null;
-            break;
-          case SNAP:
-          case LINEAR:
-          default:
-            desired = poses[i].getRotation();
-            break;
-        }
-
-        if (desired != null
-            && Math.abs(normalizeAngle(desired.getRadians() - lastFallbackRotation.getRadians()))
-                > Math.toRadians(0.1)) {
-          double pos = pct * waypointSlots;
-
-          if (target.rotationMode == Target.RotationMode.SNAP) {
-            double eps = 1e-6;
-            double pre = Math.max(0.0, pos - eps);
-            double post = Math.min(waypointSlots, pos + eps);
-            fallbackRT.add(new RotationTarget(pre, lastFallbackRotation));
-            fallbackRT.add(new RotationTarget(post, desired));
-          } else {
-            fallbackRT.add(new RotationTarget(pos, desired));
+          if (target.command != null) {
+            fallbackMarkers.add(
+                new EventMarker(
+                    "target_" + i,
+                    pct * waypointSlots,
+                    Commands.defer(target.command, Collections.emptySet())));
           }
 
-          lastFallbackRotation = desired;
+          Rotation2d desired;
+          switch (target.rotationMode) {
+            case FOLLOW:
+              desired = travelHeadingPoses.get(i).getRotation();
+              break;
+            case HOLD:
+              desired = null;
+              break;
+            case SNAP:
+            case LINEAR:
+            default:
+              desired = poses[i].getRotation();
+              break;
+          }
+
+          if (desired != null
+              && Math.abs(normalizeAngle(desired.getRadians() - lastFallbackRotation.getRadians()))
+                  > Math.toRadians(0.1)) {
+            double pos = pct * waypointSlots;
+
+            if (target.rotationMode == Target.RotationMode.SNAP) {
+              double eps = 1e-6;
+              double pre = Math.max(0.0, pos - eps);
+              double post = Math.min(waypointSlots, pos + eps);
+              fallbackRT.add(new RotationTarget(pre, lastFallbackRotation));
+              fallbackRT.add(new RotationTarget(post, desired));
+            } else {
+              fallbackRT.add(new RotationTarget(pos, desired));
+            }
+
+            lastFallbackRotation = desired;
+          }
         }
+
+        endRotationForPath = lastFallbackRotation;
       }
 
-      GoalEndState finalGoal = new GoalEndState(0.0, lastFallbackRotation);
+      Double fallbackEndingSpeed = endingSpeedMps != null ? endingSpeedMps : 0.0;
+      GoalEndState finalGoal = new GoalEndState(fallbackEndingSpeed, endRotationForPath);
       PathPlannerPath fallback =
           new PathPlannerPath(
               waypoints,
@@ -736,7 +1090,7 @@ public final class PathBuilder {
               emptyConstraintsZones,
               fallbackMarkers.isEmpty() ? emptyEventMarkers : fallbackMarkers,
               globalConstraints,
-              null,
+              idealStartingState,
               finalGoal,
               false);
 
@@ -753,7 +1107,9 @@ public final class PathBuilder {
     }
 
     double totalLength = cum[m - 1];
-    if (totalLength <= 1e-9) totalLength = 1e-9;
+    if (totalLength <= 1e-9) {
+      totalLength = 1e-9;
+    }
 
     int searchSegStart = 0;
     double lastArcAccepted = 0.0;
@@ -769,7 +1125,9 @@ public final class PathBuilder {
       if (sampled.size() == 1) {
         double d = sampled.get(0).getTranslation().getDistance(targetTrans);
         targetArcs[t] = (d <= snapTol) ? 0.0 : totalLength;
-        if (targetArcs[t] < lastArcAccepted) targetArcs[t] = lastArcAccepted;
+        if (targetArcs[t] < lastArcAccepted) {
+          targetArcs[t] = lastArcAccepted;
+        }
         lastArcAccepted = targetArcs[t];
         continue;
       }
@@ -805,8 +1163,11 @@ public final class PathBuilder {
             double tx = targetTrans.getX() - ax;
             double ty = targetTrans.getY() - ay;
             u = (tx * dx + ty * dy) / segLenSq;
-            if (u < 0.0) u = 0.0;
-            else if (u > 1.0) u = 1.0;
+            if (u < 0.0) {
+              u = 0.0;
+            } else if (u > 1.0) {
+              u = 1.0;
+            }
           }
 
           double projX = ax + u * dx;
@@ -816,7 +1177,9 @@ public final class PathBuilder {
           double segLen = Math.hypot(dx, dy);
           double arcAlong = cum[i] + (segLen * u);
 
-          if (arcAlong + 1e-9 < lastArcAccepted) continue;
+          if (arcAlong + 1e-9 < lastArcAccepted) {
+            continue;
+          }
 
           if (dist < bestDist) {
             bestDist = dist;
@@ -845,8 +1208,11 @@ public final class PathBuilder {
             double tx = targetTrans.getX() - a.getX();
             double ty = targetTrans.getY() - a.getY();
             u = (tx * dx + ty * dy) / segLenSq;
-            if (u < 0.0) u = 0.0;
-            else if (u > 1.0) u = 1.0;
+            if (u < 0.0) {
+              u = 0.0;
+            } else if (u > 1.0) {
+              u = 1.0;
+            }
           }
           double segLen = Math.hypot(dx, dy);
           bestArc = cum[segIdx] + (segLen * u);
@@ -854,128 +1220,162 @@ public final class PathBuilder {
         }
       }
 
-      if (bestArc < lastArcAccepted) bestArc = lastArcAccepted;
-      if (bestArc > totalLength) bestArc = totalLength;
+      if (bestArc < lastArcAccepted) {
+        bestArc = lastArcAccepted;
+      }
+      if (bestArc > totalLength) {
+        bestArc = totalLength;
+      }
+
       targetArcs[t] = bestArc;
       lastArcAccepted = bestArc;
       searchSegStart = Math.min(bestSeg, sampled.size() - 2);
     }
 
-    List<RotationTarget> rotationTargets = new ArrayList<>();
+    List<RotationTarget> rotationTargets;
     List<RotationSample> rotationSamples = new ArrayList<>();
     List<FollowWindow> followWindows = new ArrayList<>();
-
-    rotationTargets.add(new RotationTarget(0.0, poses[0].getRotation()));
-    rotationSamples.add(new RotationSample(0.0, poses[0].getRotation()));
-    Rotation2d lastRotation = poses[0].getRotation();
-    final double PRE_OFFSET_ARC = Math.max(1e-3, totalLength * 1e-6);
-
     List<EventMarker> eventMarkers = new ArrayList<>();
 
-    for (int t = 1; t < nTargets; t++) {
-      Target target = activeTargets.get(t);
-      double arc = targetArcs[t];
-      double waypointPos = (arc / totalLength) * waypointSlots;
+    if (overrideSource != null) {
+      rotationTargets =
+          buildOverrideRotationTargets(
+              activeTargets, waypointSlots, startRotationForPath, endRotationForPath);
+      rotationSamples = rotationSamplesFromRotationTargets(rotationTargets);
 
-      if (target.command != null) {
-        eventMarkers.add(
-            new EventMarker(
-                "target_" + t,
-                waypointPos,
-                Commands.defer(target.command, Collections.emptySet())));
+      for (int t = 1; t < nTargets; t++) {
+        Target target = activeTargets.get(t);
+        double arc = targetArcs[t];
+        double waypointPos = (arc / totalLength) * waypointSlots;
+
+        if (target.command != null) {
+          eventMarkers.add(
+              new EventMarker(
+                  "target_" + t,
+                  waypointPos,
+                  Commands.defer(target.command, Collections.emptySet())));
+        }
       }
 
-      switch (target.rotationMode) {
-        case FOLLOW:
-          {
-            FollowProfile profile = computeFollowProfile(sampled, cum, arc, totalLength, target);
+      activeFollowEnabled = false;
+    } else {
+      rotationTargets = new ArrayList<>();
+      rotationTargets.add(new RotationTarget(0.0, poses[0].getRotation()));
+      rotationSamples.add(new RotationSample(0.0, poses[0].getRotation()));
+      Rotation2d lastRotation = poses[0].getRotation();
+      final double PRE_OFFSET_ARC = Math.max(1e-3, totalLength * 1e-6);
 
-            double activation = Math.max(profile.leadMeters, profile.sampleMeters);
-            double startArc = Math.max(0.0, arc - activation);
-            double endArc = Math.min(totalLength, arc + activation * profile.spread);
+      for (int t = 1; t < nTargets; t++) {
+        Target target = activeTargets.get(t);
+        double arc = targetArcs[t];
+        double waypointPos = (arc / totalLength) * waypointSlots;
 
-            followWindows.add(
-                new FollowWindow(
-                    startArc,
-                    endArc,
-                    profile.leadMeters,
-                    profile.spread,
-                    profile.tangentWeight,
-                    profile.sampleMeters));
+        if (target.command != null) {
+          eventMarkers.add(
+              new EventMarker(
+                  "target_" + t,
+                  waypointPos,
+                  Commands.defer(target.command, Collections.emptySet())));
+        }
 
-            Rotation2d followHeading =
-                getBiasedTangentAtArc(sampled, cum, arc, totalLength, profile.sampleMeters);
+        switch (target.rotationMode) {
+          case FOLLOW:
+            {
+              FollowProfile profile = computeFollowProfile(sampled, cum, arc, totalLength, target);
 
-            lastRotation =
-                emitRotationTarget(
-                    rotationTargets,
-                    arc,
-                    followHeading,
-                    lastRotation,
-                    totalLength,
-                    waypointSlots,
-                    false);
+              double activation = Math.max(profile.leadMeters, profile.sampleMeters);
+              double startArc = Math.max(0.0, arc - activation);
+              double endArc = Math.min(totalLength, arc + activation * profile.spread);
 
-            rotationSamples.add(new RotationSample(waypointPos, followHeading));
-            break;
-          }
+              followWindows.add(
+                  new FollowWindow(
+                      startArc,
+                      endArc,
+                      profile.leadMeters,
+                      profile.spread,
+                      profile.tangentWeight,
+                      profile.sampleMeters));
 
-        case HOLD:
-          break;
+              Rotation2d followHeading =
+                  getBiasedTangentAtArc(sampled, cum, arc, totalLength, profile.sampleMeters);
 
-        case SNAP:
-        case LINEAR:
-        default:
-          {
-            Rotation2d desired = poses[t].getRotation();
+              lastRotation =
+                  emitRotationTarget(
+                      rotationTargets,
+                      arc,
+                      followHeading,
+                      lastRotation,
+                      totalLength,
+                      waypointSlots,
+                      false);
 
-            double angDiff =
-                Math.abs(normalizeAngle(desired.getRadians() - lastRotation.getRadians()));
-            if (target.rotationMode != Target.RotationMode.SNAP && angDiff <= ROTATION_TOL_RAD) {
-              rotationSamples.add(new RotationSample(waypointPos, desired));
+              rotationSamples.add(new RotationSample(waypointPos, followHeading));
               break;
             }
 
-            double leadMeters = target.rotationLeadMeters;
-            double rotationStartArc = arc - leadMeters;
-            rotationStartArc = Math.max(0.0, Math.min(rotationStartArc, totalLength));
-
-            double baseEndArc = (leadMeters >= 0.0) ? arc : (arc - leadMeters);
-            baseEndArc = Math.max(0.0, Math.min(baseEndArc, totalLength));
-
-            double baseWindow = Math.abs(baseEndArc - rotationStartArc);
-            if (baseWindow < 1e-12) baseWindow = PRE_OFFSET_ARC;
-
-            double spread = target.rotationSpread;
-            if (!Double.isFinite(spread) || spread <= 0.0) spread = 1.0;
-
-            double spreadWindow =
-                (target.rotationMode == Target.RotationMode.SNAP)
-                    ? PRE_OFFSET_ARC
-                    : (baseWindow * spread);
-
-            double rotationEndArc = rotationStartArc + spreadWindow;
-            rotationEndArc = Math.max(0.0, Math.min(rotationEndArc, totalLength));
-
-            double preArc = rotationStartArc;
-            double preWaypointPos = (preArc / totalLength) * waypointSlots;
-            double finalWaypointPos = (rotationEndArc / totalLength) * waypointSlots;
-
-            if (finalWaypointPos <= preWaypointPos + 1e-12) {
-              finalWaypointPos = Math.min(waypointSlots, preWaypointPos + 1e-6);
-              preWaypointPos = Math.max(0.0, finalWaypointPos - 1e-6);
-            }
-
-            rotationTargets.add(new RotationTarget(preWaypointPos, lastRotation));
-            rotationSamples.add(new RotationSample(preWaypointPos, lastRotation));
-
-            rotationTargets.add(new RotationTarget(finalWaypointPos, desired));
-            rotationSamples.add(new RotationSample(finalWaypointPos, desired));
-
-            lastRotation = desired;
+          case HOLD:
             break;
-          }
+
+          case SNAP:
+          case LINEAR:
+          default:
+            {
+              Rotation2d desired = poses[t].getRotation();
+
+              double angDiff =
+                  Math.abs(normalizeAngle(desired.getRadians() - lastRotation.getRadians()));
+              if (target.rotationMode != Target.RotationMode.SNAP && angDiff <= ROTATION_TOL_RAD) {
+                rotationSamples.add(new RotationSample(waypointPos, desired));
+                break;
+              }
+
+              double leadMeters = target.rotationLeadMeters;
+              double rotationStartArc = arc - leadMeters;
+              rotationStartArc = Math.max(0.0, Math.min(rotationStartArc, totalLength));
+
+              double baseEndArc = (leadMeters >= 0.0) ? arc : (arc - leadMeters);
+              baseEndArc = Math.max(0.0, Math.min(baseEndArc, totalLength));
+
+              double baseWindow = Math.abs(baseEndArc - rotationStartArc);
+              if (baseWindow < 1e-12) {
+                baseWindow = PRE_OFFSET_ARC;
+              }
+
+              double spread = target.rotationSpread;
+              if (!Double.isFinite(spread) || spread <= 0.0) {
+                spread = 1.0;
+              }
+
+              double spreadWindow =
+                  (target.rotationMode == Target.RotationMode.SNAP)
+                      ? PRE_OFFSET_ARC
+                      : (baseWindow * spread);
+
+              double rotationEndArc = rotationStartArc + spreadWindow;
+              rotationEndArc = Math.max(0.0, Math.min(rotationEndArc, totalLength));
+
+              double preArc = rotationStartArc;
+              double preWaypointPos = (preArc / totalLength) * waypointSlots;
+              double finalWaypointPos = (rotationEndArc / totalLength) * waypointSlots;
+
+              if (finalWaypointPos <= preWaypointPos + 1e-12) {
+                finalWaypointPos = Math.min(waypointSlots, preWaypointPos + 1e-6);
+                preWaypointPos = Math.max(0.0, finalWaypointPos - 1e-6);
+              }
+
+              rotationTargets.add(new RotationTarget(preWaypointPos, lastRotation));
+              rotationSamples.add(new RotationSample(preWaypointPos, lastRotation));
+
+              rotationTargets.add(new RotationTarget(finalWaypointPos, desired));
+              rotationSamples.add(new RotationSample(finalWaypointPos, desired));
+
+              lastRotation = desired;
+              break;
+            }
+        }
       }
+
+      activeFollowEnabled = !followWindows.isEmpty();
     }
 
     List<ConstraintsZone> constraintsZones = new ArrayList<>();
@@ -986,7 +1386,9 @@ public final class PathBuilder {
       double startArc = targetArcs[i];
       double endArc = targetArcs[i + 1];
 
-      if (endArc - startArc < 1e-6) continue;
+      if (endArc - startArc < 1e-6) {
+        continue;
+      }
 
       double startFrac = startArc / totalLength;
       double endFrac = endArc / totalLength;
@@ -997,7 +1399,6 @@ public final class PathBuilder {
       double linearMult = current.speedMultiplier;
       double angularMult = current.rotationSpeedMultiplier;
 
-      // Skip if BOTH are default
       if (Math.abs(linearMult - 1.0) < 1e-9 && Math.abs(angularMult - 1.0) < 1e-9) {
         continue;
       }
@@ -1014,7 +1415,14 @@ public final class PathBuilder {
 
     constraintsZones = mergeConstraintsZones(constraintsZones);
 
-    GoalEndState finalGoal = new GoalEndState(0.0, lastRotation);
+    Rotation2d finalRotation =
+        rotationTargets.isEmpty()
+            ? poses[poses.length - 1].getRotation()
+            : rotationTargets.get(rotationTargets.size() - 1).rotation();
+
+    Double finalEndingSpeed = endingSpeedMps != null ? endingSpeedMps : 0.0;
+    GoalEndState finalGoal = new GoalEndState(finalEndingSpeed, finalRotation);
+
     PathPlannerPath finalPath =
         new PathPlannerPath(
             waypoints,
@@ -1023,7 +1431,7 @@ public final class PathBuilder {
             constraintsZones.isEmpty() ? emptyConstraintsZones : constraintsZones,
             eventMarkers.isEmpty() ? emptyEventMarkers : eventMarkers,
             globalConstraints,
-            null,
+            idealStartingState,
             finalGoal,
             false);
 
@@ -1033,7 +1441,6 @@ public final class PathBuilder {
     activeFollowWaypointSlots = waypointSlots;
     activeExplicitRotationSamples = rotationSamples;
     activeFollowWindows = followWindows;
-    activeFollowEnabled = !followWindows.isEmpty();
 
     Command followCmd = AutoBuilder.followPath(finalPath);
 
@@ -1047,6 +1454,89 @@ public final class PathBuilder {
         .finallyDo(PathBuilder::clearFollowRotationOverride);
   }
 
+  private static Target getFirstOverrideTarget(List<Target> activeTargets) {
+    for (Target target : activeTargets) {
+      if (target.overrideRotations != null && target.overrideRotations.length > 0) {
+        return target;
+      }
+    }
+    return null;
+  }
+
+  private static List<RotationTarget> buildOverrideRotationTargets(
+      List<Target> activeTargets,
+      double waypointSlots,
+      Rotation2d startingRotation,
+      Rotation2d endingRotation) {
+
+    Target source = getFirstOverrideTarget(activeTargets);
+    if (source == null) {
+      return Collections.emptyList();
+    }
+
+    List<RotationTarget> output = new ArrayList<>();
+    double endPos = Math.max(0.0, waypointSlots);
+
+    if (startingRotation != null) {
+      output.add(new RotationTarget(0.0, startingRotation));
+    }
+
+    if (source.overrideRotations != null) {
+      for (RotationTarget target : source.overrideRotations) {
+        if (target == null) {
+          continue;
+        }
+
+        double pos = clamp(target.position(), 0.0, endPos);
+
+        if (startingRotation != null && pos <= ROTATION_POSITION_EPS) {
+          continue;
+        }
+        if (endingRotation != null && Math.abs(pos - endPos) <= ROTATION_POSITION_EPS) {
+          continue;
+        }
+
+        output.add(new RotationTarget(pos, target.rotation()));
+      }
+    }
+
+    if (endingRotation != null) {
+      output.add(new RotationTarget(endPos, endingRotation));
+    }
+
+    output.sort(Comparator.comparingDouble(RotationTarget::position));
+
+    List<RotationTarget> deduped = new ArrayList<>();
+    for (RotationTarget target : output) {
+      if (deduped.isEmpty()) {
+        deduped.add(target);
+        continue;
+      }
+
+      RotationTarget last = deduped.get(deduped.size() - 1);
+      if (Math.abs(last.position() - target.position()) <= ROTATION_POSITION_EPS) {
+        continue;
+      }
+
+      deduped.add(target);
+    }
+
+    return deduped;
+  }
+
+  private static List<RotationSample> rotationSamplesFromRotationTargets(
+      List<RotationTarget> rotationTargets) {
+    if (rotationTargets == null || rotationTargets.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<RotationSample> samples = new ArrayList<>(rotationTargets.size());
+    for (RotationTarget target : rotationTargets) {
+      samples.add(new RotationSample(target.position(), target.rotation()));
+    }
+    return samples;
+  }
+
   private static List<Waypoint> waypointsFromPosesWithCurve(
       List<Pose2d> poses, List<Target> targets) {
     List<Waypoint> waypoints = new ArrayList<>(poses.size());
@@ -1054,9 +1544,10 @@ public final class PathBuilder {
     for (int i = 0; i < poses.size(); i++) {
       Pose2d pose = poses.get(i);
       Translation2d anchor = pose.getTranslation();
-      Rotation2d travelHeading = pose.getRotation();
+      Target target = targets.get(i);
 
-      double curveScale = clamp01(targets.get(i).curveScale);
+      Rotation2d travelHeading = target.heading != null ? target.heading : pose.getRotation();
+      double curveScale = clamp01(target.curveScale);
 
       Translation2d prevControl = anchor;
       Translation2d nextControl = anchor;
@@ -1072,6 +1563,13 @@ public final class PathBuilder {
         }
         if (i < poses.size() - 1) {
           nextDist = anchor.getDistance(poses.get(i + 1).getTranslation()) * 0.33 * curveScale;
+        }
+
+        if (target.controlDistanceBeforeMeters != null) {
+          prevDist = target.controlDistanceBeforeMeters;
+        }
+        if (target.controlDistanceAfterMeters != null) {
+          nextDist = target.controlDistanceAfterMeters;
         }
 
         prevControl = anchor.minus(dir.times(prevDist));
@@ -1388,8 +1886,11 @@ public final class PathBuilder {
         double tx = point.getX() - ax;
         double ty = point.getY() - ay;
         u = (tx * dx + ty * dy) / segLenSq;
-        if (u < 0.0) u = 0.0;
-        else if (u > 1.0) u = 1.0;
+        if (u < 0.0) {
+          u = 0.0;
+        } else if (u > 1.0) {
+          u = 1.0;
+        }
       }
 
       double projX = ax + u * dx;
@@ -1407,7 +1908,9 @@ public final class PathBuilder {
   }
 
   private static List<ConstraintsZone> mergeConstraintsZones(List<ConstraintsZone> zones) {
-    if (zones == null || zones.size() <= 1) return zones;
+    if (zones == null || zones.size() <= 1) {
+      return zones;
+    }
     zones.sort(Comparator.comparingDouble(ConstraintsZone::minPosition));
     List<ConstraintsZone> out = new ArrayList<>();
     ConstraintsZone cur = zones.get(0);
@@ -1434,7 +1937,9 @@ public final class PathBuilder {
   }
 
   private static double clamp01(double value) {
-    if (!Double.isFinite(value)) return 0.0;
+    if (!Double.isFinite(value)) {
+      return 0.0;
+    }
     return Math.max(0.0, Math.min(1.0, value));
   }
 
