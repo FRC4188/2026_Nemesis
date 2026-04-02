@@ -134,11 +134,11 @@ public class ScoringCommands {
             Commands.runOnce(() -> timer.restart()),
             Commands.repeatingSequence(
                     Commands.run(
-                            () -> wrist.runWristVolts(5 + Math.min(2 * timer.get() / 5.0, 2.5)),
+                            () -> wrist.runWristVolts(1 + Math.min(2 * timer.get() / 5.0, 5.0)),
                             wrist)
                         .withTimeout(0.25),
                     Commands.run(
-                            () -> wrist.runWristVolts(-5 - Math.min(2 * timer.get() / 5.0, 2.5)),
+                            () -> wrist.runWristVolts(-1 - Math.min(2 * timer.get() / 5.0, 5.0)),
                             wrist)
                         .withTimeout(0.25))
                 .until(() -> wrist.getAngle() > 120.0)

@@ -33,6 +33,7 @@ public class Vision extends SubsystemBase {
           switch (Constants.Robot.currentMode) {
             case REAL -> new Vision(
                 Drive.getInstance()::accept,
+                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront),
                 new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
                 new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
             case SIM -> new Vision(Drive.getInstance()::accept, new VisionIO() {});

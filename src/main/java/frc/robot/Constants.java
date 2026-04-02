@@ -281,9 +281,9 @@ public final class Constants {
 
     public static final Transform3d cameraFront =
         new Transform3d(
-            Units.inchesToMeters(-10.64272),
-            Units.inchesToMeters(-6.18796 - 0.25),
-            Units.inchesToMeters(15.25159),
-            new Rotation3d(0, Math.toRadians(34), 0));
+            Units.inchesToMeters(1.28870),
+            Units.inchesToMeters(11.937500),
+            Units.inchesToMeters(21.206522),
+            new Rotation3d(0, Math.toRadians(8), 0));
   }
 }
