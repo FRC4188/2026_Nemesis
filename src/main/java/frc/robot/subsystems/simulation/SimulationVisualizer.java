@@ -47,4 +47,20 @@ public class SimulationVisualizer {
     Logger.recordOutput(
         "Mechanism3d/" + key, wristPos, hopperPos, hoodPos, climberPos, agitatorPos, indexerPos);
   }
+
+  // public void reset() {
+  //   wristPos =
+  //       new Pose3d(
+  //           SimulationConfig.wristAxis.getTranslation(),
+  //           new Rotation3d(0, 0, 0));
+
+  //   hoodPos =
+  //       new Pose3d(
+  //           SimulationConfig.hoodAxis.getTranslation(),
+  //           new Rotation3d(0, 0 - 0.35, 0));
+
+  //   climberPos =
+  //       SimulationConfig.climberAxis.transformBy(
+  //           new Transform3d(new Translation3d(0, 0, 0), Rotation3d.kZero));
+  // }
 }

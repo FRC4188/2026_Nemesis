@@ -35,6 +35,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -111,9 +112,9 @@ public class RobotContainer {
     swipeChooser.addOption("Close Swipe", AutoCommands.Swipe.CLOSE);
     climbChooser = new LoggedDashboardChooser<>("Climb Choices");
     climbChooser.addOption("Climb", AutoCommands.Climb.CLIMB);
-    climbChooser.addOption("No Climb", AutoCommands.Climb.NONE);
-    climbChooser.addOption("1.5 Neutral", AutoCommands.Climb.NZ);
-    climbChooser.addOption("2nd Swipe", AutoCommands.Climb.DOUBLE);
+    climbChooser.addOption("None", AutoCommands.Climb.NONE);
+    climbChooser.addOption("1.5", AutoCommands.Climb.NZ);
+    climbChooser.addOption("2", AutoCommands.Climb.DOUBLE);
 
     autoChooser.addOption(
         "PsuedoBoard",
@@ -390,19 +391,21 @@ public class RobotContainer {
                     new Translation2d(3.57, Units.inchesToMeters(317.69) / 2), Rotation2d.kZero)));
       } else if (DriverStation.getLocation().getAsInt() == 1) {
         drive.setPose(
-            // AllianceFlip.apply(
-            //     new Pose2d(
-            //         FieldConstants.Trench.left_trench_alliance_entrance.getX()
-            //             + Constants.Robot.B_LENGTH / 2,
-            //         FieldConstants.Trench.left_trench_alliance_entrance.getY(),
-            //         Rotation2d.kCW_90deg)));
-            new Pose2d(0, 0, Rotation2d.kZero));
+            AllianceFlip.apply(
+                new Pose2d(
+                    FieldConstants.Trench.left_trench_alliance_entrance.getX()
+                        + Constants.Robot.B_LENGTH / 2,
+                    FieldConstants.Trench.left_trench_alliance_entrance.getY(),
+                    Rotation2d.kCW_90deg)));
+        // new Pose2d(0, 0, Rotation2d.kZero));
       }
     }
 
     // drive.setPose(new Pose2d(FieldConstants.FuelField.second_intake_right_close_corner,
     // Rotation2d.kCW_90deg));
   }
+
+  char autoWinner = ' '; // this is so stupid
 
   public void periodic() {
     // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
@@ -412,7 +415,85 @@ public class RobotContainer {
 
     Logger.recordOutput(
         "Drive/Distance From Hub",
-        FieldConstants.Hub.hub_center_2d.getDistance(drive.getPose().getTranslation()));
+        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+            .getDistance(drive.getPose().getTranslation()));
+
+    boolean hubState = false;
+    double timeLeftInShift = 0.0;
+
+    if (DriverStation.getGameSpecificMessage().length() > 0 && DriverStation.isFMSAttached()) {
+      autoWinner = DriverStation.getGameSpecificMessage().charAt(0);
+    } else if (DriverStation.isDSAttached()) {
+      if (autoWinner == ' ') {
+        autoWinner = new Random().nextBoolean() ? 'B' : 'R'; // for practice
+      }
+    } else {
+      autoWinner = 'B'; // fallback
+    }
+
+    if (DriverStation.isTeleop()) {
+      Logger.recordOutput(
+          "Won Auto?",
+          (autoWinner == 'B' && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue)
+              || (autoWinner == 'R'
+                  && DriverStation.getAlliance().get() == DriverStation.Alliance.Red));
+      if (DriverStation.getMatchTime() <= 140 && DriverStation.getMatchTime() > 131) {
+        hubState = true;
+        timeLeftInShift = DriverStation.getMatchTime() - 130;
+      } else if (DriverStation.getMatchTime() <= 131 && DriverStation.getMatchTime() > 106) {
+        if ((autoWinner == 'B' && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue)
+            || (autoWinner == 'R'
+                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)) {
+          hubState = false;
+        } else {
+          hubState = true;
+        }
+        timeLeftInShift = DriverStation.getMatchTime() - 105;
+      } else if (DriverStation.getMatchTime() <= 106 && DriverStation.getMatchTime() > 81) {
+        if ((autoWinner == 'B' && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue)
+            || (autoWinner == 'R'
+                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)) {
+          hubState = true;
+        } else {
+          hubState = false;
+        }
+        timeLeftInShift = DriverStation.getMatchTime() - 80;
+      } else if (DriverStation.getMatchTime() <= 81 && DriverStation.getMatchTime() > 56) {
+        if ((autoWinner == 'B' && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue)
+            || (autoWinner == 'R'
+                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)) {
+          hubState = false;
+        } else {
+          hubState = true;
+        }
+        timeLeftInShift = DriverStation.getMatchTime() - 55;
+      } else if (DriverStation.getMatchTime() <= 56 && DriverStation.getMatchTime() > 31) {
+        if ((autoWinner == 'B' && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue)
+            || (autoWinner == 'R'
+                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)) {
+          hubState = true;
+        } else {
+          hubState = false;
+        }
+        timeLeftInShift = DriverStation.getMatchTime() - 30;
+      } else if (DriverStation.getMatchTime() <= 31) {
+        hubState = true;
+        timeLeftInShift = DriverStation.getMatchTime();
+      }
+    } else {
+      hubState = true; // we're in auto
+      timeLeftInShift = DriverStation.getMatchTime();
+      Logger.recordOutput(
+        "Won Auto?",
+        false);
+    }
+    Logger.recordOutput("Is Our Shift?", hubState);
+    Logger.recordOutput("Time Left In Shift", Math.floor(timeLeftInShift));
+  }
+
+  // so weird
+  public void genericReset() {
+    autoWinner = ' ';
   }
 
   public void displaySimFieldToAdvantageScope() {
