@@ -106,6 +106,8 @@ public class Robot extends LoggedRobot {
     if (Constants.Robot.currentMode == Mode.SIM) {
       robotContainer.simReset();
     }
+
+    robotContainer.genericReset();
   }
 
   /** This function is called periodically when disabled. */
