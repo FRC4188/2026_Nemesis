@@ -72,6 +72,7 @@ public final class PathBuilder {
   private static List<RotationSample> activeExplicitRotationSamples = Collections.emptyList();
   private static List<FollowWindow> activeFollowWindows = Collections.emptyList();
   private static boolean activeFollowEnabled = false;
+  private static double fieldWidthMeters = 0;
 
   private static final class RotationSample {
     final double position;
@@ -126,6 +127,10 @@ public final class PathBuilder {
     ROTATION_TOL_RAD = rotationTolRadians;
     PATH_CREATION_TOL = pathCreationTolMeters;
     FOLLOW_ROTATION_SAMPLE_METERS = followRotationMeters;
+  }
+
+  public static void configureField(double width) {
+    fieldWidthMeters = width;
   }
 
   /**
@@ -1452,6 +1457,79 @@ public final class PathBuilder {
     return Commands.sequence(
             Commands.runOnce(PathBuilder::installFollowRotationOverride), followCmd)
         .finallyDo(PathBuilder::clearFollowRotationOverride);
+  }
+
+  public static Target[] mirror(BooleanSupplier mirrorCondition, Target... targets) {
+    if (mirrorCondition == null) {
+      throw new IllegalArgumentException("mirrorCondition cannot be null");
+    }
+    if (targets == null) {
+      throw new IllegalArgumentException("targets cannot be null");
+    }
+
+    if (!mirrorCondition.getAsBoolean()) {
+      return targets.clone();
+    }
+
+    Target[] mirrored = new Target[targets.length];
+
+    for (int i = 0; i < targets.length; i++) {
+      Target target = targets[i];
+      if (target == null) {
+        throw new IllegalArgumentException("targets cannot contain null");
+      }
+
+      Pose2d mirroredPose =
+          new Pose2d(
+              target.pose.getX(),
+              fieldWidthMeters - target.pose.getY(),
+              new Rotation2d(-target.pose.getRotation().getRadians()));
+
+      Rotation2d mirroredHeading =
+          target.heading == null ? null : new Rotation2d(-target.heading.getRadians());
+      Rotation2d mirroredStartingRotation =
+          target.startingRotation == null
+              ? null
+              : new Rotation2d(-target.startingRotation.getRadians());
+      Rotation2d mirroredEndingRotation =
+          target.endingRotation == null
+              ? null
+              : new Rotation2d(-target.endingRotation.getRadians());
+
+      RotationTarget[] mirroredOverrideRotations = null;
+      if (target.overrideRotations != null) {
+        mirroredOverrideRotations = new RotationTarget[target.overrideRotations.length];
+        for (int j = 0; j < target.overrideRotations.length; j++) {
+          RotationTarget rt = target.overrideRotations[j];
+          mirroredOverrideRotations[j] =
+              new RotationTarget(rt.position(), new Rotation2d(-rt.rotation().getRadians()));
+        }
+      }
+
+      mirrored[i] =
+          new Target(
+              mirroredPose,
+              target.speedMultiplier,
+              target.rotationSpeedMultiplier,
+              target.rotationLeadMeters,
+              target.rotationSpread,
+              target.rotationMode,
+              mirroredHeading,
+              target.tangentWeight,
+              target.curveScale,
+              mirroredOverrideRotations,
+              mirroredStartingRotation,
+              mirroredEndingRotation,
+              target.controlDistanceBeforeMeters,
+              target.controlDistanceAfterMeters,
+              target.startingSpeedMetersPerSecond,
+              target.endingSpeedMetersPerSecond,
+              target.toleranceMeters,
+              target.command,
+              target.condition);
+    }
+
+    return mirrored;
   }
 
   private static Target getFirstOverrideTarget(List<Target> activeTargets) {

@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
@@ -86,6 +87,7 @@ public class RobotContainer {
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
+    PathBuilder.configureField(FieldConstants.field_width);
     PathBuilder.configureDrive(
         true,
         2,
@@ -270,7 +272,7 @@ public class RobotContainer {
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    pilot.getRightTButton().whileTrue(ScoringCommands.shake());
+    pilot.getRightTButton().whileTrue(new WaitCommand(1.5).andThen(ScoringCommands.shake()));
 
     pilot
         .getLeftTButton()
@@ -463,9 +465,7 @@ public class RobotContainer {
     } else {
       hubState = true; // we're in auto
       timeLeftInShift = DriverStation.getMatchTime();
-      Logger.recordOutput(
-        "Won Auto?",
-        false);
+      Logger.recordOutput("Won Auto?", false);
     }
     Logger.recordOutput("Is Our Shift?", hubState);
     Logger.recordOutput("Time Left In Shift", Math.floor(timeLeftInShift));

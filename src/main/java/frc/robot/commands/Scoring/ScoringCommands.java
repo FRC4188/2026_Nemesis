@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
@@ -23,6 +24,7 @@ public class ScoringCommands {
   private static final Drive drive = Drive.getInstance();
   private static final Hood hood = Hood.getInstance();
   private static final Wrist wrist = Wrist.getInstance();
+  private static final Intake intake = Intake.getInstance();
 
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
@@ -72,7 +74,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 4.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -126,23 +128,20 @@ public class ScoringCommands {
                             () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
   }
 
-  public static Timer timer = new Timer();
+  private static final Timer timer = new Timer();
 
   public static Command shake() {
     return Commands.either(
-        Commands.sequence(
+        Commands.parallel(
             Commands.runOnce(() -> timer.restart()),
             Commands.repeatingSequence(
-                    Commands.run(
-                            () -> wrist.runWristVolts(1 + Math.min(2 * timer.get() / 5.0, 5.0)),
-                            wrist)
-                        .withTimeout(0.25),
-                    Commands.run(
-                            () -> wrist.runWristVolts(-1 - Math.min(2 * timer.get() / 5.0, 5.0)),
-                            wrist)
-                        .withTimeout(0.25))
+                    Commands.run(() -> wrist.runWristVolts(Math.min(3 + timer.get(), 6)), wrist)
+                        .withTimeout(0.5),
+                    Commands.run(() -> wrist.runWristVolts(-Math.min(3 + timer.get(), 6)), wrist)
+                        .withTimeout(0.5))
                 .until(() -> wrist.getAngle() > 120.0)
-                .finallyDo(wrist::stop)),
+                .finallyDo(wrist::stop),
+            Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)),
         Commands.none(),
         () -> wrist.shakeEnable);
   }
