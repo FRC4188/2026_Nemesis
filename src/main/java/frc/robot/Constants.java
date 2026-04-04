@@ -33,7 +33,6 @@ import frc.robot.subsystems.drive.Drive;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-
   public static class Id {
     public static final int kWrist = 13;
     public static final int kIntake = 14;
@@ -279,11 +278,18 @@ public final class Constants {
     //         Units.inchesToMeters(7.44761),
     //         new Rotation3d(0, 0, 0));
 
+    // public static final Transform3d cameraFront =
+    //     new Transform3d(
+    //         Units.inchesToMeters(1.28870),
+    //         Units.inchesToMeters(11.937500),
+    //         Units.inchesToMeters(21.206522),
+    //         new Rotation3d(0, Math.toRadians(10.2), 0));
+
     public static final Transform3d cameraFront =
         new Transform3d(
             Units.inchesToMeters(1.28870),
             Units.inchesToMeters(11.937500),
             Units.inchesToMeters(21.206522),
-            new Rotation3d(0, Math.toRadians(9), 0));
+            new Rotation3d(0, Math.toRadians(10.2), 0));
   }
 }

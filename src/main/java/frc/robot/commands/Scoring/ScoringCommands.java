@@ -146,6 +146,78 @@ public class ScoringCommands {
         () -> wrist.shakeEnable);
   }
 
+  public static Command fullShake() {
+    // return Commands.runEnd(() -> wrist.runWristVolts(3.5), () -> wrist.stop(), wrist)
+    //     .withTimeout(3)
+    //     .until(() -> wrist.getAngle() > 120.0);
+
+    // ADD WRIST REQUIREMENTS (if we even use this one)
+    // return Commands.either(
+    //     Commands.sequence(
+    //         new WaitCommand(1.25),
+    //         Commands.run(() -> wrist.runWristVolts(3)).withTimeout(0.5),
+    //         Commands.run(() -> wrist.runWristVolts(-3)).withTimeout(0.5),
+    //         new WaitCommand(0.75),
+    //         Commands.run(() -> wrist.runWristVolts(3)).withTimeout(0.5),
+    //         Commands.run(() -> wrist.runWristVolts(-3)).withTimeout(0.5),
+    //         new WaitCommand(0.75),
+    //         Commands.run(() -> wrist.runWristVolts(3)).withTimeout(0.5),
+    //         Commands.run(() -> wrist.runWristVolts(-3)).withTimeout(0.5),
+    //         new WaitCommand(0.75),
+    //         Commands.run(() -> wrist.runWristVolts(3)).withTimeout(0.5),
+    //         Commands.run(() -> wrist.runWristVolts(-3)).withTimeout(0.5),
+    //         new WaitCommand(0.1),
+    //         Commands.run(() -> wrist.runWristVolts(3))
+    //             .withTimeout(2.5)
+    //             .until(() -> wrist.getAngle() > 110.0))
+    //     .until(() -> wrist.getAngle() > 110.0), Commands.none(), () -> wrist.shakeEnable);
+
+    return Commands.either(
+        Commands.sequence(
+                new WaitCommand(1.25),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+                new WaitCommand(0.1),
+                Commands.parallel(
+                    Commands.run(() -> wrist.runWristVolts(3), wrist)
+                        .withTimeout(2.5)
+                        .until(() -> wrist.getAngle() > 100.0),
+                    Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)
+                        .withTimeout(2.5)))
+            .until(() -> wrist.getAngle() > 100.0),
+        Commands.none(),
+        () -> wrist.shakeEnable);
+  }
+
+  public static Command halfShake() {
+    return Commands.either(
+        Commands.sequence(
+            new WaitCommand(1),
+            Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+            Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
+            new WaitCommand(1.5),
+            Commands.run(() -> wrist.runWristVolts(3), wrist)
+                .withTimeout(2.5)
+                .until(() -> wrist.getAngle() > 110.0)),
+        Commands.none(),
+        () -> wrist.shakeEnable);
+  }
+
   public static Command downNoStall() {
     return Commands.run(() -> wrist.runWristVolts(-4), wrist)
         .until(() -> wrist.getAngle() < 30)

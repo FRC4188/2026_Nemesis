@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
@@ -272,7 +271,8 @@ public class RobotContainer {
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    pilot.getRightTButton().whileTrue(new WaitCommand(1.5).andThen(ScoringCommands.shake()));
+    // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
+    pilot.getRightTButton().whileTrue(ScoringCommands.fullShake());
 
     pilot
         .getLeftTButton()
