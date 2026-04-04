@@ -290,6 +290,6 @@ public final class Constants {
             Units.inchesToMeters(1.28870),
             Units.inchesToMeters(11.937500),
             Units.inchesToMeters(21.206522),
-            new Rotation3d(0, Math.toRadians(10.2), 0));
+            new Rotation3d(0, Math.toRadians(10), 0));
   }
 }

@@ -345,7 +345,7 @@ public class AutoCommands {
                                           .withOverrideRotations(
                                               new RotationTarget(
                                                   0.97, Rotation2d.fromDegrees(87.075)),
-                                              new RotationTarget(0.60, Rotation2d.fromDegrees(0)),
+                                              new RotationTarget(0.60, Rotation2d.kZero),
                                               new RotationTarget(
                                                   2.00, Rotation2d.fromDegrees(110.726)),
                                               new RotationTarget(
@@ -355,19 +355,19 @@ public class AutoCommands {
                                           .withHeading(Rotation2d.fromDegrees(61.763))
                                           .withControlDistances(0, 0.250),
                                       new PathBuilder.Target(
-                                              new Pose2d(7.355, 1.523, new Rotation2d()))
+                                              new Pose2d(7.355, 1.523, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(66.360))
                                           .withControlDistances(1.517, 0.476),
                                       new PathBuilder.Target(
-                                              new Pose2d(7.614, 3.051, new Rotation2d()))
+                                              new Pose2d(7.614, 3.051, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(120.689))
                                           .withControlDistances(0.288, 1.250),
                                       new PathBuilder.Target(
-                                              new Pose2d(5.968, 3.051, new Rotation2d()))
+                                              new Pose2d(5.968, 3.051, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(-104.349))
                                           .withControlDistances(0.955, 0.310),
                                       new PathBuilder.Target(
-                                              new Pose2d(5.968, 0.608, new Rotation2d()))
+                                              new Pose2d(5.968, 0.608, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(99.792))
                                           .withControlDistances(0.250, 0)
                                           .withEndingRotation(Rotation2d.kZero)
