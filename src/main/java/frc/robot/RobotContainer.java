@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 import frc.robot.CSPLib.inputs.CSP_Controller;
@@ -113,7 +112,7 @@ public class RobotContainer {
     // These 4 choosers are subbing for PB's dashboard fyi
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     startChooser = new LoggedDashboardChooser<>("Start Choices");
-    startChooser.addOption("Left Trench", AutoCommands.Start.LEFT);
+    startChooser.addDefaultOption("Left Trench", AutoCommands.Start.LEFT);
     startChooser.addOption("Right Trench", AutoCommands.Start.RIGHT);
     swipeChooser = new LoggedDashboardChooser<>("Swipe Choices");
     swipeChooser.addOption("Center Swipe", AutoCommands.Swipe.CENTER);
@@ -278,7 +277,14 @@ public class RobotContainer {
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    pilot.getRightTButton().whileTrue(new WaitCommand(1.5).andThen(ScoringCommands.shake()));
+    // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
+    pilot
+        .getRightTButton()
+        .whileTrue(
+            Commands.either(
+                ScoringCommands.halfShake(),
+                ScoringCommands.fullShake(),
+                () -> copilot.b().getAsBoolean()));
 
     pilot
         .getLeftTButton()
@@ -293,13 +299,19 @@ public class RobotContainer {
 
     pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
 
-    copilot
-        .b()
-        .whileTrue(
-            Commands.runEnd(
-                () -> climber.runClimberVolts(8 * -copilot.getCorrectedLeft(Scale.LINEAR).getY()),
-                climber::stop,
-                climber));
+    // copilot
+    //     .b()
+    //     .whileTrue(
+    //         Commands.runEnd(
+    //             () -> climber.runClimberVolts(8 *
+    // -copilot.getCorrectedLeft(Scale.LINEAR).getY()),
+    //             climber::stop,
+    //             climber));
+
+    // Commands.either(
+    //     ScoringCommands.halfShake(), ScoringCommands.fullShake(), () ->
+    // copilot.b().getAsBoolean());
+
     copilot
         .y()
         .whileTrue(
@@ -409,8 +421,10 @@ public class RobotContainer {
     boolean hubState = false;
     double timeLeftInShift = 0.0;
 
-    if (DriverStation.getGameSpecificMessage().length() > 0 && DriverStation.isFMSAttached()) {
-      autoWinner = DriverStation.getGameSpecificMessage().charAt(0);
+    if (DriverStation.isFMSAttached()) {
+      if (DriverStation.getGameSpecificMessage().length() > 0) {
+        autoWinner = DriverStation.getGameSpecificMessage().charAt(0);
+      }
     } else if (DriverStation.isDSAttached()) {
       if (autoWinner == ' ') {
         autoWinner = new Random().nextBoolean() ? 'B' : 'R'; // for practice
