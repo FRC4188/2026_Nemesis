@@ -39,7 +39,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
@@ -74,7 +74,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -98,7 +98,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
@@ -125,7 +125,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(6.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
   }
 
   private static final Timer timer = new Timer();
@@ -244,7 +244,7 @@ public class ScoringCommands {
                         .until(() -> wrist.getAngle() > 80.0),
                     Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)
                         .withTimeout(2.5)))
-            .until(() -> wrist.getAngle() > 80.0)
+            //.until(() -> wrist.getAngle() > 80.0)
             .finallyDo(() -> wrist.stop()),
         Commands.none(),
         () -> wrist.shakeEnable);

@@ -24,7 +24,6 @@ import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -55,7 +54,6 @@ public class RobotContainer {
   private final Hopper hopper;
   private final Intake intake;
   private final Wrist wrist;
-  private final Climber climber;
   private final Vision vis;
   private final SimulationVisualizer simvis;
 
@@ -67,7 +65,7 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
   private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
-  private final LoggedDashboardChooser<AutoCommands.Climb> climbChooser;
+  private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
 
   public RobotContainer() {
     drive = Drive.getInstance();
@@ -77,13 +75,11 @@ public class RobotContainer {
     hopper = Hopper.getInstance();
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
-    climber = Climber.getInstance();
     simvis =
         new SimulationVisualizer(
             "Models",
             () -> Units.degreesToRadians(wrist.getAngle()),
-            () -> Units.degreesToRadians(hood.getAngle()),
-            () -> Units.inchesToMeters(climber.getHeight()));
+            () -> Units.degreesToRadians(hood.getAngle()));
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
@@ -112,24 +108,23 @@ public class RobotContainer {
     // These 4 choosers are subbing for PB's dashboard fyi
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     startChooser = new LoggedDashboardChooser<>("Start Choices");
-    startChooser.addDefaultOption("Left Trench", AutoCommands.Start.LEFT);
+    startChooser.addOption("Left Trench", AutoCommands.Start.LEFT);
     startChooser.addOption("Right Trench", AutoCommands.Start.RIGHT);
     swipeChooser = new LoggedDashboardChooser<>("Swipe Choices");
     swipeChooser.addOption("Center Swipe", AutoCommands.Swipe.CENTER);
     swipeChooser.addOption("Close Swipe", AutoCommands.Swipe.CLOSE);
-    climbChooser = new LoggedDashboardChooser<>("Climb Choices");
-    climbChooser.addOption("Climb", AutoCommands.Climb.CLIMB);
-    climbChooser.addOption("None", AutoCommands.Climb.NONE);
-    climbChooser.addOption("1.5", AutoCommands.Climb.NZ);
-    climbChooser.addOption("2", AutoCommands.Climb.DOUBLE);
+    cycleChooser = new LoggedDashboardChooser<>("Cycle Choices");
+    cycleChooser.addOption("None", AutoCommands.Cycle.NONE);
+    cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
+    cycleChooser.addOption("2", AutoCommands.Cycle.DOUBLE);
 
     autoChooser.addOption(
         "PsuedoBoard",
         Commands.defer(
             () ->
                 AutoCommands.pseudoBoard(
-                    startChooser.get(), swipeChooser.get(), climbChooser.get()),
-            Set.of(shooter, climber, hopper, wrist, intake, hood)));
+                    startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+            Set.of(shooter, hopper, wrist, intake, hood)));
 
     // autoChooser.addOption(
     //     "testing drive idk",
@@ -144,8 +139,6 @@ public class RobotContainer {
         "FORWARD Left Disruptor",
         AutoCommands.leftDisrupt(drive, intake, hopper, shooter, wrist, hood));
 
-    autoChooser.addOption("Climb Only Right", AutoCommands.climbRight(climber));
-    autoChooser.addOption("Climb Only Left", AutoCommands.climbLeft(climber));
     autoChooser.addOption("Nothing", Commands.none());
 
     autoChooser.addOption(
@@ -297,16 +290,6 @@ public class RobotContainer {
                 Commands.runEnd(() -> hopper.runHopperVolts(-6.0, -6.0), hopper::stop, hopper),
                 Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
 
-    pilot.y().toggleOnTrue(Commands.startEnd(climber::raise, climber::lower, climber));
-
-    // copilot
-    //     .b()
-    //     .whileTrue(
-    //         Commands.runEnd(
-    //             () -> climber.runClimberVolts(8 *
-    // -copilot.getCorrectedLeft(Scale.LINEAR).getY()),
-    //             climber::stop,
-    //             climber));
 
     // Commands.either(
     //     ScoringCommands.halfShake(), ScoringCommands.fullShake(), () ->
@@ -331,7 +314,6 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
 
-    copilot.povLeft().onTrue(Commands.runOnce(climber::zero));
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
     copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
     copilot.povDown().onTrue(Commands.runOnce(hood::subOne));

@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathbuilder.*;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -29,7 +28,6 @@ public class AutoCommands {
   private static final Shooter shooter = Shooter.getInstance();
   private static final Hopper hopper = Hopper.getInstance();
   private static final Wrist wrist = Wrist.getInstance();
-  private static final Climber climber = Climber.getInstance();
 
   public static Command autoShoot() {
     return Commands.parallel(
@@ -59,14 +57,13 @@ public class AutoCommands {
     RIGHT
   }
 
-  public static enum Climb {
-    CLIMB,
+  public static enum Cycle {
     NZ,
     NONE,
     DOUBLE
   }
 
-  public static Command pseudoBoard(Start start, Swipe swipe, Climb climb) {
+  public static Command pseudoBoard(Start start, Swipe swipe, Cycle cycle) {
     return Commands.sequence(
         Commands.runOnce(
             () ->
@@ -238,44 +235,12 @@ public class AutoCommands {
         Commands.runOnce(() -> PathBuilder.stopTarget())
             .andThen(AutoCommands.autoShoot())
             .withTimeout(
-                switch (climb) {
-                  case CLIMB -> 4.0;
+                switch (cycle) {
                   case NZ -> 8.0;
                   case NONE -> 10.0;
                   case DOUBLE -> 4.0;
                 }),
-        switch (climb) {
-          case CLIMB -> Commands.sequence(
-              Commands.runOnce(climber::raise, climber),
-              switch (start) {
-                case RIGHT -> PathBuilder.path(
-                    new PathBuilder.Target(new Pose2d(1.981, 1.150, Rotation2d.kZero)),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1));
-                case LEFT -> PathBuilder.path(
-                    new PathBuilder.Target(
-                        new Pose2d(1.981, FieldConstants.field_width - 1.150, Rotation2d.k180deg),
-                        1,
-                        0,
-                        0.5),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg),
-                        0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Tower.left_intermediate_approach_pos,
-                            Rotation2d.k180deg),
-                        0.1),
-                    new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
-                        0.2),
-                    new PathBuilder.Target(
-                        new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05));
-              },
-              Commands.runOnce(climber::lower, climber));
+        switch (cycle) {
           case NONE -> Commands.none();
           case NZ -> Commands.deadline(
               switch (start) {
@@ -392,40 +357,6 @@ public class AutoCommands {
                                       Rotation2d.kZero))))))
               .andThen(autoShoot().withTimeout(10.0));
         });
-  }
-
-  public static Command climbRight(Climber climber) {
-    return Commands.sequence(
-        Commands.runOnce(climber::raise, climber),
-        PathBuilder.path(
-            new PathBuilder.Target(new Pose2d(1.981, 1.150, Rotation2d.kZero)),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.right_approach_pos, Rotation2d.kZero), 0.2),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.right_align_pos, Rotation2d.kZero), 0.1)),
-        Commands.runOnce(climber::lower, climber));
-  }
-
-  public static Command climbLeft(Climber climber) {
-    return Commands.sequence(
-        Commands.runOnce(climber::raise, climber),
-        PathBuilder.path(
-            new PathBuilder.Target(
-                new Pose2d(1.981, FieldConstants.field_width - 1.150, Rotation2d.k180deg),
-                1,
-                0,
-                0.5),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.left_approach_pos, Rotation2d.k180deg), 0.2),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.left_intermediate_approach_pos, Rotation2d.k180deg),
-                0.1),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.left_inter_inter_approach_pos, Rotation2d.k180deg),
-                0.2),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Tower.left_align_pos, Rotation2d.k180deg), 0.05)),
-        Commands.runOnce(climber::lower, climber));
   }
 
   public static Command rightDisrupt(
