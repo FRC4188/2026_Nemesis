@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.CSPLib.ppp.PathBuilder;
+import frc.lib.pathbuilder.*;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -227,8 +227,7 @@ public class AutoCommands {
                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance
                                   .getY()
                               + 0.0;
-                          case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance
-                                  .getY()
+                          case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance.getY()
                               - 0.0;
                         },
                         switch (start) {
@@ -373,8 +372,7 @@ public class AutoCommands {
                                           .withControlDistances(0.250, 0)
                                           .withEndingRotation(Rotation2d.kZero)
                                           .withEndingSpeed(2)))),
-                                          Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)
-                                          ),
+                      Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)),
                   Commands.runOnce(intake::stop),
                   Commands.deadline(
                       PathBuilder.path(

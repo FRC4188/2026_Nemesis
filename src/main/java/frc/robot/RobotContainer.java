@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,9 +19,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.pathbuilder.*;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.CSPLib.ppp.PathBuilder;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
@@ -87,7 +88,7 @@ public class RobotContainer {
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
-    PathBuilder.configureField(FieldConstants.field_width);
+    PathBuilder.configureField(FieldConstants.field_width, FieldConstants.field_length);
     PathBuilder.configureDrive(
         true,
         2,
@@ -100,6 +101,11 @@ public class RobotContainer {
         Constants.DriveConstants.DRIVE_PID,
         Constants.DriveConstants.ANGLE_PID,
         Constants.DriveConstants.PP_CONFIG,
+        new PathConstraints(
+            Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
+            Constants.DriveConstants.DRIVE_MAXACC * 0.8,
+            Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
+            Constants.DriveConstants.ANGLE_MAXACC * 0.8),
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
     // PBExperimental.configure(drive);
