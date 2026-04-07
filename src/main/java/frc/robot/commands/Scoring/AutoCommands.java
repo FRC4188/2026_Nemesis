@@ -85,7 +85,7 @@ public class AutoCommands {
                               FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
                         })
                     .withCurve(0.4)
-                    .withSpeed(0.8),
+                    .withSpeed(1),
                 new PathBuilder.Target(
                         switch (start) {
                           case LEFT -> new Pose2d(
@@ -96,7 +96,7 @@ public class AutoCommands {
                               Rotation2d.kCCW_90deg);
                         })
                     .withCurve(0)
-                    .withSpeed(0.8),
+                    .withSpeed(1),
                 new PathBuilder.Target(
                         switch (start) {
                           case LEFT -> new Pose2d(
@@ -113,7 +113,7 @@ public class AutoCommands {
                               },
                               Rotation2d.kCCW_90deg);
                         },
-                        0.8)
+                        1)
                     .withCurve(0.4),
                 new PathBuilder.Target(
                     switch (start) {
@@ -130,7 +130,7 @@ public class AutoCommands {
                           },
                           Rotation2d.kCCW_90deg);
                     },
-                    0.4),
+                    0.7),
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
@@ -141,7 +141,7 @@ public class AutoCommands {
                           case LEFT -> Rotation2d.fromDegrees(-115);
                           case RIGHT -> Rotation2d.fromDegrees(115);
                         }),
-                    0.4)),
+                    0.7)),
             PathBuilder.triggerWhenFar(
                 switch (start) {
                   case LEFT -> FieldConstants.Trench.left_trench_center;
