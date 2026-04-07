@@ -83,11 +83,6 @@ public final class Constants {
   }
 
   public static class DriveConstants {
-    public static final double kTurnStatorCurrent = 50.0;
-    public static final double kTurnSupplyCurrent = 30.0;
-    public static final double kDriveStatorCurrent = 70.0;
-    public static final double kDriveSupplyCurrent = 50.0;
-
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     public static final double DRIVE_MAXACC = 8.0;
     public static final ProfiledPIDController DRIVE_PID =
@@ -131,8 +126,8 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final double kStatorCurrent = 50.0;
-    public static final double kSupplyCurrent = 30.0;
+    public static final double kStatorCurrent = 40.0;
+    public static final double kSupplyCurrent = 40.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
   }
@@ -143,8 +138,8 @@ public final class Constants {
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(144.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
-    public static final double kStatorCurrent = 50;
-    public static final double kSupplyCurrent = 30;
+    public static final double kStatorCurrent = 40;
+    public static final double kSupplyCurrent = 40;
     public static final double kStallCurrent = 40; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
@@ -158,30 +153,6 @@ public final class Constants {
             .withGravityType(GravityTypeValue.Arm_Cosine);
   }
 
-  public static class ClimberConstants {
-    public static final double kTolerance = Units.inchesToMeters(0.2);
-    public static final double Max_H = Units.inchesToMeters(7.5);
-    public static final double Min_H = 0.0;
-    public static final double kGearBox = 27.0;
-    public static final double kSproketDiameter = Units.inchesToMeters(0.75);
-    public static final double kConversion = kGearBox / (kSproketDiameter * Math.PI);
-
-    public static final double kStatorCurrent = 60.0;
-    public static final double kSupplyCurrent = 40.0;
-    public static final double kStallCurrent = 50.0; // paceholder
-    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
-    public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
-    public static final Slot0Configs climberGains =
-        new Slot0Configs()
-            .withKP(1.0)
-            .withKI(0.0)
-            .withKD(0.3)
-            .withKG(0.0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
-  }
-
   public static class HoodConstants {
     public static final double kGearRatio = 40.0;
     public static final Rotation2d kTolerance = Rotation2d.fromDegrees(1.0);
@@ -189,7 +160,7 @@ public final class Constants {
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
     public static final double kStatorCurrent = 50.0;
-    public static final double kSupplyCurrent = 30.0;
+    public static final double kSupplyCurrent = 50.0;
     public static final double kStallCurrent = 20.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -209,7 +180,7 @@ public final class Constants {
     public static final double kGearRatio = 1.0;
 
     public static final double kStatorCurrent = 60.0;
-    public static final double kSupplyCurrent = 40.0;
+    public static final double kSupplyCurrent = 60.0;
     public static final double kPeakForwardTC = 60.0;
     public static final double kPeakReverseTC = 60.0;
 
@@ -226,18 +197,14 @@ public final class Constants {
 
   public static class IndexerConstants {
     public static final double kStatorCurrent = 40.0;
-    public static final double kSupplyCurrent = 20.0;
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
+    public static final double kSupplyCurrent = 40.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 40.0;
+    public static final double kStatorCurrent = 20.0;
     public static final double kSupplyCurrent = 20.0;
-    public static final double kPeakForwardTC = 50.0; // placeholder
-    public static final double kPeakReverseTC = 50.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
   }
@@ -289,7 +256,7 @@ public final class Constants {
         new Transform3d(
             Units.inchesToMeters(1.28870),
             Units.inchesToMeters(11.937500),
-            Units.inchesToMeters(21.206522),
-            new Rotation3d(0, Math.toRadians(10), 0));
+            Units.inchesToMeters(24.206522),
+            new Rotation3d(0, Math.toRadians(25), Math.toRadians(4.93)));
   }
 }

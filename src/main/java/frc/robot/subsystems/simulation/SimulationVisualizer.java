@@ -14,11 +14,10 @@ public class SimulationVisualizer {
   private DoubleSupplier hoodpos;
   private DoubleSupplier climberpos;
 
-  public SimulationVisualizer(
-      String logkey, DoubleSupplier wrist, DoubleSupplier hood, DoubleSupplier climber) {
+  public SimulationVisualizer(String logkey, DoubleSupplier wrist, DoubleSupplier hood) {
     wristpos = wrist;
     hoodpos = hood;
-    climberpos = climber;
+    climberpos = () -> 0;
 
     key = logkey;
   }

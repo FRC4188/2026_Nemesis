@@ -5,7 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
@@ -44,10 +44,8 @@ public class HopperIOReal implements HopperIO {
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.IndexerConstants.kStatorCurrent)
                     .withSupplyCurrentLimit(Constants.IndexerConstants.kSupplyCurrent))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.IndexerConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.IndexerConstants.kNuetralMode)
@@ -59,10 +57,8 @@ public class HopperIOReal implements HopperIO {
                     .withStatorCurrentLimit(Constants.HopperConstants.kStatorCurrent)
                     .withSupplyCurrentLimit(Constants.HopperConstants.kSupplyCurrent)
                     .withStatorCurrentLimitEnable(true))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.HopperConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.HopperConstants.kNuetralMode)

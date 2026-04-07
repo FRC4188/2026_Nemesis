@@ -15,7 +15,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -29,7 +28,6 @@ public class HoodIOReal implements HoodIO {
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
   private final StatusSignal<Angle> positionRots;
-  private final StatusSignal<AngularVelocity> velocityRots;
   private final StatusSignal<Temperature> tempC;
 
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
@@ -69,9 +67,8 @@ public class HoodIOReal implements HoodIO {
     currentAmps = motor.getStatorCurrent();
     tempC = motor.getDeviceTemp();
     positionRots = motor.getPosition();
-    velocityRots = motor.getVelocity();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC, velocityRots);
+    BaseStatusSignal.setUpdateFrequencyForAll(5.0, appliedVolts, currentAmps, tempC);
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, positionRots);
 
     motor.optimizeBusUtilization();
@@ -92,7 +89,6 @@ public class HoodIOReal implements HoodIO {
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.position = Rotation2d.fromRotations(positionRots.getValueAsDouble());
-    inputs.velocity = Rotation2d.fromRotations(velocityRots.getValueAsDouble());
   }
 
   @Override

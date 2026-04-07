@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -50,6 +51,8 @@ public class ShooterIOReal implements ShooterIO {
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
                     .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
             .withTorqueCurrent(
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)

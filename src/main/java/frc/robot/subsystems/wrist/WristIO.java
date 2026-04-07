@@ -13,7 +13,6 @@ public interface WristIO {
     public double currentAmps = 0.0;
 
     public Rotation2d position = Rotation2d.kZero;
-    public Rotation2d velocity = Rotation2d.kZero;
   }
 
   default void updateInputs(WristIOInputs inputs) {}
