@@ -50,6 +50,13 @@ public class Vision extends SubsystemBase {
     updateVision = enable;
   }
 
+  @AutoLogOutput(key = "Vision/Enable Front?")
+  private boolean frontEnable = true;
+
+  public void enableFront(boolean enable) {
+    frontEnable = enable;
+  }
+
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
@@ -111,7 +118,7 @@ public class Vision extends SubsystemBase {
             Arrays.stream(inputs[0].poseObservations).anyMatch(obs -> obs.tagCount() > 0));
 
     // Loop over cameras
-    for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
+    for (int cameraIndex = (frontEnable) ? 0 : 1; cameraIndex < io.length; cameraIndex++) {
       // Skip secondary cameras if main camera has tags
       // if (cameraIndex != 0 && usingMainCamera) {
       //   continue;

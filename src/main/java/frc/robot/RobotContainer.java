@@ -97,10 +97,10 @@ public class RobotContainer {
         Constants.DriveConstants.ANGLE_PID,
         Constants.DriveConstants.PP_CONFIG,
         new PathConstraints(
-            Constants.DriveConstants.DRIVE_MAXVEL * 0.8,
-            Constants.DriveConstants.DRIVE_MAXACC * 0.8,
-            Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
-            Constants.DriveConstants.ANGLE_MAXACC * 0.8),
+            Constants.DriveConstants.DRIVE_MAXVEL,
+            Constants.DriveConstants.DRIVE_MAXACC,
+            Constants.DriveConstants.ANGLE_MAXVEL,
+            Constants.DriveConstants.ANGLE_MAXACC),
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
     // PBExperimental.configure(drive);

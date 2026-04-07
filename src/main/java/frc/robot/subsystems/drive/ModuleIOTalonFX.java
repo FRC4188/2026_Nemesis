@@ -34,7 +34,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import java.util.Queue;
 
@@ -55,8 +54,8 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final CANcoder cancoder;
 
   // Configurations
-  private final TalonFXConfiguration driveConfig = new TalonFXConfiguration();
-  private final TalonFXConfiguration turnConfig = new TalonFXConfiguration();
+  private final TalonFXConfiguration driveConfig = TunerConstants.driveInitialConfigs;
+  private final TalonFXConfiguration turnConfig = TunerConstants.steerInitialConfigs;
 
   // Voltage control requests
   private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
@@ -112,8 +111,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     driveConfig.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
     driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = constants.SlipCurrent;
     driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -constants.SlipCurrent;
-    driveConfig.CurrentLimits.StatorCurrentLimit = Constants.DriveConstants.kDriveStatorCurrent;
-    driveConfig.CurrentLimits.SupplyCurrentLimit = Constants.DriveConstants.kDriveSupplyCurrent;
+    driveConfig.CurrentLimits.StatorCurrentLimit = constants.SlipCurrent;
     driveConfig.MotorOutput.Inverted =
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive
@@ -124,8 +122,6 @@ public class ModuleIOTalonFX implements ModuleIO {
     // Configure turn motor
     turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     turnConfig.Slot0 = constants.SteerMotorGains;
-    driveConfig.CurrentLimits.StatorCurrentLimit = Constants.DriveConstants.kTurnStatorCurrent;
-    driveConfig.CurrentLimits.SupplyCurrentLimit = Constants.DriveConstants.kTurnSupplyCurrent;
     turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
     turnConfig.Feedback.FeedbackSensorSource =
         switch (constants.FeedbackSource) {
