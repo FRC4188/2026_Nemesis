@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -34,7 +33,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void intakeVolts(double volts) {
-    io.setVolts(MathUtil.clamp(volts, -12, 12));
+    io.setVolts(volts);
   }
 
   public void ejectVolts(double volts) {

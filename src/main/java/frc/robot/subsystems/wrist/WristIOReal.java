@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -27,7 +28,6 @@ public class WristIOReal implements WristIO {
 
   private final StatusSignal<Temperature> tempC;
   private final StatusSignal<Angle> posRots;
-  private final StatusSignal<AngularVelocity> velocityRots;
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
 
@@ -47,6 +47,8 @@ public class WristIOReal implements WristIO {
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Constants.WristConstants.kStatorCurrent)
                     .withSupplyCurrentLimit(Constants.WristConstants.kStatorCurrent))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.WristConstants.kNuetralMode)
@@ -68,13 +70,11 @@ public class WristIOReal implements WristIO {
     tempC = motor.getDeviceTemp();
     appliedVolts = motor.getMotorVoltage();
     currentAmps = motor.getStatorCurrent();
-    velocityRots = motor.getVelocity();
 
     posRots.setUpdateFrequency(50.0);
     appliedVolts.setUpdateFrequency(5.0);
     tempC.setUpdateFrequency(5.0);
     currentAmps.setUpdateFrequency(5.0);
-    velocityRots.setUpdateFrequency(5.0);
 
     motor.optimizeBusUtilization();
     motor.setPosition(Constants.WristConstants.Max_A.getRotations());
@@ -105,6 +105,5 @@ public class WristIOReal implements WristIO {
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.position = Rotation2d.fromRotations(posRots.getValueAsDouble());
-    inputs.velocity = Rotation2d.fromRotations(velocityRots.getValueAsDouble());
   }
 }

@@ -1,6 +1,5 @@
 package frc.robot.subsystems.hopper;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -36,8 +35,8 @@ public class Hopper extends SubsystemBase {
   }
 
   public void runHopperVolts(double a_volts, double i_volts) {
-    io.setAggitateVolts(MathUtil.clamp(a_volts, -12, 12));
-    io.setIndexerVolts(MathUtil.clamp(i_volts, -12, 12));
+    io.setAggitateVolts(a_volts);
+    io.setIndexerVolts(i_volts);
   }
 
   public void stop() {

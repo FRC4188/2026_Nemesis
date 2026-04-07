@@ -44,7 +44,7 @@ public class Hood extends SubsystemBase {
 
   public void runHoodVolts(double volts) {
     setpoint = 0.0;
-    io.setVolts(MathUtil.clamp(volts, -12, 12));
+    io.setVolts(volts);
   }
 
   public void stop() {
@@ -76,12 +76,6 @@ public class Hood extends SubsystemBase {
 
   public void zero() {
     io.setZero();
-  }
-
-  // @AutoLogOutput(key = "Hood/Is Stalled?")
-  public boolean isStalled() {
-    return Math.abs(inputs.currentAmps) > Constants.HoodConstants.kStallCurrent
-        && inputs.velocity.getDegrees() < 2.0;
   }
 
   // @AutoLogOutput(key = "Hood/At Setpoint?")

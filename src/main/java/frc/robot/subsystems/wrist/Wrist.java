@@ -1,6 +1,5 @@
 package frc.robot.subsystems.wrist;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -46,7 +45,7 @@ public class Wrist extends SubsystemBase {
 
   public void runWristVolts(double volts) {
     setpoint = 180;
-    io.setVolts(MathUtil.clamp(volts, -12, 12));
+    io.setVolts(volts);
   }
 
   public void stop() {
@@ -70,12 +69,6 @@ public class Wrist extends SubsystemBase {
 
   public void zero() {
     io.setZero();
-  }
-
-  @AutoLogOutput(key = "Wrist/is Stalling?")
-  public boolean isStalled() {
-    return Math.abs(inputs.currentAmps) > Constants.WristConstants.kStallCurrent
-        && inputs.velocity.getDegrees() < 2.0;
   }
 
   @AutoLogOutput(key = "Wrist/Angle Degrees")
