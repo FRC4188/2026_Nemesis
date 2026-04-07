@@ -563,4 +563,51 @@ public class AutoCommands {
             Commands.runOnce(() -> PathBuilder.stopTarget()))
         .andThen(AutoCommands.autoShoot().withTimeout(10.0));
   }
+
+  public static Command disruptDoubleSwipe(Start start) {
+    return Commands.sequence(
+        Commands.runOnce(() -> drive.setPose(new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero)), drive),
+        Commands.deadline(
+            PathBuilder.path(
+                new PathBuilder.Target(
+                        new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero))
+                    .withCurve(0.4).withSpeed(0.9),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kZero)).withSpeed(0.9),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_intermediate.plus(new Translation2d(0, 0.35)), Rotation2d.fromDegrees(110))).withRotationLead(2.5).withRotationSpread(2).withEndingSpeed(5)
+                    ).andThen(
+                        PathBuilder.path(
+                        new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_intermediate.plus(new Translation2d(0, 0.35)), new Rotation2d()))
+                                .withStartingSpeed(5)
+                                .withStartingRotation(Rotation2d.fromDegrees(120))
+                                .withHeading(Rotation2d.fromDegrees(75.270))
+                                .withControlDistances(0, 1.024)
+                                .withOverrideRotations(
+                                    new RotationTarget(1, Rotation2d.fromDegrees(121.280)),
+                                    new RotationTarget(1.97, Rotation2d.fromDegrees(-112.025)),
+                                    new RotationTarget(2.95, Rotation2d.fromDegrees(-78.298))
+                                ).withSpeed(0.8),
+                            new PathBuilder.Target(
+                                new Pose2d(8.226, 3.520, new Rotation2d())).withHeading(Rotation2d.fromDegrees(106.045)).withControlDistances(0.719, 0.470).withSpeed(0.8),
+                            new PathBuilder.Target(
+                                new Pose2d(6.817, 3.633, new Rotation2d())).withHeading(Rotation2d.fromDegrees(-119.475)).withControlDistances(0.649, 0.922),
+                            new PathBuilder.Target(
+                                new Pose2d(6.817, 2.087, new Rotation2d())).withHeading(Rotation2d.fromDegrees(-102.063)).withControlDistances(0.779, 0.448),
+                            new PathBuilder.Target(
+                                new Pose2d(5.869, 0.603, new Rotation2d())).withHeading(Rotation2d.fromDegrees(179.170)).withControlDistances(0.711, 0).withEndingSpeed(5).withEndingRotation(Rotation2d.fromDegrees(180))
+                        )
+                    ),
+                    PathBuilder.triggerWhenFar(
+                        FieldConstants.Trench.right_trench_center, 0.3, ScoringCommands.forceDown()),
+                        PathBuilder.triggerWhenClose(
+                        FieldConstants.FuelField.right_midline_corner, 0.3, Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake))),
+                        Commands.runOnce(intake::stop, intake)
+                        
+            );
+  }
 }
