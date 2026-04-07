@@ -23,7 +23,8 @@ public class ShooterIOReal implements ShooterIO {
   private final TalonFX motorLeft;
   private final TalonFX motorRight;
 
-  private final TalonFXConfiguration motorConfigs;
+  private final TalonFXConfiguration leftMotorConfigs;
+  private final TalonFXConfiguration rightMotorConfigs;
 
   private final StatusSignal<Voltage> leftAppliedVolts;
   private final StatusSignal<Voltage> rightAppliedVolts;
@@ -45,7 +46,7 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
     motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    motorConfigs =
+    leftMotorConfigs =
         new TalonFXConfiguration()
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
@@ -58,20 +59,37 @@ public class ShooterIOReal implements ShooterIO {
                     .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
                     .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
             .withMotorOutput(
-                new MotorOutputConfigs().withNeutralMode(Constants.ShooterConstants.kNuetralMode))
+                new MotorOutputConfigs()
+                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
+                    .withInverted(Constants.ShooterConstants.kLeftInvertedValue))
+            .withSlot0(Constants.ShooterConstants.leftShooterGains)
+            .withFeedback(
+                new FeedbackConfigs()
+                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
+
+    rightMotorConfigs =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
+                    .withInverted(Constants.ShooterConstants.kRightInvertedValue))
             .withSlot0(Constants.ShooterConstants.rightShooterGains)
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    motorLeft
-        .getConfigurator()
-        .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kLeftInvertedValue));
-    motorRight
-        .getConfigurator()
-        .apply(
-            motorConfigs.MotorOutput.withInverted(Constants.ShooterConstants.kRightInvertedValue));
+    motorLeft.getConfigurator().apply(leftMotorConfigs);
+    motorRight.getConfigurator().apply(rightMotorConfigs);
 
     leftAppliedVolts = motorLeft.getMotorVoltage();
     rightAppliedVolts = motorRight.getMotorVoltage();
