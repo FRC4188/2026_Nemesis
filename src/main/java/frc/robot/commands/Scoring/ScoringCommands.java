@@ -38,7 +38,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 5.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
@@ -74,7 +74,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 5.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -98,20 +98,22 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 5.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
-    // return 145.557 * distance + 1806.67131;
-    return (11.94806 * Math.pow(distance, 3))
-        - (92.62501 * Math.pow(distance, 2))
-        + 351.50335 * distance
-        + 1736.74591;
+    // return 145.557 * distance + 1806.67131 + 100;
+    return 180 * distance + 1806.67131 - 20;
+    // return (11.94806 * Math.pow(distance, 3))
+    //     - (92.62501 * Math.pow(distance, 2))
+    //     + 351.50335 * distance
+    //     + 1736.74591
+    //     + 30 * (distance - 2.5);
   }
 
   public static Rotation2d inclineHueristic(double distance) {
-    // return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7 / distance));
-    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(8.5 / distance));
+    return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(7 / distance));
+    // return Rotation2d.fromRadians(Math.PI / 2 - Math.atan(8.5 / distance));
   }
 
   public static Command passAim() {
@@ -126,7 +128,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 5.0), hopper::stop, hopper))));
   }
 
   public static Command shake() {
