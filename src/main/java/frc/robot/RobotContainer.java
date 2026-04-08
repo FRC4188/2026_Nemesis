@@ -99,8 +99,8 @@ public class RobotContainer {
         new PathConstraints(
             Constants.DriveConstants.DRIVE_MAXVEL,
             Constants.DriveConstants.DRIVE_MAXACC,
-            Constants.DriveConstants.ANGLE_MAXVEL,
-            Constants.DriveConstants.ANGLE_MAXACC),
+            Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
+            Constants.DriveConstants.ANGLE_MAXACC * 0.8),
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
     // PBExperimental.configure(drive);
@@ -214,8 +214,7 @@ public class RobotContainer {
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
                     || pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.x().getAsBoolean()));
+                    || pilot.a().getAsBoolean()));
 
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
@@ -226,34 +225,26 @@ public class RobotContainer {
             () -> -pilot.getCorrectedRight(Scale.SQUARED).getX(),
             //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
-                (pilot.x().getAsBoolean())
-                    ? (drive.getPose().getTranslation().getY() > FieldConstants.field_center.getY())
-                        ? Rotation2d.kCW_90deg
-                        : Rotation2d.kCCW_90deg
-                    : (pilot.a().getAsBoolean()
-                        ? drive
-                            .getPose()
-                            .getTranslation()
-                            .nearest(
-                                List.of(
-                                    AllianceFlip.apply(
-                                        FieldConstants.Bump.left_bump_alliance_entrance),
-                                    AllianceFlip.apply(
-                                        FieldConstants.Bump.right_bump_alliance_entrance)))
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()
-                        : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()),
-            () ->
-                pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.x().getAsBoolean()));
+                (pilot.a().getAsBoolean()
+                    ? drive
+                        .getPose()
+                        .getTranslation()
+                        .nearest(
+                            List.of(
+                                AllianceFlip.apply(FieldConstants.Bump.left_bump_alliance_entrance),
+                                AllianceFlip.apply(
+                                    FieldConstants.Bump.right_bump_alliance_entrance)))
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()
+                    : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()),
+            () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
     pilot.a().whileTrue(ScoringCommands.passAim());
     pilot
-        .y()
+        .x()
         .or(() -> pilot.b().getAsBoolean())
         .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
@@ -276,11 +267,11 @@ public class RobotContainer {
             Commands.either(
                 ScoringCommands.halfShake(),
                 ScoringCommands.fullShake(),
-                () -> copilot.b().getAsBoolean() || pilot.a().getAsBoolean()));
+                () -> copilot.b().getAsBoolean()));
 
     pilot
         .getLeftTButton()
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake));
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(7.25), intake::stop, intake));
 
     pilot
         .leftBumper()
