@@ -51,7 +51,7 @@ public class Vision extends SubsystemBase {
   }
 
   @AutoLogOutput(key = "Vision/Enable Front?")
-  private boolean frontEnable = true;
+  private boolean frontEnable = false;
 
   public void enableFront(boolean enable) {
     frontEnable = enable;

@@ -7,9 +7,7 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -216,7 +214,8 @@ public class RobotContainer {
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
                     || pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()));
+                    || pilot.a().getAsBoolean()
+                    || pilot.x().getAsBoolean()));
 
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
@@ -227,26 +226,34 @@ public class RobotContainer {
             () -> -pilot.getCorrectedRight(Scale.SQUARED).getX(),
             //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
-                (pilot.a().getAsBoolean()
-                    ? drive
-                        .getPose()
-                        .getTranslation()
-                        .nearest(
-                            List.of(
-                                AllianceFlip.apply(FieldConstants.Bump.left_bump_alliance_entrance),
-                                AllianceFlip.apply(
-                                    FieldConstants.Bump.right_bump_alliance_entrance)))
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()
-                    : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()),
-            () -> pilot.rightBumper().getAsBoolean() || pilot.a().getAsBoolean()));
+                (pilot.x().getAsBoolean())
+                    ? (drive.getPose().getTranslation().getY() > FieldConstants.field_center.getY())
+                        ? Rotation2d.kCW_90deg
+                        : Rotation2d.kCCW_90deg
+                    : (pilot.a().getAsBoolean()
+                        ? drive
+                            .getPose()
+                            .getTranslation()
+                            .nearest(
+                                List.of(
+                                    AllianceFlip.apply(
+                                        FieldConstants.Bump.left_bump_alliance_entrance),
+                                    AllianceFlip.apply(
+                                        FieldConstants.Bump.right_bump_alliance_entrance)))
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle()
+                        : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle()),
+            () ->
+                pilot.rightBumper().getAsBoolean()
+                    || pilot.a().getAsBoolean()
+                    || pilot.x().getAsBoolean()));
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
     pilot.a().whileTrue(ScoringCommands.passAim());
     pilot
-        .x()
+        .y()
         .or(() -> pilot.b().getAsBoolean())
         .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
@@ -269,11 +276,11 @@ public class RobotContainer {
             Commands.either(
                 ScoringCommands.halfShake(),
                 ScoringCommands.fullShake(),
-                () -> copilot.b().getAsBoolean()));
+                () -> copilot.b().getAsBoolean() || pilot.a().getAsBoolean()));
 
     pilot
         .getLeftTButton()
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(7.25), intake::stop, intake));
+        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake));
 
     pilot
         .leftBumper()

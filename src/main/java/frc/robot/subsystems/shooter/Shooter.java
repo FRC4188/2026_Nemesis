@@ -52,6 +52,12 @@ public class Shooter extends SubsystemBase {
         MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
+  public void runTC(double amps) {
+    setRightRPM = 0;
+    setLeftRPM = 0;
+    io.setTorqueCurrent(amps);
+  }
+
   public void stop() {
     setRightRPM = 0;
     setLeftRPM = 0;

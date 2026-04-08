@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -39,6 +40,7 @@ public class ShooterIOReal implements ShooterIO {
   private final Debouncer rightDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+  private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0);
 
@@ -141,6 +143,12 @@ public class ShooterIOReal implements ShooterIO {
   public void setVolts(double volts) {
     motorRight.setControl(voltageRequest.withOutput(volts));
     motorLeft.setControl(voltageRequest.withOutput(volts));
+  }
+
+  @Override
+  public void setTorqueCurrent(double amps) {
+    motorRight.setControl(torqueCurrentFOC.withOutput(amps));
+    motorLeft.setControl(torqueCurrentFOC.withOutput(amps));
   }
 
   @Override

@@ -38,19 +38,20 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
     return Commands.runEnd(
-        () ->
-            hood.setAngle(
-                inclineHueristic(
-                    AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                        .minus(drive.getPose().getTranslation())
-                        .getNorm())),
-        hood::stow,
-        hood);
+            () ->
+                hood.setAngle(
+                    inclineHueristic(
+                        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                            .minus(drive.getPose().getTranslation())
+                            .getNorm())),
+            hood::stow,
+            hood)
+        .alongWith(Commands.startEnd(() -> shooter.runTC(15), () -> shooter.runTC(0)));
   }
 
   public static Command staticShoot() {
@@ -73,7 +74,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -97,7 +98,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
@@ -125,7 +126,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(8.0, 4.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 6.0), hopper::stop, hopper))));
   }
 
   public static Command shake() {
@@ -136,7 +137,7 @@ public class ScoringCommands {
                     Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.25))
                 .until(() -> wrist.getAngle() > 120.0)
                 .finallyDo(wrist::stop),
-            Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)),
+            Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)),
         Commands.none(),
         () -> wrist.shakeEnable);
   }
@@ -231,13 +232,13 @@ public class ScoringCommands {
                         Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
                         new WaitCommand(0.1),
                         Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                        Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)
+                        Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
                             .withTimeout(0.1))),
                 new WaitCommand(0.1),
                 Commands.parallel(
                     Commands.run(() -> wrist.runWristVolts(3), wrist)
                         .until(() -> wrist.getAngle() > 80.0),
-                    Commands.runEnd(() -> intake.intakeVolts(2.0), intake::stop, intake)
+                    Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
                         .withTimeout(2.5)))
             // .until(() -> wrist.getAngle() > 80.0)
             .finallyDo(() -> wrist.stop()),

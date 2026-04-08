@@ -22,5 +22,7 @@ public interface ShooterIO {
 
   public default void setVolts(double volts) {}
 
+  public default void setTorqueCurrent(double amps) {}
+
   public default void setVelocity(double leftRPM, double rightRPM) {}
 }
