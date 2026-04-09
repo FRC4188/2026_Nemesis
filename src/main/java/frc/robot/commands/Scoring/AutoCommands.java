@@ -543,11 +543,20 @@ public class AutoCommands {
                                       FieldConstants.Trench.right_trench_center.plus(
                                           new Translation2d(0, -0.15)),
                                       Rotation2d.kZero)),
+                                new PathBuilder.Target(
+                                  new Pose2d(
+                                      FieldConstants.Trench.right_trench_alliance_entrance.plus(
+                                          new Translation2d(0, -0.15)),
+                                      Rotation2d.kZero)),
                               new PathBuilder.Target(
                                   new Pose2d(
-                                      FieldConstants.Trench.right_trench_alliance_preentrance.plus(
-                                          new Translation2d(0, 0.2)),
-                                      Rotation2d.kZero))))))
+                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.95,
+                        FieldConstants.Trench.right_trench_alliance_preentrance
+                                  .getY()
+                              + 0.2,
+                          Rotation2d.fromDegrees(70)
+                        ))
+                        ))))
               .andThen(autoShoot().withTimeout(10.0));
         });
   }
