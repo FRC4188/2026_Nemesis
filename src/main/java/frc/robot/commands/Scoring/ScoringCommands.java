@@ -103,7 +103,9 @@ public class ScoringCommands {
 
   public static double RPMRegress(double distance) {
     // return 145.557 * distance + 1806.67131 + 100;
-    return 180 * distance + 1806.67131 - 20;
+    // return 180 * distance + 1806.67131 - 20;
+    // return 200 * distance + 1700;
+    return 50 * Math.pow((distance - 1.5), 2) + 2100;
     // return (11.94806 * Math.pow(distance, 3))
     //     - (92.62501 * Math.pow(distance, 2))
     //     + 351.50335 * distance
@@ -219,31 +221,20 @@ public class ScoringCommands {
 
     return Commands.either(
         Commands.sequence(
-                new WaitCommand(1),
-                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                new WaitCommand(0.1),
-                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                new WaitCommand(0.1),
-                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                new WaitCommand(0.1),
-                Commands.parallel(
-                    Commands.sequence(
-                        Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                        new WaitCommand(0.1),
-                        Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                        Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
-                            .withTimeout(0.1))),
-                new WaitCommand(0.1),
-                Commands.parallel(
-                    Commands.run(() -> wrist.runWristVolts(3), wrist)
-                        .until(() -> wrist.getAngle() > 80.0),
-                    Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
-                        .withTimeout(2.5)))
-            // .until(() -> wrist.getAngle() > 80.0)
-            .finallyDo(() -> wrist.stop()),
+            new WaitCommand(1),
+            // small shakes
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            // big shakes
+            Commands.parallel(
+                Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
+                    .until(() -> wrist.getAngle() > 90.0),
+                Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
+                    .withTimeout(2.5))),
         Commands.none(),
         () -> wrist.shakeEnable);
 
@@ -263,16 +254,16 @@ public class ScoringCommands {
   public static Command halfShake() {
     return Commands.either(
         Commands.sequence(
-                new WaitCommand(0.5),
-                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                new WaitCommand(0.25),
-                Commands.run(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
-                Commands.run(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.5),
-                new WaitCommand(0.30),
-                Commands.run(() -> wrist.runWristVolts(3), wrist)
-                    .until(() -> wrist.getAngle() > 80.0))
-            .finallyDo(() -> wrist.stop()),
+            // small shake
+            new WaitCommand(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.75),
+            // big shake
+            Commands.parallel(
+                Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
+                    .until(() -> wrist.getAngle() > 90.0),
+                Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)
+                    .withTimeout(2.5))),
         Commands.none(),
         () -> wrist.shakeEnable);
   }
