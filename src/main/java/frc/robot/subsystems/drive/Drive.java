@@ -274,12 +274,11 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * return to their normal orientations the next time a nonzero velocity is requested.
    */
   public void stopWithX() {
-    Rotation2d[] headings = new Rotation2d[4];
-    for (int i = 0; i < 4; i++) {
-      headings[i] = getModuleTranslations()[i].getAngle();
+    for (int i = 0; i < modules.length; i++) {
+      modules[i].runSetpoint(new SwerveModuleState(0.0, getModuleTranslations()[i].getAngle()));
     }
-    kinematics.resetHeadings(headings);
-    stop();
+    // kinematics.resetHeadings(headings);
+    // stop();
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */
