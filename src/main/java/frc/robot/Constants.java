@@ -127,7 +127,7 @@ public final class Constants {
 
   public static class IntakeConstants {
     public static final double kStatorCurrent = 40.0;
-    public static final double kSupplyCurrent = 40.0;
+    public static final double kSupplyCurrent = 30.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
   }
@@ -139,7 +139,7 @@ public final class Constants {
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
     public static final double kStatorCurrent = 40;
-    public static final double kSupplyCurrent = 40;
+    public static final double kSupplyCurrent = 30;
     public static final double kStallCurrent = 40; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
@@ -160,7 +160,7 @@ public final class Constants {
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
     public static final double kStatorCurrent = 50.0;
-    public static final double kSupplyCurrent = 50.0;
+    public static final double kSupplyCurrent = 30.0;
     public static final double kStallCurrent = 20.0; // placeholder
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
@@ -175,12 +175,12 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 25.0;
+    public static final double kTolerance = 50.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
     public static final double kStatorCurrent = 60.0;
-    public static final double kSupplyCurrent = 60.0;
+    public static final double kSupplyCurrent = 50.0;
     public static final double kPeakForwardTC = 60.0;
     public static final double kPeakReverseTC = -60.0;
 
@@ -197,7 +197,7 @@ public final class Constants {
 
   public static class IndexerConstants {
     public static final double kStatorCurrent = 40.0;
-    public static final double kSupplyCurrent = 40.0;
+    public static final double kSupplyCurrent = 30.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
   }

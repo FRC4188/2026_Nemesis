@@ -4,10 +4,13 @@ import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathbuilder.*;
+import frc.robot.Constants;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -41,10 +44,9 @@ public class AutoCommands {
                     .getAngle(),
             () -> true),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
-        new WaitUntilCommand(() -> drive.getChassisSpeeds().omegaRadiansPerSecond < 0.01),
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
-        ScoringCommands.fullShake());
+        ScoringCommands.halfShake());
   }
 
   public static enum Swipe {
@@ -352,7 +354,7 @@ public class AutoCommands {
                   };
                 },
                 1,
-                Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                Commands.runEnd(() -> intake.intakeVolts(7.5), intake::stop, intake))),
         Commands.deadline(
             PathBuilder.path(
                 new PathBuilder.Target(

@@ -50,10 +50,10 @@ public class ScoringCommands {
                             .minus(drive.getPose().getTranslation())
                             .getNorm())),
             hood::stow,
-            hood)
-        .alongWith(Commands.startEnd(() -> shooter.runTC(15), () -> shooter.runTC(0)));
+            hood);
+        //.alongWith(Commands.startEnd(() -> shooter.runTC(15), () -> shooter.runTC(0)));
   }
-
+  
   public static Command staticShoot() {
     return Commands.parallel(
         Commands.runEnd(
@@ -69,8 +69,8 @@ public class ScoringCommands {
                             .getNorm())),
             shooter::stop,
             shooter),
-        new WaitCommand(0.1)
-            .andThen(
+         new WaitCommand(0.1)
+             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(

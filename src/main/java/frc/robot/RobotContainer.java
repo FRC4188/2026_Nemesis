@@ -192,9 +192,10 @@ public class RobotContainer {
                             .nearest(
                                 List.of(
                                     AllianceFlip.apply(
-                                        FieldConstants.Bump.left_bump_alliance_entrance),
+                                        FieldConstants.Depot.left_far_corner),
                                     AllianceFlip.apply(
-                                        FieldConstants.Bump.right_bump_alliance_entrance)))
+                                      new Translation2d(FieldConstants.Depot.left_far_corner.getX(),
+                                        AllianceFlip.flipY(FieldConstants.Depot.left_far_corner.getY())))))
                             .minus(drive.getPose().getTranslation())
                             .getAngle()
                         : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
