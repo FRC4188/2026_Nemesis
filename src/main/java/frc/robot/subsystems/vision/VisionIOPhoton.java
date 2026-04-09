@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -113,7 +112,7 @@ public class VisionIOPhoton implements VisionIO {
               new Transform3d(tagPose.get().getTranslation(), tagPose.get().getRotation());
           Transform3d cameraToTarget = target.bestCameraToTarget;
 
-          //absolute distance limit
+          // absolute distance limit
           if (cameraToTarget.getTranslation().getNorm() > Units.feetToMeters(18.0)) break;
 
           Transform3d fieldToCamera = fieldToTarget.plus(cameraToTarget.inverse());

@@ -105,7 +105,7 @@ public class ScoringCommands {
     // return 145.557 * distance + 1806.67131 + 100;
     // return 180 * distance + 1806.67131 - 20;
     // return 200 * distance + 1700;
-    return 50 * Math.pow((distance - 1.5), 2) + 2100;
+    return 38 * Math.pow((distance - 1.5), 2) + 2200;
     // return (11.94806 * Math.pow(distance, 3))
     //     - (92.62501 * Math.pow(distance, 2))
     //     + 351.50335 * distance
