@@ -124,13 +124,13 @@ public class AutoCommands {
                               case CENTER -> FieldConstants.FuelField.left_midline_corner;
                               case CLOSE -> FieldConstants.FuelField.intake_left_midline_corner;
                             },
-                            Rotation2d.fromDegrees(-110));
+                            Rotation2d.kCW_90deg);
                         case RIGHT -> new Pose2d(
                             switch (swipe) {
                               case CENTER -> FieldConstants.FuelField.right_midline_corner;
                               case CLOSE -> FieldConstants.FuelField.intake_right_midline_corner;
                             },
-                            Rotation2d.fromDegrees(110));
+                            Rotation2d.kCCW_90deg);
                       },
                       0.25),
                   new PathBuilder.Target(
@@ -140,8 +140,8 @@ public class AutoCommands {
                             case CLOSE -> FieldConstants.FuelField.intake_midline;
                           },
                           switch (start) {
-                            case LEFT -> Rotation2d.fromDegrees(-115);
-                            case RIGHT -> Rotation2d.fromDegrees(115);
+                            case LEFT -> Rotation2d.kCW_90deg;
+                            case RIGHT -> Rotation2d.kCCW_90deg;
                           }),
                       0.25)),
               PathBuilder.triggerWhenFar(
@@ -313,13 +313,13 @@ public class AutoCommands {
                             case CENTER -> FieldConstants.FuelField.left_midline_corner;
                             case CLOSE -> FieldConstants.FuelField.intake_left_midline_corner;
                           },
-                          Rotation2d.fromDegrees(-115));
+                          Rotation2d.kCW_90deg);
                       case RIGHT -> new Pose2d(
                           switch (swipe) {
                             case CENTER -> FieldConstants.FuelField.right_midline_corner;
                             case CLOSE -> FieldConstants.FuelField.intake_right_midline_corner;
                           },
-                          Rotation2d.fromDegrees(115));
+                          Rotation2d.kCCW_90deg);
                     },
                     0.7),
                 new PathBuilder.Target(
@@ -329,8 +329,8 @@ public class AutoCommands {
                           case CLOSE -> FieldConstants.FuelField.intake_midline;
                         },
                         switch (start) {
-                          case LEFT -> Rotation2d.fromDegrees(-115);
-                          case RIGHT -> Rotation2d.fromDegrees(115);
+                          case LEFT -> Rotation2d.kCW_90deg;
+                          case RIGHT -> Rotation2d.kCCW_90deg;
                         }),
                     0.7)),
             PathBuilder.triggerWhenFar(
@@ -410,13 +410,13 @@ public class AutoCommands {
                     0.5),
                 new PathBuilder.Target(
                     new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.65,
+                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.8,
                         switch (start) {
                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance
                                   .getY()
-                              + 0.0;
+                              + 0.2;
                           case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance.getY()
-                              - 0.0;
+                              - 0.2;
                         },
                         switch (start) {
                           case RIGHT -> Rotation2d.fromDegrees(70);
