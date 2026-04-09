@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 import frc.robot.CSPLib.inputs.CSP_Controller;
@@ -151,6 +152,12 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
+    hood.setDefaultCommand(
+        Commands.sequence(
+            Commands.runOnce(hood::stow, hood),
+            new WaitUntilCommand(hood::atGoal),
+            Commands.runOnce(hood::stop, hood)));
+
     pilot
         .start()
         .onTrue(
@@ -191,11 +198,12 @@ public class RobotContainer {
                             .getTranslation()
                             .nearest(
                                 List.of(
+                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
                                     AllianceFlip.apply(
-                                        FieldConstants.Depot.left_far_corner),
-                                    AllianceFlip.apply(
-                                      new Translation2d(FieldConstants.Depot.left_far_corner.getX(),
-                                        AllianceFlip.flipY(FieldConstants.Depot.left_far_corner.getY())))))
+                                        new Translation2d(
+                                            FieldConstants.Depot.left_far_corner.getX(),
+                                            AllianceFlip.flipY(
+                                                FieldConstants.Depot.left_far_corner.getY())))))
                             .minus(drive.getPose().getTranslation())
                             .getAngle()
                         : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)

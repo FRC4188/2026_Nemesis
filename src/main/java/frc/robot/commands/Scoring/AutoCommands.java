@@ -4,13 +4,9 @@ import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathbuilder.*;
-import frc.robot.Constants;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -543,20 +539,18 @@ public class AutoCommands {
                                       FieldConstants.Trench.right_trench_center.plus(
                                           new Translation2d(0, -0.15)),
                                       Rotation2d.kZero)),
-                                new PathBuilder.Target(
+                              new PathBuilder.Target(
                                   new Pose2d(
                                       FieldConstants.Trench.right_trench_alliance_entrance.plus(
                                           new Translation2d(0, -0.15)),
                                       Rotation2d.kZero)),
                               new PathBuilder.Target(
                                   new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.95,
-                        FieldConstants.Trench.right_trench_alliance_preentrance
-                                  .getY()
-                              + 0.2,
-                          Rotation2d.fromDegrees(70)
-                        ))
-                        ))))
+                                      FieldConstants.Trench.right_trench_alliance_entrance.getX()
+                                          - 0.95,
+                                      FieldConstants.Trench.right_trench_alliance_preentrance.getY()
+                                          + 0.2,
+                                      Rotation2d.fromDegrees(70)))))))
               .andThen(autoShoot().withTimeout(10.0));
         });
   }
