@@ -18,6 +18,8 @@ import static frc.robot.subsystems.vision.VisConstants.*;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,14 +43,14 @@ public class VisionIOPhoton implements VisionIO {
   }
 
   public boolean valid(int id) {
-    // return true;
+    return true;
     // if (DriverStation.getAlliance().isPresent()
     //     && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
     //   return !(id > 16);
     // } else {
     //   return !(id < 17);
     // }
-    return !(id == 23 || id == 28 || id == 22 || id == 17);
+    // return !(id == 23 || id == 28 || id == 22 || id == 17);
   }
 
   @Override
@@ -110,6 +112,10 @@ public class VisionIOPhoton implements VisionIO {
           Transform3d fieldToTarget =
               new Transform3d(tagPose.get().getTranslation(), tagPose.get().getRotation());
           Transform3d cameraToTarget = target.bestCameraToTarget;
+
+          //absolute distance limit
+          if (cameraToTarget.getTranslation().getNorm() > Units.feetToMeters(18.0)) break;
+
           Transform3d fieldToCamera = fieldToTarget.plus(cameraToTarget.inverse());
           Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
           Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());

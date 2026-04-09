@@ -220,7 +220,7 @@ public final class Constants {
     public static final Transform3d cameraLeft =
         new Transform3d(
             Units.inchesToMeters(-11.500000),
-            Units.inchesToMeters(11.100000 - 1.600000),
+            Units.inchesToMeters(11.100000),
             Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, Math.PI / 2));
 
@@ -234,7 +234,7 @@ public final class Constants {
     public static final Transform3d cameraRight =
         new Transform3d(
             Units.inchesToMeters(-11.500000),
-            Units.inchesToMeters(-11.100000 + 1.600000),
+            Units.inchesToMeters(-11.100000),
             Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, -Math.PI / 2));
 
@@ -245,18 +245,18 @@ public final class Constants {
     //         Units.inchesToMeters(7.44761),
     //         new Rotation3d(0, 0, 0));
 
-    // public static final Transform3d cameraFront =
-    //     new Transform3d(
-    //         Units.inchesToMeters(1.28870),
-    //         Units.inchesToMeters(11.937500),
-    //         Units.inchesToMeters(21.206522),
-    //         new Rotation3d(0, Math.toRadians(10.2), 0));
-
     public static final Transform3d cameraFront =
         new Transform3d(
             Units.inchesToMeters(1.28870),
             Units.inchesToMeters(11.937500),
-            Units.inchesToMeters(24.206522),
-            new Rotation3d(0, Math.toRadians(25), Math.toRadians(4.93)));
+            Units.inchesToMeters(21.206522),
+            new Rotation3d(0, Math.toRadians(9.8), 0));
+
+    // public static final Transform3d cameraFront =
+    //     new Transform3d(
+    //         Units.inchesToMeters(1.28870),
+    //         Units.inchesToMeters(11.937500),
+    //         Units.inchesToMeters(24.206522),
+    //         new Rotation3d(0, Math.toRadians(25), Math.toRadians(4.93)));
   }
 }
