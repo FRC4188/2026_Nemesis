@@ -325,8 +325,8 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
-                          case CENTER -> FieldConstants.field_center;
-                          case CLOSE -> FieldConstants.FuelField.intake_midline;
+                          case CENTER -> FieldConstants.field_center.plus(new Translation2d(0, -0.2));
+                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(new Translation2d(0, -0.2));
                         },
                         switch (start) {
                           case LEFT -> Rotation2d.kCW_90deg;
@@ -358,8 +358,8 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
-                          case CENTER -> FieldConstants.field_center;
-                          case CLOSE -> FieldConstants.FuelField.intake_midline;
+                          case CENTER -> FieldConstants.field_center.plus(new Translation2d(0, -0.2));
+                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(new Translation2d(0, -0.2));
                         },
                         switch (start) {
                           case RIGHT -> Rotation2d.kCCW_90deg;
@@ -387,8 +387,8 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (start) {
-                          case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance;
-                          case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance;
+                          case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance.plus(new Translation2d(0.5, 0));
+                          case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance.plus(new Translation2d(0.5, 0));
                         },
                         switch (start) {
                           case LEFT -> Rotation2d.kCW_90deg;
@@ -481,12 +481,12 @@ public class AutoCommands {
                       PathBuilder.path(
                               PathBuilder.mirror(
                                   () -> (start == Start.LEFT),
-                                  new PathBuilder.Target(new Pose2d(1.981, 0.5, Rotation2d.kZero))
+                                  new PathBuilder.Target(new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
                                       .withCurve(0.6),
                                   new PathBuilder.Target(
                                           new Pose2d(
-                                              FieldConstants.Trench.right_trench_center,
-                                              Rotation2d.kZero))
+                                              FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
+                                              Rotation2d.kCCW_90deg))
                                       .withEndingSpeed(5)))
                           .andThen(
                               PathBuilder.path(
@@ -494,14 +494,14 @@ public class AutoCommands {
                                       () -> (start == Start.LEFT),
                                       new PathBuilder.Target(
                                               new Pose2d(
-                                                  FieldConstants.Trench.right_trench_center,
-                                                  Rotation2d.kZero))
+                                                  FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
+                                                  Rotation2d.kCCW_90deg))
                                           .withStartingSpeed(5)
-                                          .withStartingRotation(Rotation2d.kZero)
+                                          .withStartingRotation(Rotation2d.kCCW_90deg)
                                           .withOverrideRotations(
                                               new RotationTarget(
                                                   0.97, Rotation2d.fromDegrees(87.075)),
-                                              new RotationTarget(0.60, Rotation2d.kZero),
+                                              new RotationTarget(0.60, Rotation2d.kCCW_90deg),
                                               new RotationTarget(
                                                   2.00, Rotation2d.fromDegrees(110.726)),
                                               new RotationTarget(
@@ -511,7 +511,7 @@ public class AutoCommands {
                                           .withHeading(Rotation2d.fromDegrees(61.763))
                                           .withControlDistances(0, 0.250),
                                       new PathBuilder.Target(
-                                              new Pose2d(7.355, 1.523, Rotation2d.kZero))
+                                              new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(66.360))
                                           .withControlDistances(1.517, 0.476),
                                       new PathBuilder.Target(
