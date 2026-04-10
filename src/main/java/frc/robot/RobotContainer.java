@@ -36,7 +36,6 @@ import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -118,12 +117,13 @@ public class RobotContainer {
     cycleChooser.addOption("None", AutoCommands.Cycle.NONE);
     cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
 
-    autoChooser.addOption("PsuedoBoard Delayed", 
-      Commands.defer(
-        ()->AutoCommands.pseudoBoard(startChooser.get(),swipeChooser.get(), cycleChooser.get()), 
-         Set.of(shooter, hopper, wrist, intake, hood)
-        )
-    );
+    autoChooser.addOption(
+        "PsuedoBoard Delayed",
+        Commands.defer(
+            () ->
+                AutoCommands.pseudoBoard(
+                    startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+            Set.of(shooter, hopper, wrist, intake, hood)));
     autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
 
     autoChooser.addOption(
@@ -361,7 +361,7 @@ public class RobotContainer {
   char autoWinner = ' '; // this is so stupid
 
   public void preperiodic() {
-    
+
     if (startChooser.get() != AutoCommands.curStart
         || cycleChooser.get() != AutoCommands.curCycle
         || swipeChooser.get() != AutoCommands.curSwipe) {
