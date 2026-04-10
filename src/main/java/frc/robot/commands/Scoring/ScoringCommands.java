@@ -262,11 +262,11 @@ public class ScoringCommands {
         Commands.sequence(
             // small shake
             new WaitCommand(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.7),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.55),
             Commands.waitSeconds(0.4),
-            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.7),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.55),
             Commands.waitSeconds(0.4),
             // big shake
             Commands.parallel(
