@@ -222,7 +222,8 @@ public class AutoCommands {
                       0.1))),
           Commands.runOnce(() -> PathBuilder.stopTarget())
               .andThen(AutoCommands.autoShoot())
-              .withTimeout(8),
+              .withTimeout(8)
+              .andThen(ScoringCommands.downNoStall()),
           PathBuilder.path(
               new PathBuilder.Target(
                   (start == Start.RIGHT)
@@ -428,7 +429,8 @@ public class AutoCommands {
                   case NZ -> 8.0;
                   case NONE -> 10.0;
                   case DOUBLE -> 4.0;
-                }),
+                })
+            .andThen(ScoringCommands.downNoStall()),
         switch (cycle) {
           case NONE -> Commands.none();
           case NZ -> Commands.deadline(

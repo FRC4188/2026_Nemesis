@@ -224,11 +224,17 @@ public class ScoringCommands {
             new WaitCommand(1),
             // small shakes
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             // big shakes
             Commands.parallel(
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
@@ -257,7 +263,11 @@ public class ScoringCommands {
             // small shake
             new WaitCommand(0.5),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.75),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.4),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.4),
             // big shake
             Commands.parallel(
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)

@@ -202,8 +202,8 @@ public class RobotContainer {
                                     AllianceFlip.apply(
                                         new Translation2d(
                                             FieldConstants.Depot.left_far_corner.getX(),
-                                            AllianceFlip.flipY(
-                                                FieldConstants.Depot.left_far_corner.getY())))))
+                                            FieldConstants.field_width
+                                                - FieldConstants.Depot.left_far_corner.getY()))))
                             .minus(drive.getPose().getTranslation())
                             .getAngle()
                         : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
