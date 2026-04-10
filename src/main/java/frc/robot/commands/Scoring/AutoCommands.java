@@ -415,13 +415,13 @@ public class AutoCommands {
                     0.5),
                 new PathBuilder.Target(
                     new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.8,
+                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 1.1,
                         switch (start) {
                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance
                                   .getY()
-                              + 0.2;
+                              + 0.15;
                           case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance.getY()
-                              - 0.2;
+                              - 0.15;
                         },
                         switch (start) {
                           case RIGHT -> Rotation2d.fromDegrees(70);
