@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathbuilder.*;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -41,10 +40,9 @@ public class AutoCommands {
                     .getAngle(),
             () -> true),
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
-        new WaitUntilCommand(() -> drive.getChassisSpeeds().omegaRadiansPerSecond < 0.01),
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
-        ScoringCommands.fullShake());
+        ScoringCommands.halfShake());
   }
 
   public static enum Swipe {
@@ -224,7 +222,8 @@ public class AutoCommands {
                       0.1))),
           Commands.runOnce(() -> PathBuilder.stopTarget())
               .andThen(AutoCommands.autoShoot())
-              .withTimeout(8),
+              .withTimeout(8)
+              .andThen(ScoringCommands.downNoStall()),
           PathBuilder.path(
               new PathBuilder.Target(
                   (start == Start.RIGHT)
@@ -352,7 +351,7 @@ public class AutoCommands {
                   };
                 },
                 1,
-                Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                Commands.runEnd(() -> intake.intakeVolts(7.5), intake::stop, intake))),
         Commands.deadline(
             PathBuilder.path(
                 new PathBuilder.Target(
@@ -430,7 +429,8 @@ public class AutoCommands {
                   case NZ -> 8.0;
                   case NONE -> 10.0;
                   case DOUBLE -> 4.0;
-                }),
+                })
+            .andThen(ScoringCommands.downNoStall()),
         switch (cycle) {
           case NONE -> Commands.none();
           case NZ -> Commands.deadline(
@@ -541,20 +541,18 @@ public class AutoCommands {
                                       FieldConstants.Trench.right_trench_center.plus(
                                           new Translation2d(0, -0.15)),
                                       Rotation2d.kZero)),
-                                new PathBuilder.Target(
+                              new PathBuilder.Target(
                                   new Pose2d(
                                       FieldConstants.Trench.right_trench_alliance_entrance.plus(
                                           new Translation2d(0, -0.15)),
                                       Rotation2d.kZero)),
                               new PathBuilder.Target(
                                   new Pose2d(
-                        FieldConstants.Trench.right_trench_alliance_entrance.getX() - 0.95,
-                        FieldConstants.Trench.right_trench_alliance_preentrance
-                                  .getY()
-                              + 0.2,
-                          Rotation2d.fromDegrees(70)
-                        ))
-                        ))))
+                                      FieldConstants.Trench.right_trench_alliance_entrance.getX()
+                                          - 0.95,
+                                      FieldConstants.Trench.right_trench_alliance_preentrance.getY()
+                                          + 0.2,
+                                      Rotation2d.fromDegrees(70)))))))
               .andThen(autoShoot().withTimeout(10.0));
         });
   }

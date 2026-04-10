@@ -43,15 +43,15 @@ public class ScoringCommands {
 
   public static Command staticAim() {
     return Commands.runEnd(
-            () ->
-                hood.setAngle(
-                    inclineHueristic(
-                        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getNorm())),
-            hood::stow,
-            hood)
-        .alongWith(Commands.startEnd(() -> shooter.runTC(15), () -> shooter.runTC(0)));
+        () ->
+            hood.setAngle(
+                inclineHueristic(
+                    AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                        .minus(drive.getPose().getTranslation())
+                        .getNorm())),
+        hood::stow,
+        hood);
+    // .alongWith(Commands.startEnd(() -> shooter.runTC(15), () -> shooter.runTC(0)));
   }
 
   public static Command staticShoot() {
@@ -224,11 +224,17 @@ public class ScoringCommands {
             new WaitCommand(1),
             // small shakes
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.6),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             // big shakes
             Commands.parallel(
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
@@ -257,7 +263,11 @@ public class ScoringCommands {
             // small shake
             new WaitCommand(0.5),
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
-            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.75),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.4),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.4),
             // big shake
             Commands.parallel(
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)

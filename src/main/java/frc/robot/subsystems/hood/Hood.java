@@ -71,7 +71,7 @@ public class Hood extends SubsystemBase {
 
   public void stow() {
     setpoint = 0.0;
-    io.setPosition(Rotation2d.kZero);
+    setAngle(Rotation2d.kZero);
   }
 
   public void zero() {
