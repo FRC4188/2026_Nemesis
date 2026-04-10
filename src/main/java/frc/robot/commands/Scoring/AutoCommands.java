@@ -391,9 +391,9 @@ public class AutoCommands {
                     new Pose2d(
                         switch (start) {
                           case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance.plus(
-                              new Translation2d(0.5, 0));
+                              new Translation2d(0.5, -0.16));
                           case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance.plus(
-                              new Translation2d(0.5, 0));
+                              new Translation2d(0.5, 0.16));
                         },
                         switch (start) {
                           case LEFT -> Rotation2d.kCW_90deg;
@@ -403,9 +403,9 @@ public class AutoCommands {
                     new Pose2d(
                         switch (start) {
                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_entrance.plus(
-                              new Translation2d(-0.3, -0.15));
+                              new Translation2d(-0.3, -0.18));
                           case LEFT -> FieldConstants.Trench.left_trench_alliance_entrance.plus(
-                              new Translation2d(-0.3, 0.15));
+                              new Translation2d(-0.3, 0.18));
                         },
                         switch (start) {
                           case RIGHT -> Rotation2d.fromDegrees(70);
