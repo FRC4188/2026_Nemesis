@@ -523,7 +523,7 @@ public class AutoCommands {
                                           .withHeading(Rotation2d.fromDegrees(-104.349))
                                           .withControlDistances(0.955, 0.310),
                                       new PathBuilder.Target(
-                                              new Pose2d(5.968, 0.608, Rotation2d.kZero))
+                                              new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
                                           .withHeading(Rotation2d.fromDegrees(99.792))
                                           .withControlDistances(0.250, 0)
                                           .withEndingRotation(Rotation2d.kZero)
@@ -534,7 +534,7 @@ public class AutoCommands {
                       PathBuilder.path(
                           PathBuilder.mirror(
                               () -> (start == Start.LEFT),
-                              new PathBuilder.Target(new Pose2d(5.968, 0.608, Rotation2d.kZero))
+                              new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
                                   .withStartingSpeed(2),
                               new PathBuilder.Target(
                                   new Pose2d(
