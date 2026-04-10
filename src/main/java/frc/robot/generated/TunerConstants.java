@@ -64,7 +64,9 @@ public class TunerConstants {
           .withCurrentLimits(new CurrentLimitsConfigs().withSupplyCurrentLimit(50));
   public static final TalonFXConfiguration steerInitialConfigs =
       new TalonFXConfiguration()
-          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));
+          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
+          .withCurrentLimits(
+              new CurrentLimitsConfigs().withStatorCurrentLimit(50).withSupplyCurrentLimit(30));
   public static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
   private static final Pigeon2Configuration pigeonConfigs = null;

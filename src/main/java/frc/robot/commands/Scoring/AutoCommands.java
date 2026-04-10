@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.pathbuilder.*;
+import frc.robot.Robot;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -21,12 +22,34 @@ public class AutoCommands {
 
   public AutoCommands() {}
 
+  public static enum Swipe {
+    CENTER,
+    CLOSE,
+  }
+
+  public static enum Start {
+    LEFT,
+    RIGHT
+  }
+
+  public static enum Cycle {
+    NZ,
+    NONE,
+    DOUBLE
+  }
+
+  public static Swipe curSwipe = Swipe.CENTER;
+  public static Start curStart = Start.RIGHT;
+  public static Cycle curCycle = Cycle.DOUBLE;
+
   private static final Drive drive = Drive.getInstance();
   private static final Intake intake = Intake.getInstance();
   private static final Hood hood = Hood.getInstance();
   private static final Shooter shooter = Shooter.getInstance();
   private static final Hopper hopper = Hopper.getInstance();
   private static final Wrist wrist = Wrist.getInstance();
+
+  public static Command constructedAuto = pseudoBoard(curStart, curSwipe, curCycle);
 
   public static Command autoShoot() {
     return Commands.parallel(
@@ -45,35 +68,23 @@ public class AutoCommands {
         ScoringCommands.halfShake());
   }
 
-  public static enum Swipe {
-    CENTER,
-    CLOSE,
-  }
-
-  public static enum Start {
-    LEFT,
-    RIGHT
-  }
-
-  public static enum Cycle {
-    NZ,
-    NONE,
-    DOUBLE
-  }
-
   public static Command pseudoBoard(Start start, Swipe swipe, Cycle cycle) {
     if (cycle == Cycle.NONE) {
       return Commands.sequence(
-          Commands.runOnce(
-              () ->
-                  drive.setPose(
-                      AllianceFlip.apply(
-                          switch (start) {
-                            case LEFT -> new Pose2d(
-                                FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
-                            case RIGHT -> new Pose2d(
-                                FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
-                          }))),
+          Commands.either(
+              Commands.runOnce(
+                  () ->
+                      drive.setPose(
+                          AllianceFlip.apply(
+                              switch (start) {
+                                case LEFT -> new Pose2d(
+                                    FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
+                                case RIGHT -> new Pose2d(
+                                    FieldConstants.Trench.right_trench_center,
+                                    Rotation2d.kCCW_90deg);
+                              }))),
+              Commands.none(),
+              () -> Robot.isSimulation()),
           Commands.deadline(
               PathBuilder.path(
                   new PathBuilder.Target(
@@ -83,8 +94,7 @@ public class AutoCommands {
                             case RIGHT -> new Pose2d(
                                 FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
                           })
-                      .withCurve(0.4)
-                      .withSpeed(1),
+                      .withCurve(0.4),
                   new PathBuilder.Target(
                           switch (start) {
                             case LEFT -> new Pose2d(
@@ -255,16 +265,19 @@ public class AutoCommands {
     // NORMAL CYCLES (NZ OR DOUBLE)
 
     return Commands.sequence(
-        Commands.runOnce(
-            () ->
-                drive.setPose(
-                    AllianceFlip.apply(
-                        switch (start) {
-                          case LEFT -> new Pose2d(
-                              FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
-                          case RIGHT -> new Pose2d(
-                              FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
-                        }))),
+        Commands.either(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(
+                        AllianceFlip.apply(
+                            switch (start) {
+                              case LEFT -> new Pose2d(
+                                  FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
+                              case RIGHT -> new Pose2d(
+                                  FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
+                            }))),
+            Commands.none(),
+            () -> Robot.isSimulation()),
         Commands.deadline(
             PathBuilder.path(
                 new PathBuilder.Target(
@@ -436,7 +449,7 @@ public class AutoCommands {
                   case NONE -> 10.0;
                   case DOUBLE -> 6.0;
                 })
-            .andThen(ScoringCommands.downNoStall()),
+            .andThen(Robot.isReal() ? ScoringCommands.downNoStall() : Commands.none()),
         switch (cycle) {
           case NONE -> Commands.none();
           case NZ -> Commands.deadline(
