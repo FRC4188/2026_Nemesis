@@ -434,7 +434,7 @@ public class AutoCommands {
                 switch (cycle) {
                   case NZ -> 8.0;
                   case NONE -> 10.0;
-                  case DOUBLE -> 4.0;
+                  case DOUBLE -> 6.0;
                 })
             .andThen(ScoringCommands.downNoStall()),
         switch (cycle) {
@@ -485,75 +485,67 @@ public class AutoCommands {
               Commands.none());
 
           case DOUBLE -> Commands.sequence(
-                  Commands.deadline(
-                      PathBuilder.path(
+              Commands.deadline(
+                  PathBuilder.path(
+                          PathBuilder.mirror(
+                              () -> (start == Start.LEFT),
+                              new PathBuilder.Target(new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
+                                  .withCurve(0.6),
+                              new PathBuilder.Target(
+                                      new Pose2d(
+                                          FieldConstants.Trench.right_trench_center.plus(
+                                              new Translation2d(0, -0.18)),
+                                          Rotation2d.kCCW_90deg))
+                                  .withEndingSpeed(5)))
+                      // .alongWith(ScoringCommands.downNoStall())
+                      .andThen(
+                          PathBuilder.path(
                               PathBuilder.mirror(
                                   () -> (start == Start.LEFT),
-                                  new PathBuilder.Target(
-                                          new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
-                                      .withCurve(0.6),
                                   new PathBuilder.Target(
                                           new Pose2d(
                                               FieldConstants.Trench.right_trench_center.plus(
                                                   new Translation2d(0, -0.18)),
                                               Rotation2d.kCCW_90deg))
-                                      .withEndingSpeed(5)))
-                          // .alongWith(ScoringCommands.downNoStall())
-                          .andThen(
-                              PathBuilder.path(
-                                  PathBuilder.mirror(
-                                      () -> (start == Start.LEFT),
-                                      new PathBuilder.Target(
-                                              new Pose2d(
-                                                  FieldConstants.Trench.right_trench_center.plus(
-                                                      new Translation2d(0, -0.18)),
-                                                  Rotation2d.kCCW_90deg))
-                                          .withStartingSpeed(5)
-                                          .withStartingRotation(Rotation2d.kCCW_90deg)
-                                          .withOverrideRotations(
-                                              new RotationTarget(
-                                                  0.97, Rotation2d.fromDegrees(87.075)),
-                                              new RotationTarget(0.60, Rotation2d.kCCW_90deg),
-                                              new RotationTarget(
-                                                  2.00, Rotation2d.fromDegrees(110.726)),
-                                              new RotationTarget(
-                                                  3.00, Rotation2d.fromDegrees(-95.856)),
-                                              new RotationTarget(
-                                                  3.34, Rotation2d.fromDegrees(-85.402)))
-                                          .withHeading(Rotation2d.fromDegrees(61.763))
-                                          .withControlDistances(0, 0.250),
-                                      new PathBuilder.Target(
-                                              new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
-                                          .withHeading(Rotation2d.fromDegrees(66.360))
-                                          .withControlDistances(1.517, 0.476),
-                                      new PathBuilder.Target(
-                                              new Pose2d(7.614, 3.051, Rotation2d.kZero))
-                                          .withHeading(Rotation2d.fromDegrees(120.689))
-                                          .withControlDistances(0.288, 1.250),
-                                      new PathBuilder.Target(
-                                              new Pose2d(5.968, 3.051, Rotation2d.kZero))
-                                          .withHeading(Rotation2d.fromDegrees(-104.349))
-                                          .withControlDistances(0.955, 0.310),
-                                      new PathBuilder.Target(
-                                              new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                                          .withHeading(Rotation2d.fromDegrees(99.792))
-                                          .withControlDistances(0.250, 0)
-                                          .withEndingRotation(Rotation2d.kZero)
-                                          .withEndingSpeed(2)))),
-                      Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
-                  Commands.runOnce(intake::stop),
-                  Commands.deadline(
-                      PathBuilder.path(
-                          PathBuilder.mirror(
-                              () -> (start == Start.LEFT),
-                              new PathBuilder.Target(
-                                      new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                                  .withStartingSpeed(2),
-                              new PathBuilder.Target(
-                                  new Pose2d(
-                                      FieldConstants.Trench.right_trench_center.plus(
-                                          new Translation2d(0, -0.15)),
-                                      Rotation2d.kZero))))));
+                                      .withStartingSpeed(5)
+                                      .withStartingRotation(Rotation2d.kCCW_90deg)
+                                      .withOverrideRotations(
+                                          new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
+                                          new RotationTarget(0.60, Rotation2d.kCCW_90deg),
+                                          new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
+                                          new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
+                                          new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
+                                      .withHeading(Rotation2d.fromDegrees(61.763))
+                                      .withControlDistances(0, 0.250),
+                                  new PathBuilder.Target(
+                                          new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
+                                      .withHeading(Rotation2d.fromDegrees(66.360))
+                                      .withControlDistances(1.517, 0.476),
+                                  new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
+                                      .withHeading(Rotation2d.fromDegrees(120.689))
+                                      .withControlDistances(0.288, 1.250),
+                                  new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
+                                      .withHeading(Rotation2d.fromDegrees(-104.349))
+                                      .withControlDistances(0.955, 0.310),
+                                  new PathBuilder.Target(
+                                          new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                                      .withHeading(Rotation2d.fromDegrees(99.792))
+                                      .withControlDistances(0.250, 0)
+                                      .withEndingRotation(Rotation2d.kZero)
+                                      .withEndingSpeed(2)))),
+                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
+              Commands.runOnce(intake::stop),
+              Commands.deadline(
+                  PathBuilder.path(
+                      PathBuilder.mirror(
+                          () -> (start == Start.LEFT),
+                          new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                              .withStartingSpeed(2),
+                          new PathBuilder.Target(
+                              new Pose2d(
+                                  FieldConstants.Trench.right_trench_center.plus(
+                                      new Translation2d(0, -0.15)),
+                                  Rotation2d.kZero))))));
         });
   }
 
