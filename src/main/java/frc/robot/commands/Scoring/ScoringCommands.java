@@ -235,6 +235,9 @@ public class ScoringCommands {
             Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
             Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
             Commands.waitSeconds(0.25),
+            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist).withTimeout(0.5),
+            Commands.runEnd(() -> wrist.runWristVolts(-3), wrist::stop, wrist).withTimeout(0.35),
+            Commands.waitSeconds(0.25),
             // big shakes
             Commands.parallel(
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)

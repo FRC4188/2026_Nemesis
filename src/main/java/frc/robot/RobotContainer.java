@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 import frc.robot.CSPLib.inputs.CSP_Controller;
@@ -152,12 +151,6 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
-    hood.setDefaultCommand(
-        Commands.sequence(
-            Commands.runOnce(hood::stow, hood),
-            new WaitUntilCommand(hood::atGoal),
-            Commands.runOnce(hood::stop, hood)));
-
     pilot
         .start()
         .onTrue(
@@ -214,12 +207,30 @@ public class RobotContainer {
                     || pilot.a().getAsBoolean()
                     || pilot.x().getAsBoolean()));
 
-    pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
-    pilot.a().whileTrue(ScoringCommands.passAim());
+    pilot
+        .rightBumper()
+        .whileTrue(ScoringCommands.staticAim())
+        .onFalse(
+            Commands.sequence(
+                Commands.runOnce(hood::stow, hood),
+                Commands.waitUntil(hood::atGoal),
+                Commands.runOnce(hood::stop, hood)));
+
+    pilot.a().whileTrue(ScoringCommands.passAim())
+    .onFalse(
+            Commands.sequence(
+                Commands.runOnce(hood::stow, hood),
+                Commands.waitUntil(hood::atGoal),
+                Commands.runOnce(hood::stop, hood)));
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
+        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12))
+        .onFalse(
+            Commands.sequence(
+                Commands.runOnce(hood::stow, hood),
+                Commands.waitUntil(hood::atGoal),
+                Commands.runOnce(hood::stop, hood)));
 
     pilot
         .getRightTButton()

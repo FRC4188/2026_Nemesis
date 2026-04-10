@@ -155,7 +155,7 @@ public final class Constants {
 
   public static class HoodConstants {
     public static final double kGearRatio = 40.0;
-    public static final Rotation2d kTolerance = Rotation2d.fromDegrees(1.0);
+    public static final Rotation2d kTolerance = Rotation2d.fromDegrees(3.0);
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 

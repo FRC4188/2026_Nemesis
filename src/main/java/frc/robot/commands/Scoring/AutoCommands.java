@@ -324,8 +324,10 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
-                          case CENTER -> FieldConstants.field_center.plus(new Translation2d(0, -0.2));
-                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(new Translation2d(0, -0.2));
+                          case CENTER -> FieldConstants.field_center.plus(
+                              new Translation2d(0, -0.2));
+                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
+                              new Translation2d(0, -0.2));
                         },
                         switch (start) {
                           case LEFT -> Rotation2d.kCW_90deg;
@@ -357,8 +359,10 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
-                          case CENTER -> FieldConstants.field_center.plus(new Translation2d(0, -0.2));
-                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(new Translation2d(0, -0.2));
+                          case CENTER -> FieldConstants.field_center.plus(
+                              new Translation2d(0, -0.2));
+                          case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
+                              new Translation2d(0, -0.2));
                         },
                         switch (start) {
                           case RIGHT -> Rotation2d.kCCW_90deg;
@@ -386,8 +390,10 @@ public class AutoCommands {
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (start) {
-                          case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance.plus(new Translation2d(0.5, 0));
-                          case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance.plus(new Translation2d(0.5, 0));
+                          case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance.plus(
+                              new Translation2d(0.5, 0));
+                          case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance.plus(
+                              new Translation2d(0.5, 0));
                         },
                         switch (start) {
                           case LEFT -> Rotation2d.kCW_90deg;
@@ -481,11 +487,13 @@ public class AutoCommands {
                       PathBuilder.path(
                               PathBuilder.mirror(
                                   () -> (start == Start.LEFT),
-                                  new PathBuilder.Target(new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
+                                  new PathBuilder.Target(
+                                          new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
                                       .withCurve(0.6),
                                   new PathBuilder.Target(
                                           new Pose2d(
-                                              FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
+                                              FieldConstants.Trench.right_trench_center.plus(
+                                                  new Translation2d(0, -0.18)),
                                               Rotation2d.kCCW_90deg))
                                       .withEndingSpeed(5)))
                           .andThen(
@@ -494,7 +502,8 @@ public class AutoCommands {
                                       () -> (start == Start.LEFT),
                                       new PathBuilder.Target(
                                               new Pose2d(
-                                                  FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
+                                                  FieldConstants.Trench.right_trench_center.plus(
+                                                      new Translation2d(0, -0.18)),
                                                   Rotation2d.kCCW_90deg))
                                           .withStartingSpeed(5)
                                           .withStartingRotation(Rotation2d.kCCW_90deg)

@@ -78,7 +78,7 @@ public class Hood extends SubsystemBase {
     io.setZero();
   }
 
-  // @AutoLogOutput(key = "Hood/At Setpoint?")
+  @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
     return Math.abs(getAngle() - setpoint) < Constants.HoodConstants.kTolerance.getDegrees();
   }
