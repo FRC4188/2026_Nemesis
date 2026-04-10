@@ -216,8 +216,10 @@ public class RobotContainer {
                 Commands.waitUntil(hood::atGoal),
                 Commands.runOnce(hood::stop, hood)));
 
-    pilot.a().whileTrue(ScoringCommands.passAim())
-    .onFalse(
+    pilot
+        .a()
+        .whileTrue(ScoringCommands.passAim())
+        .onFalse(
             Commands.sequence(
                 Commands.runOnce(hood::stow, hood),
                 Commands.waitUntil(hood::atGoal),

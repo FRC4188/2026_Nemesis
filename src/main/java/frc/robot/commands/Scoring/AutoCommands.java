@@ -222,8 +222,8 @@ public class AutoCommands {
                       0.1))),
           Commands.runOnce(() -> PathBuilder.stopTarget())
               .andThen(AutoCommands.autoShoot())
-              .withTimeout(8)
-              .andThen(ScoringCommands.downNoStall()),
+              .withTimeout(8),
+          // .andThen(ScoringCommands.downNoStall()),
           PathBuilder.path(
               new PathBuilder.Target(
                   (start == Start.RIGHT)
@@ -459,6 +459,7 @@ public class AutoCommands {
                         .withRotationLead(1)
                         .withCommand(
                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+                  // .alongWith(ScoringCommands.forceDown());
 
                 case LEFT -> PathBuilder.path(
                     new PathBuilder.Target(
@@ -479,6 +480,7 @@ public class AutoCommands {
                         .withRotationLead(1)
                         .withCommand(
                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+                  // .alongWith(ScoringCommands.downNoStall());
               },
               Commands.none());
 
@@ -496,6 +498,7 @@ public class AutoCommands {
                                                   new Translation2d(0, -0.18)),
                                               Rotation2d.kCCW_90deg))
                                       .withEndingSpeed(5)))
+                          // .alongWith(ScoringCommands.downNoStall())
                           .andThen(
                               PathBuilder.path(
                                   PathBuilder.mirror(
@@ -543,7 +546,8 @@ public class AutoCommands {
                       PathBuilder.path(
                           PathBuilder.mirror(
                               () -> (start == Start.LEFT),
-                              new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                              new PathBuilder.Target(
+                                      new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
                                   .withStartingSpeed(2),
                               new PathBuilder.Target(
                                   new Pose2d(
