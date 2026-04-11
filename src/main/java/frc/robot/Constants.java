@@ -70,13 +70,13 @@ public final class Constants {
     public static final double loopPeriodSecs = 0.02;
 
     // PathPlanner config constants
-    // private static final double ROBOT_MASS_KG = Units.lbsToKilograms(133.5);
-    // private static final double ROBOT_MOI = 6.0;
-    // private static final double WHEEL_COF = 1.0; // how do you even calculate this
-
-    private static final double ROBOT_MASS_KG = Units.lbsToKilograms(130);
+    private static final double ROBOT_MASS_KG = Units.lbsToKilograms(132.5);
     private static final double ROBOT_MOI = 6.5062;
     private static final double WHEEL_COF = 1.2; // how do you even calculate this
+
+    // private static final double ROBOT_MASS_KG = Units.lbsToKilograms(130);
+    // private static final double ROBOT_MOI = 6.5062;
+    // private static final double WHEEL_COF = 1.2; // how do you even calculate this
   }
 
   public static class Controller {
