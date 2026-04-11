@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.pathbuilder.*;
+import frc.robot.Robot;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -436,7 +437,9 @@ public class AutoCommands {
                   case NONE -> 10.0;
                   case DOUBLE -> 4.0;
                 })
-            .andThen(ScoringCommands.downNoStall()),
+            .andThen(
+                (Robot.isReal())?
+            ScoringCommands.downNoStall() : Commands.none()),
         switch (cycle) {
           case NONE -> Commands.none();
           case NZ -> Commands.deadline(
