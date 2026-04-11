@@ -108,27 +108,23 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     startChooser = new LoggedDashboardChooser<>("Start Choices");
     startChooser.addOption("Left Trench", AutoCommands.Start.LEFT);
-    startChooser.addOption("Right Trench", AutoCommands.Start.RIGHT);
+    startChooser.addDefaultOption("Right Trench", AutoCommands.Start.RIGHT);
     swipeChooser = new LoggedDashboardChooser<>("Swipe Choices");
-    swipeChooser.addOption("Center Swipe", AutoCommands.Swipe.CENTER);
+    swipeChooser.addDefaultOption("Center Swipe", AutoCommands.Swipe.CENTER);
     swipeChooser.addOption("Close Swipe", AutoCommands.Swipe.CLOSE);
     cycleChooser = new LoggedDashboardChooser<>("Cycle Choices");
+    cycleChooser.addDefaultOption("2", AutoCommands.Cycle.DOUBLE);
     cycleChooser.addOption("None", AutoCommands.Cycle.NONE);
     cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
-    cycleChooser.addOption("2", AutoCommands.Cycle.DOUBLE);
 
     autoChooser.addOption(
-        "PsuedoBoard",
+        "PsuedoBoard Delayed",
         Commands.defer(
             () ->
                 AutoCommands.pseudoBoard(
                     startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
-
-    // autoChooser.addOption(
-    //     "testing drive idk",
-    //     Commands.runOnce(() -> drive.setPose(new Pose2d()));
-    //     );
+    autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
 
     autoChooser.addOption(
         "FORWARD Right Disruptor",
@@ -364,7 +360,23 @@ public class RobotContainer {
 
   char autoWinner = ' '; // this is so stupid
 
+  public void preperiodic() {
+
+    if (startChooser.get() != AutoCommands.curStart
+        || cycleChooser.get() != AutoCommands.curCycle
+        || swipeChooser.get() != AutoCommands.curSwipe) {
+      AutoCommands.constructedAuto =
+          AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+      AutoCommands.curStart = startChooser.get();
+      AutoCommands.curCycle = cycleChooser.get();
+      AutoCommands.curSwipe = swipeChooser.get();
+    }
+
+    autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
+  }
+
   public void periodic() {
+
     // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
     // Logger.recordOutput(
     //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);

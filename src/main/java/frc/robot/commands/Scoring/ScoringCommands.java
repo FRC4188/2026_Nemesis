@@ -291,11 +291,10 @@ public class ScoringCommands {
   public static Command forceDown() {
 
     return Commands.sequence(
-        Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.12),
-        Commands.run(() -> wrist.runWristVolts(8), wrist).withTimeout(0.12),
-        Commands.run(() -> wrist.runWristVolts(-8), wrist)
-            .until(() -> wrist.getAngle() < 30)
-            .finallyDo(wrist::stop));
+            Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.12),
+            Commands.run(() -> wrist.runWristVolts(8), wrist).withTimeout(0.12),
+            Commands.run(() -> wrist.runWristVolts(-8), wrist).until(() -> wrist.getAngle() < 30))
+        .finallyDo(wrist::stop);
   }
 
   public static Command goodStow() {
