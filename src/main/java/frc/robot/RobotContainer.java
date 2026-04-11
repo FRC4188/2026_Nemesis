@@ -134,6 +134,8 @@ public class RobotContainer {
         "FORWARD Left Disruptor",
         AutoCommands.leftDisrupt(drive, intake, hopper, shooter, wrist, hood));
 
+    autoChooser.addOption("BACKWARD Full Depot", AutoCommands.fullDepot());
+
     autoChooser.addOption("Nothing", Commands.none());
 
     // Set up SysId routines

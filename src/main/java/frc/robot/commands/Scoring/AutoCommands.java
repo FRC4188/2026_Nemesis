@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.lib.pathbuilder.*;
 import frc.robot.Robot;
 import frc.robot.commands.drive.DriveCommands;
@@ -762,5 +763,44 @@ public class AutoCommands {
                 0.3,
                 Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake))),
         Commands.runOnce(intake::stop, intake));
+  }
+
+  public static Command fullDepot() {
+    return Commands.sequence(
+        Commands.runOnce(() -> drive.setPose(new Pose2d(3.568, 6.095, Rotation2d.k180deg)), drive),
+        PathBuilder.path(
+            new PathBuilder.Target(new Pose2d(3.568, 6.095, Rotation2d.k180deg))
+                .withHeading(Rotation2d.fromDegrees(-177.030))
+                .withOverrideRotations(
+                    new RotationTarget(0, Rotation2d.k180deg),
+                    new RotationTarget(1, Rotation2d.k180deg))
+                .withStartingSpeed(0)
+                .withStartingRotation(Rotation2d.k180deg)
+                .withControlDistances(0, 1.990)
+                .withSpeed(0.5),
+            new PathBuilder.Target(new Pose2d(1.115, 5.977, Rotation2d.k180deg))
+                .withHeading(Rotation2d.fromDegrees(-174.808))
+                .withEndingSpeed(1.4)
+                .withEndingRotation(Rotation2d.k180deg)
+                .withControlDistances(1.377, 0)),
+        new WaitCommand(1.0),
+        PathBuilder.path(
+            new PathBuilder.Target(new Pose2d(0.728, 5.977, new Rotation2d()))
+                .withHeading(Rotation2d.fromDegrees(-0.119))
+                .withOverrideRotations(new RotationTarget(0.8, Rotation2d.k180deg))
+                .withSpeed(0.5)
+                .withStartingSpeed(0)
+                .withStartingRotation(Rotation2d.k180deg)
+                .withControlDistances(0, 1.020),
+            new PathBuilder.Target(new Pose2d(1.675, 5.977, new Rotation2d()))
+                .withSpeed(0.5)
+                .withHeading(Rotation2d.fromDegrees(-0.044))
+                .withControlDistances(0.823, 0.250),
+            new PathBuilder.Target(new Pose2d(2.320, 5.041, new Rotation2d()))
+                .withHeading(Rotation2d.fromDegrees(115.618))
+                .withEndingSpeed(0)
+                .withEndingRotation(Rotation2d.fromDegrees(-23.686))
+                .withControlDistances(0.383, 0)),
+        AutoCommands.autoShoot().withTimeout(10.0));
   }
 }
