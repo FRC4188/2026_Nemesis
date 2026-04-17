@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.lib.pathbuilder.*;
+// import frc.lib.pathbuilder.*;
+import frc.robot.CSPLib.csppathing.PathBuilder;
+import frc.robot.CSPLib.csppathing.PosePathing;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
@@ -33,6 +35,9 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -137,6 +142,37 @@ public class RobotContainer {
     autoChooser.addOption("BACKWARD Full Depot", AutoCommands.fullDepot());
 
     autoChooser.addOption("Nothing", Commands.none());
+
+    autoChooser.addOption("experimental", PosePathing.buildTrialAuto());
+
+    autoChooser.addOption(
+        "right diagonal disruptor",
+        Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))),
+            new PosePathing(Constants.DriveConstants.ANGLE_PID)
+                .withStartPose(
+                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+                .withHandoffThreshold(0.1)
+                .addWaypoint(
+                    new Pose2d(
+                        FieldConstants.FuelField.right_far_corner.plus(
+                            new Translation2d(-0.5, 0.5)),
+                        Rotation2d.fromDegrees(205)),
+                    t ->
+                        t.withEntryAngle(Rotation2d.fromDegrees(45))
+                            .withVelocity(2)
+                            .withRotationRadius(Meters.of(2)))
+                .addWaypoint(
+                    new Pose2d(
+                        FieldConstants.FuelField.left_far_corner.plus(
+                            new Translation2d(-0.5, -0.5)),
+                        Rotation2d.fromDegrees(205)),
+                    t -> t.withEntryAngle(Rotation2d.kCCW_90deg).withVelocity(0))
+                .build()));
 
     // Set up SysId routines
     // autoChooser.addOption(
