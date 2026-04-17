@@ -46,8 +46,7 @@ public class Shooter extends SubsystemBase {
 
   public void setVelocityRPM(double RPM) {
     setLeftRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
-    io.setVelocity(
-        MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
+    io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
   public void runTC(double amps) {

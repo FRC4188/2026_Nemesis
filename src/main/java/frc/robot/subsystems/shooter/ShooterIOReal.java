@@ -8,19 +8,18 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import com.ctre.phoenix6.controls.Follower;
 import frc.robot.Constants;
 
 public class ShooterIOReal implements ShooterIO {
@@ -69,11 +68,17 @@ public class ShooterIOReal implements ShooterIO {
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    motorLeft.getConfigurator().apply(shooterConfigs.withMotorOutput(
+    motorLeft
+        .getConfigurator()
+        .apply(
+            shooterConfigs.withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
                     .withInverted(Constants.ShooterConstants.kLeftInvertedValue)));
-    motorRight.getConfigurator().apply(shooterConfigs.withMotorOutput(
+    motorRight
+        .getConfigurator()
+        .apply(
+            shooterConfigs.withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
                     .withInverted(Constants.ShooterConstants.kRightInvertedValue)));

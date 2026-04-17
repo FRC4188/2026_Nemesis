@@ -29,10 +29,7 @@ public class ScoringCommands {
 
   public static Command dataShoot() {
     return Commands.parallel(
-        Commands.runEnd(
-            () -> shooter.setVelocityRPM(_RPM.getAsDouble()),
-            shooter::stop,
-            shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
@@ -83,9 +80,7 @@ public class ScoringCommands {
   public static Command manualShoot(DoubleSupplier distance) {
     return Commands.parallel(
         Commands.runEnd(
-            () ->
-                shooter.setVelocityRPM(
-                    RPMRegress(Units.feetToMeters(distance.getAsDouble()))),
+            () -> shooter.setVelocityRPM(RPMRegress(Units.feetToMeters(distance.getAsDouble()))),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
