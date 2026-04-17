@@ -44,36 +44,28 @@ public class Shooter extends SubsystemBase {
     rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
   }
 
-  public void setVelocityRPM(double leftRPM, double rightRPM) {
-    setRightRPM = MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM);
-    setLeftRPM = MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM);
+  public void setVelocityRPM(double RPM) {
+    setLeftRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
     io.setVelocity(
-        MathUtil.clamp(leftRPM, 0, Constants.ShooterConstants.kMaxRPM),
-        MathUtil.clamp(rightRPM, 0, Constants.ShooterConstants.kMaxRPM));
+        MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
   public void runTC(double amps) {
-    setRightRPM = 0;
     setLeftRPM = 0;
     io.setTorqueCurrent(amps);
   }
 
   public void stop() {
-    setRightRPM = 0;
     setLeftRPM = 0;
     io.setVolts(0.0);
   }
 
   public boolean atGoal() {
-    return leftAtGoal() && rightAtGoal();
+    return leftAtGoal();
   }
 
   public boolean leftAtGoal() {
     return setLeftRPM - inputs.leftVelocityRPM < Constants.ShooterConstants.kTolerance;
-  }
-
-  public boolean rightAtGoal() {
-    return setRightRPM - inputs.rightVelocityRPM < Constants.ShooterConstants.kTolerance;
   }
 
   public void periodic() {

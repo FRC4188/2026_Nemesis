@@ -30,7 +30,7 @@ public class ScoringCommands {
   public static Command dataShoot() {
     return Commands.parallel(
         Commands.runEnd(
-            () -> shooter.setVelocityRPM(_RPM.getAsDouble(), _RPM.getAsDouble()),
+            () -> shooter.setVelocityRPM(_RPM.getAsDouble()),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
@@ -62,10 +62,6 @@ public class ScoringCommands {
                     RPMRegress(
                         AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                             .minus(drive.getPose().getTranslation())
-                            .getNorm()),
-                    RPMRegress(
-                        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
                             .getNorm())),
             shooter::stop,
             shooter),
@@ -89,7 +85,6 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    RPMRegress(Units.feetToMeters(distance.getAsDouble())),
                     RPMRegress(Units.feetToMeters(distance.getAsDouble()))),
             shooter::stop,
             shooter),
@@ -124,7 +119,7 @@ public class ScoringCommands {
 
   public static Command passShoot() {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(3000, 3000), shooter::stop, shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(3000), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())

@@ -12,20 +12,22 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import com.ctre.phoenix6.controls.Follower;
 import frc.robot.Constants;
 
 public class ShooterIOReal implements ShooterIO {
   private final TalonFX motorLeft;
   private final TalonFX motorRight;
 
-  private final TalonFXConfiguration leftMotorConfigs;
-  private final TalonFXConfiguration rightMotorConfigs;
+  private final TalonFXConfiguration shooterConfigs;
 
   private final StatusSignal<Voltage> leftAppliedVolts;
   private final StatusSignal<Voltage> rightAppliedVolts;
@@ -48,7 +50,9 @@ public class ShooterIOReal implements ShooterIO {
     motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
     motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    leftMotorConfigs =
+    motorRight.setControl(new Follower(Constants.Id.kLeftShooter, MotorAlignmentValue.Opposed));
+
+    shooterConfigs =
         new TalonFXConfiguration()
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
@@ -60,38 +64,19 @@ public class ShooterIOReal implements ShooterIO {
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
                     .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
-            .withMotorOutput(
-                new MotorOutputConfigs()
-                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
-                    .withInverted(Constants.ShooterConstants.kLeftInvertedValue))
             .withSlot0(Constants.ShooterConstants.leftShooterGains)
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    rightMotorConfigs =
-        new TalonFXConfiguration()
-            .withCurrentLimits(
-                new CurrentLimitsConfigs()
-                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
-                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent))
-            .withVoltage(
-                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
-            .withTorqueCurrent(
-                new TorqueCurrentConfigs()
-                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
-                    .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
-            .withMotorOutput(
+    motorLeft.getConfigurator().apply(shooterConfigs.withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
-                    .withInverted(Constants.ShooterConstants.kRightInvertedValue))
-            .withSlot0(Constants.ShooterConstants.rightShooterGains)
-            .withFeedback(
-                new FeedbackConfigs()
-                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
-
-    motorLeft.getConfigurator().apply(leftMotorConfigs);
-    motorRight.getConfigurator().apply(rightMotorConfigs);
+                    .withInverted(Constants.ShooterConstants.kLeftInvertedValue)));
+    motorRight.getConfigurator().apply(shooterConfigs.withMotorOutput(
+                new MotorOutputConfigs()
+                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
+                    .withInverted(Constants.ShooterConstants.kRightInvertedValue)));
 
     leftAppliedVolts = motorLeft.getMotorVoltage();
     rightAppliedVolts = motorRight.getMotorVoltage();
@@ -141,27 +126,20 @@ public class ShooterIOReal implements ShooterIO {
 
   @Override
   public void setVolts(double volts) {
-    motorRight.setControl(voltageRequest.withOutput(volts));
     motorLeft.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override
   public void setTorqueCurrent(double amps) {
-    motorRight.setControl(torqueCurrentFOC.withOutput(amps));
     motorLeft.setControl(torqueCurrentFOC.withOutput(amps));
   }
 
   @Override
-  public void setVelocity(double leftRPM, double rightRPM) {
-    if (leftRPM == 0.0) {
+  public void setVelocity(double RPM) {
+    if (RPM == 0.0) {
       motorLeft.setControl(voltageRequest.withOutput(0.0));
     }
 
-    if (rightRPM == 0.0) {
-      motorRight.setControl(voltageRequest.withOutput(0.0));
-    }
-
-    motorRight.setControl(velocityTorqueCurrentFOC.withVelocity(rightRPM / 60.0));
-    motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(leftRPM / 60.0));
+    motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
   }
 }
