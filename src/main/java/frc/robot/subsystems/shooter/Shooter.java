@@ -30,11 +30,8 @@ public class Shooter extends SubsystemBase {
   private final Alert leftDisconnectedAlert;
   private final Alert rightDisconnectedAlert;
 
-  @AutoLogOutput(key = "Shooter/Right Setpoint RPM")
-  private double setRightRPM = 0.0;
-
-  @AutoLogOutput(key = "Shooter/Left Setpoint RPM")
-  private double setLeftRPM = 0.0;
+  @AutoLogOutput(key = "Shooter/Setpoint RPM")
+  private double setRPM = 0.0;
 
   public Shooter(ShooterIO io) {
     this.io = io;
@@ -45,26 +42,22 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setVelocityRPM(double RPM) {
-    setLeftRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
+    setRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
     io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
   public void runTC(double amps) {
-    setLeftRPM = 0;
+    setRPM = 0;
     io.setTorqueCurrent(amps);
   }
 
   public void stop() {
-    setLeftRPM = 0;
+    setRPM = 0;
     io.setVolts(0.0);
   }
 
   public boolean atGoal() {
-    return leftAtGoal();
-  }
-
-  public boolean leftAtGoal() {
-    return setLeftRPM - inputs.leftVelocityRPM < Constants.ShooterConstants.kTolerance;
+    return setRPM - inputs.velocityRPM < Constants.ShooterConstants.kTolerance;
   }
 
   public void periodic() {

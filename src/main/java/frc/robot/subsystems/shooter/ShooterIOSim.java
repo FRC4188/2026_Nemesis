@@ -13,11 +13,11 @@ public class ShooterIOSim implements ShooterIO {
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    inputs.leftVelocityRPM = leftRPM;
-    inputs.rightVelocityRPM = rightRPM;
+    // inputs.leftVelocityRPM = leftRPM;
+    // inputs.rightVelocityRPM = rightRPM;
 
-    inputs.leftAppliedVolts = leftAppliedVolts;
-    inputs.rightAppliedVolts = rightAppliedVolts;
+    // inputs.leftAppliedVolts = leftAppliedVolts;
+    // inputs.rightAppliedVolts = rightAppliedVolts;
   }
 
   @Override

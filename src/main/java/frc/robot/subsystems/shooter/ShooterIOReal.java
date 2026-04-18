@@ -8,12 +8,10 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -23,17 +21,15 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 public class ShooterIOReal implements ShooterIO {
-  private final TalonFX motorLeft;
-  private final TalonFX motorRight;
+  private final TalonFX leftLeader;
+  private final TalonFX rightFollow;
 
-  private final TalonFXConfiguration shooterConfigs;
+  private final TalonFXConfiguration leftShooterConfigs;
+  private final TalonFXConfiguration rightShooterConfigs;
 
-  private final StatusSignal<Voltage> leftAppliedVolts;
-  private final StatusSignal<Voltage> rightAppliedVolts;
-  private final StatusSignal<Current> leftCurrentAmps;
-  private final StatusSignal<Current> rightCurrentAmps;
-  private final StatusSignal<AngularVelocity> leftVelocity;
-  private final StatusSignal<AngularVelocity> rightVelocity;
+  private final StatusSignal<Voltage> appliedVolts;
+  private final StatusSignal<Current> currentAmps;
+  private final StatusSignal<AngularVelocity> velocity;
   private final StatusSignal<Temperature> leftTempC;
   private final StatusSignal<Temperature> rightTempC;
 
@@ -46,12 +42,10 @@ public class ShooterIOReal implements ShooterIO {
       new VelocityTorqueCurrentFOC(0.0);
 
   public ShooterIOReal() {
-    motorLeft = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
-    motorRight = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
+    leftLeader = new TalonFX(Constants.Id.kLeftShooter, Constants.Robot.rio);
+    rightFollow = new TalonFX(Constants.Id.kRightShooter, Constants.Robot.rio);
 
-    motorRight.setControl(new Follower(Constants.Id.kLeftShooter, MotorAlignmentValue.Opposed));
-
-    shooterConfigs =
+    leftShooterConfigs =
         new TalonFXConfiguration()
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
@@ -63,88 +57,88 @@ public class ShooterIOReal implements ShooterIO {
                 new TorqueCurrentConfigs()
                     .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
                     .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
-            .withSlot0(Constants.ShooterConstants.leftShooterGains)
+            .withSlot0(Constants.ShooterConstants.shooterGains)
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
+                    .withInverted(Constants.ShooterConstants.kLeftInvertedValue))
             .withFeedback(
                 new FeedbackConfigs()
                     .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    motorLeft
-        .getConfigurator()
-        .apply(
-            shooterConfigs.withMotorOutput(
+    rightShooterConfigs =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withStatorCurrentLimit(Constants.ShooterConstants.kStatorCurrent)
+                    .withSupplyCurrentLimit(Constants.ShooterConstants.kSupplyCurrent))
+            .withVoltage(
+                new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.ShooterConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.ShooterConstants.kPeakReverseTC))
+            .withSlot0(Constants.ShooterConstants.shooterGains)
+            .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
-                    .withInverted(Constants.ShooterConstants.kLeftInvertedValue)));
-    motorRight
-        .getConfigurator()
-        .apply(
-            shooterConfigs.withMotorOutput(
-                new MotorOutputConfigs()
-                    .withNeutralMode(Constants.ShooterConstants.kNuetralMode)
-                    .withInverted(Constants.ShooterConstants.kRightInvertedValue)));
+                    .withInverted(Constants.ShooterConstants.kRightInvertedValue))
+            .withFeedback(
+                new FeedbackConfigs()
+                    .withRotorToSensorRatio(Constants.ShooterConstants.kGearRatio));
 
-    leftAppliedVolts = motorLeft.getMotorVoltage();
-    rightAppliedVolts = motorRight.getMotorVoltage();
-    leftCurrentAmps = motorLeft.getStatorCurrent();
-    rightCurrentAmps = motorRight.getStatorCurrent();
-    leftTempC = motorLeft.getDeviceTemp();
-    rightTempC = motorRight.getDeviceTemp();
-    leftVelocity = motorLeft.getVelocity();
-    rightVelocity = motorRight.getVelocity();
+    leftLeader.getConfigurator().apply(leftShooterConfigs);
+    rightFollow.getConfigurator().apply(rightShooterConfigs);
+
+    appliedVolts = leftLeader.getMotorVoltage();
+    currentAmps = leftLeader.getStatorCurrent();
+    leftTempC = leftLeader.getDeviceTemp();
+    velocity = leftLeader.getVelocity();
+    rightTempC = rightFollow.getDeviceTemp();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        5.0,
-        leftAppliedVolts,
-        rightAppliedVolts,
-        leftCurrentAmps,
-        rightCurrentAmps,
-        leftTempC,
-        rightTempC);
-    BaseStatusSignal.setUpdateFrequencyForAll(50.0, leftVelocity, rightVelocity);
+        5.0, appliedVolts, currentAmps, leftTempC, rightTempC);
+    BaseStatusSignal.setUpdateFrequencyForAll(50.0, velocity);
 
-    motorLeft.optimizeBusUtilization();
-    motorRight.optimizeBusUtilization();
+    leftLeader.optimizeBusUtilization();
+    rightFollow.optimizeBusUtilization();
   }
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
     inputs.leftConnected =
         leftDebouncer.calculate(
-            BaseStatusSignal.refreshAll(leftAppliedVolts, leftCurrentAmps, leftVelocity, leftTempC)
-                .isOK());
+            BaseStatusSignal.refreshAll(appliedVolts, currentAmps, velocity, leftTempC).isOK());
 
     inputs.rightConnected =
-        rightDebouncer.calculate(
-            BaseStatusSignal.refreshAll(
-                    rightAppliedVolts, rightCurrentAmps, rightVelocity, rightTempC)
-                .isOK());
+        rightDebouncer.calculate(BaseStatusSignal.refreshAll(rightTempC).isOK());
 
-    inputs.leftAppliedVolts = leftAppliedVolts.getValueAsDouble();
-    inputs.rightAppliedVolts = rightAppliedVolts.getValueAsDouble();
-    inputs.leftCurrentAmps = leftCurrentAmps.getValueAsDouble();
-    inputs.rightCurrentAmps = rightCurrentAmps.getValueAsDouble();
+    inputs.appliedVolts = appliedVolts.getValueAsDouble();
+    inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.leftTempC = leftTempC.getValueAsDouble();
     inputs.rightTempC = rightTempC.getValueAsDouble();
-    inputs.leftVelocityRPM = leftVelocity.getValueAsDouble() * 60.0;
-    inputs.rightVelocityRPM = rightVelocity.getValueAsDouble() * 60.0;
+    inputs.velocityRPM = velocity.getValueAsDouble() * 60.0;
   }
 
   @Override
   public void setVolts(double volts) {
-    motorLeft.setControl(voltageRequest.withOutput(volts));
+    leftLeader.setControl(voltageRequest.withOutput(volts));
+    rightFollow.setControl(voltageRequest.withOutput(volts));
   }
 
   @Override
   public void setTorqueCurrent(double amps) {
-    motorLeft.setControl(torqueCurrentFOC.withOutput(amps));
+    leftLeader.setControl(torqueCurrentFOC.withOutput(amps));
+    rightFollow.setControl(torqueCurrentFOC.withOutput(amps));
   }
 
   @Override
   public void setVelocity(double RPM) {
     if (RPM == 0.0) {
-      motorLeft.setControl(voltageRequest.withOutput(0.0));
+      setTorqueCurrent(0);
     }
 
-    motorLeft.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
+    leftLeader.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
+    rightFollow.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
   }
 }

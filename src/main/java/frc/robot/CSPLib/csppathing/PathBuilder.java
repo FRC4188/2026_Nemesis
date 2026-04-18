@@ -223,7 +223,7 @@ public final class PathBuilder {
             new PIDConstants(
                 driveController.getP(), driveController.getI(), driveController.getD()),
             new PIDConstants(
-                driveController.getP(), driveController.getI(), driveController.getD())),
+                angleController.getP(), angleController.getI(), angleController.getD())),
         robotConfig_,
         shouldFlip_,
         drive_);
