@@ -76,9 +76,6 @@ public class RobotContainer {
   private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
   private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
 
-  // temp
-  private LoggedNetworkNumber shooterRPMset = new LoggedNetworkNumber("Shooter/PID target", 0);
-
   public RobotContainer() {
     drive = Drive.getInstance();
     vis = Vision.getInstance();
@@ -305,30 +302,15 @@ public class RobotContainer {
 
     pilot
         .rightBumper()
-        .whileTrue(ScoringCommands.staticAim())
-        .onFalse(
-            Commands.sequence(
-                Commands.runOnce(hood::stow, hood),
-                Commands.waitUntil(hood::atGoal),
-                Commands.runOnce(hood::stop, hood)));
+        .whileTrue(ScoringCommands.staticAim());
 
     pilot
         .a()
-        .whileTrue(ScoringCommands.passAim())
-        .onFalse(
-            Commands.sequence(
-                Commands.runOnce(hood::stow, hood),
-                Commands.waitUntil(hood::atGoal),
-                Commands.runOnce(hood::stop, hood)));
+        .whileTrue(ScoringCommands.passAim());
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12))
-        .onFalse(
-            Commands.sequence(
-                Commands.runOnce(hood::stow, hood),
-                Commands.waitUntil(hood::atGoal),
-                Commands.runOnce(hood::stop, hood)));
+        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
     pilot
         .getRightTButton()

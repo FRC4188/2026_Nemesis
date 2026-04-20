@@ -159,23 +159,32 @@ public final class Constants {
 
   public static class HoodConstants {
     public static final double kGearRatio = 40.0;
-    public static final Rotation2d kTolerance = Rotation2d.fromDegrees(3.0);
+    public static final Rotation2d kTolerance = Rotation2d.fromDegrees(1.0);
     public static final Rotation2d Max_A = Rotation2d.fromDegrees(40.0);
     public static final Rotation2d Min_A = Rotation2d.fromDegrees(0.0);
 
     public static final double kStatorCurrent = 50.0;
     public static final double kSupplyCurrent = 30.0;
-    public static final double kStallCurrent = 20.0; // placeholder
-    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
+    public static final double kPeakForwardTC = 50.0;
+    public static final double kPeakReverseTC = -50.0;
+
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(75.0)
-            .withKI(0.0)
-            .withKD(1.0)
+            .withKP(0.0)
+            .withKD(0.0)
             .withKS(0.0)
-            .withKG(0.4)
+            .withKG(0.0)
             .withGravityType(GravityTypeValue.Arm_Cosine);
+    // public static final Slot0Configs hoodGains =
+    //     new Slot0Configs()
+    //         .withKP(75.0)
+    //         .withKI(0.0)
+    //         .withKD(1.0)
+    //         .withKS(0.0)
+    //         .withKG(0.4)
+    //         .withGravityType(GravityTypeValue.Arm_Cosine);
   }
 
   public static class ShooterConstants {
@@ -192,11 +201,11 @@ public final class Constants {
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
-    // public static final Slot0Configs shooterGains =
-    //     new Slot0Configs().withKP(0.0).withKS(0.0).withKV(0.0);
-
     public static final Slot0Configs shooterGains =
-        new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(8.2).withKV(0.085);
+        new Slot0Configs().withKP(0.0).withKS(0.0).withKV(0.0);
+
+    // public static final Slot0Configs shooterGains =
+    //     new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(8.2).withKV(0.085);
 
     // public static final Slot0Configs rightShooterGains =
     //     new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(7.5).withKV(0.045);

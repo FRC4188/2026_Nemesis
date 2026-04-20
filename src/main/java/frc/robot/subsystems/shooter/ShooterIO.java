@@ -7,13 +7,15 @@ public interface ShooterIO {
   public static class ShooterIOInputs {
     public boolean leftConnected = true;
     public double leftTempC = 0.0;
+    public double leftAppliedVolts = 0.0;
+    public double leftCurrentAmps = 0.0;
+    public double leftVelocityRPM = 0.0;
 
     public boolean rightConnected = true;
     public double rightTempC = 0.0;
-
-    public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
-    public double velocityRPM = 0.0;
+    public double rightAppliedVolts = 0.0;
+    public double rightCurrentAmps = 0.0;
+    public double rightVelocityRPM = 0.0;
   }
 
   public default void updateInputs(ShooterIOInputs inputs) {}

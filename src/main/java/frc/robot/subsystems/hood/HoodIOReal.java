@@ -8,7 +8,9 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
@@ -33,8 +35,8 @@ public class HoodIOReal implements HoodIO {
   private final Debouncer motorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-  private final PositionVoltage positionVoltageRequest =
-      new PositionVoltage(0.0).withEnableFOC(true);
+  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0.0);
+  private final PositionTorqueCurrentFOC positionTorqueCurrent = new PositionTorqueCurrentFOC(0.0);
 
   public HoodIOReal() {
     motor = new TalonFX(Constants.Id.kHood, Constants.Robot.rio);
@@ -97,7 +99,12 @@ public class HoodIOReal implements HoodIO {
   }
 
   @Override
+  public void setCurrent(double output) {
+    motor.setControl(torqueCurrentRequest.withOutput(output));
+  }
+
+  @Override
   public void setPosition(Rotation2d position) {
-    motor.setControl(positionVoltageRequest.withPosition(position.getRotations()));
+    motor.setControl(positionTorqueCurrent.withPosition(position.getRotations()));
   }
 }

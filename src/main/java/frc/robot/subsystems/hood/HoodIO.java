@@ -18,6 +18,8 @@ public interface HoodIO {
 
   public default void setVolts(double output) {}
 
+  public default void setCurrent(double output) {}
+
   public default void setPosition(Rotation2d position) {}
 
   public default void setZero() {}

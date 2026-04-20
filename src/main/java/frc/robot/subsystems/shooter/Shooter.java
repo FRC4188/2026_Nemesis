@@ -53,11 +53,11 @@ public class Shooter extends SubsystemBase {
 
   public void stop() {
     setRPM = 0;
-    io.setVolts(0.0);
+    io.setTorqueCurrent(0.0);
   }
 
   public boolean atGoal() {
-    return setRPM - inputs.velocityRPM < Constants.ShooterConstants.kTolerance;
+    return setRPM - inputs.leftVelocityRPM < Constants.ShooterConstants.kTolerance;
   }
 
   public void periodic() {
