@@ -24,6 +24,10 @@ import java.util.function.UnaryOperator;
  * A pose-parameterized motion controller, switching time to pose parameterization Best to be used
  * with CSPPathing
  */
+
+/*
+ * Basically a fork of Autopilot, just CSP style (4188 RAHHHH)
+ */
 public class CSPPilot {
   private final CSPProfile profile;
   private final double dt = 0.020;
@@ -36,11 +40,8 @@ public class CSPPilot {
     return profile;
   }
 
-  /** Returns the next field-relative velocity for a target pose. */
+  // calculates the resulting chassis speeds necessary at that point in space
   public CSPResult calculate(Pose2d current, ChassisSpeeds robotRelativeSpeeds, CSPTarget target) {
-    Objects.requireNonNull(current, "current cannot be null");
-    Objects.requireNonNull(robotRelativeSpeeds, "robotRelativeSpeeds cannot be null");
-    Objects.requireNonNull(target, "target cannot be null");
 
     Translation2d offset =
         toTargetCoordinateFrame(
@@ -80,24 +81,24 @@ public class CSPPilot {
     return new CSPResult(MetersPerSecond.of(velo.getX()), MetersPerSecond.of(velo.getY()), rot);
   }
 
-  /** Create a runtime follower for a PathPlannerPath. */
+  // makes it concise, i just didn't want to call pathfollewer like that
   public PathFollower followPath(PathPlannerPath path) {
     return new PathFollower(path);
   }
 
-  /** Turns any translation into the target-relative frame. */
+  // Basically the reciprocal of withrobotrelativespeeds, it is in the target frame
   private Translation2d toTargetCoordinateFrame(Translation2d coords, CSPTarget target) {
     Rotation2d entryAngle = target.getEntryAngle().orElse(Rotation2d.kZero);
     return coords.rotateBy(entryAngle.unaryMinus());
   }
 
-  /** Turns a translation from the target-relative frame back into field/global space. */
+  // Turns a translation from the target-relative frame back into the field coords
   private Translation2d toGlobalCoordinateFrame(Translation2d coords, CSPTarget target) {
     Rotation2d entryAngle = target.getEntryAngle().orElse(Rotation2d.kZero);
     return coords.rotateBy(entryAngle);
   }
 
-  /** Uses the acceleration limit to pull the initial vector toward the goal vector. */
+  // manages the max acceleration and max velocity to change the vectors
   private Translation2d correct(Translation2d initial, Translation2d goal) {
     Rotation2d angleOffset = Rotation2d.kZero;
     if (goal.getNorm() > 1e-9) {
@@ -408,14 +409,12 @@ public class CSPPilot {
       return target;
     }
 
-    /** A target speed hint/cap. This does not throw if the robot does not reach it. */
     public CSPTarget withVelocity(double velocity) {
       CSPTarget target = this.clone();
       target.velocity = velocity;
       return target;
     }
 
-    /** Rotation goals are respected only within this radius. */
     public CSPTarget withRotationRadius(Distance radius) {
       CSPTarget copy = this.clone();
       copy.rotationRadius = Optional.of(radius);
@@ -556,19 +555,16 @@ public class CSPPilot {
       return lerpPose(poses.get(i), poses.get(i + 1), localT);
     }
 
-    /** Convenience pose sample using interpolated translation and path-target rotation. */
     public Pose2d samplePose(double s) {
       Pose2d p = sample(s);
       return new Pose2d(p.getTranslation(), rotationAt(s));
     }
 
-    /** Arc length at normalized progress s. */
     public double arcLengthAt(double s) {
       s = clamp01(s);
       return s * totalLength;
     }
 
-    /** Curvature estimate at normalized progress s. */
     public double curvatureAt(double s) {
       if (poses.size() < 3) {
         return 0.0;
@@ -595,7 +591,6 @@ public class CSPPilot {
       return curvatures[i] + (curvatures[i + 1] - curvatures[i]) * t;
     }
 
-    /** Convert curvature to a speed cap using a lateral acceleration limit. */
     public double maxSpeedFromCurvature(double s, double maxLateralAccel) {
       double kappa = Math.abs(curvatureAt(s));
       if (kappa < 1e-9 || Double.isInfinite(maxLateralAccel)) {
@@ -604,7 +599,6 @@ public class CSPPilot {
       return Math.sqrt(Math.max(0.0, maxLateralAccel / kappa));
     }
 
-    /** Sample the path's heading using the PathPlanner path-point rotation targets. */
     public Rotation2d rotationAt(double s) {
       if (rotationSamples.isEmpty()) {
         return sample(s).getRotation();
@@ -640,7 +634,6 @@ public class CSPPilot {
       return new Rotation2d(normalizeRadians(aRad + delta * smooth));
     }
 
-    /** Tangent direction of the path at normalized progress s. */
     public Translation2d tangentAt(double s) {
       double eps = Math.max(0.01, 1.0 / Math.max(40.0, poses.size() * 2.0));
       double s0 = clamp01(s - eps);
@@ -657,16 +650,10 @@ public class CSPPilot {
       return d.div(n);
     }
 
-    /** Find the closest normalized progress to a pose by projecting onto the sampled polyline. */
     public double closestProgress(Pose2d current) {
       return closestProgress(current, 0.0, Double.POSITIVE_INFINITY);
     }
 
-    /**
-     * Find the closest normalized progress using a hint and window.
-     *
-     * <p>This is what keeps self-crossing paths stable.
-     */
     public double closestProgress(Pose2d current, double hintProgress, double searchWindowMeters) {
       if (totalLength <= 1e-9) {
         return 0.0;
@@ -731,13 +718,6 @@ public class CSPPilot {
       return clamp01(chosenArc / totalLength);
     }
 
-    /**
-     * Rebuild a PathPlannerPath from the current sampled poses.
-     *
-     * <p>The path is rebuilt using PathPlannerPath.waypointsFromPoses(...) and the public
-     * simplified constructor. This preserves the main path metadata, but not extras like event
-     * markers, constraint zones, or rotation targets.
-     */
     public PathPlannerPath toPathPlannerPath() {
       PathPlannerPath rebuilt =
           new PathPlannerPath(
@@ -827,7 +807,7 @@ public class CSPPilot {
       return ax * by - ay * bx;
     }
 
-    /** Smooth pose interpolation between two sampled poses. */
+    // lerp.
     private static Pose2d lerpPose(Pose2d a, Pose2d b, double t) {
       t = Math.max(0.0, Math.min(1.0, t));
 

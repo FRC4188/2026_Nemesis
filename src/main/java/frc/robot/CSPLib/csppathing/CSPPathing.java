@@ -3,17 +3,23 @@ package frc.robot.CSPLib.csppathing;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.FieldConstants;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
-/** Path building helper that uses CSPPilot. */
-public class CSPPathing {
+public final class CSPPathing {
+
   private static final Drive drive = Drive.getInstance();
 
   private final CSPPilot pilot;
@@ -23,8 +29,9 @@ public class CSPPathing {
   private Pose2d startPose = null;
 
   public CSPPathing(CSPPilot pilot, ProfiledPIDController headingController) {
-    this.pilot = pilot;
-    this.headingController = headingController;
+    this.pilot = Objects.requireNonNull(pilot, "pilot cannot be null");
+    this.headingController =
+        Objects.requireNonNull(headingController, "headingController cannot be null");
   }
 
   public CSPPathing withStartPose(Pose2d pose) {
@@ -33,11 +40,12 @@ public class CSPPathing {
   }
 
   public CSPPathing addPath(PathPlannerPath path) {
-    paths.add(path);
+    paths.add(Objects.requireNonNull(path, "path cannot be null"));
     return this;
   }
 
   public CSPPathing addPaths(PathPlannerPath... morePaths) {
+    Objects.requireNonNull(morePaths, "morePaths cannot be null");
     for (PathPlannerPath path : morePaths) {
       addPath(path);
     }
@@ -50,54 +58,99 @@ public class CSPPathing {
     }
 
     final int lastIndex = paths.size() - 1;
-    final int[] index = new int[] {0};
+    final AtomicInteger index = new AtomicInteger(0);
     final CSPPilot.PathFollower[] followers = new CSPPilot.PathFollower[paths.size()];
 
-    return Commands.run(
-            () -> {
-              Pose2d pose = drive.getPose();
-              ChassisSpeeds robotSpeeds = drive.getChassisSpeeds();
+    Command main =
+        Commands.run(
+                () -> {
+                  Pose2d pose = drive.getPose();
+                  ChassisSpeeds robotSpeeds = drive.getChassisSpeeds();
 
-              while (index[0] < lastIndex
-                  && followers[index[0]] != null
-                  && followers[index[0]].isFinished(pose)) {
-                index[0]++;
-              }
+                  while (index.get() < lastIndex
+                      && followers[index.get()] != null
+                      && followers[index.get()].isFinished(pose)) {
+                    index.incrementAndGet();
+                  }
 
-              CSPPilot.PathFollower follower = followers[index[0]];
-              CSPPilot.CSPResult out = follower.update(pose, robotSpeeds);
+                  CSPPilot.PathFollower follower = followers[index.get()];
+                  CSPPilot.CSPResult out = follower.update(pose, robotSpeeds);
 
-              double omega =
-                  headingController.calculate(
-                      pose.getRotation().getRadians(), out.targetAngle().getRadians());
+                  double omega =
+                      headingController.calculate(
+                          pose.getRotation().getRadians(), out.targetAngle().getRadians());
 
-              ChassisSpeeds speeds =
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      out.vx().in(MetersPerSecond),
-                      out.vy().in(MetersPerSecond),
-                      omega,
-                      pose.getRotation());
+                  ChassisSpeeds speeds =
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          out.vx().in(MetersPerSecond),
+                          out.vy().in(MetersPerSecond),
+                          omega,
+                          pose.getRotation());
 
-              drive.runVelocity(speeds);
-            },
-            drive)
-        .beforeStarting(
-            () -> {
-              index[0] = 0;
+                  drive.runVelocity(speeds);
+                },
+                drive)
+            .beforeStarting(
+                () -> {
+                  index.set(0);
 
-              Pose2d reset = startPose != null ? startPose : drive.getPose();
-              if (startPose != null) {
-                drive.setPose(startPose);
-              }
-              headingController.reset(reset.getRotation().getRadians());
+                  Pose2d reset = startPose != null ? startPose : drive.getPose();
+                  headingController.reset(reset.getRotation().getRadians());
 
-              for (int i = 0; i < paths.size(); i++) {
-                followers[i] = pilot.followPath(paths.get(i));
-                followers[i].reset();
-              }
-            })
-        .until(
-            () -> followers[lastIndex] != null && followers[lastIndex].isFinished(drive.getPose()))
-        .finallyDo(interrupted -> drive.stop());
+                  if (startPose != null) {
+                    drive.setPose(startPose);
+                  }
+
+                  for (int i = 0; i < paths.size(); i++) {
+                    followers[i] = pilot.followPath(paths.get(i));
+                  }
+                })
+            .until(
+                () ->
+                    followers[lastIndex] != null
+                        && followers[lastIndex].isFinished(drive.getPose()))
+            .finallyDo(interrupted -> drive.stop());
+
+    return main;
+  }
+
+  public static Command buildTrialAuto(CSPPilot pilot, ProfiledPIDController headingController) {
+    CSPPathing path =
+        new CSPPathing(pilot, headingController)
+            .withStartPose(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+            .addPath(
+                PathBuilder.build(
+                    new PathBuilder.Target(
+                            new Pose2d(
+                                FieldConstants.Trench.right_trench_center.plus(
+                                    new Translation2d(0, -0.18)),
+                                Rotation2d.kCCW_90deg))
+                        .withStartingSpeed(5)
+                        .withStartingRotation(Rotation2d.kCCW_90deg)
+                        .withOverrideRotations(
+                            new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
+                            new RotationTarget(0.60, Rotation2d.kCCW_90deg),
+                            new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
+                            new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
+                            new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
+                        .withHeading(Rotation2d.fromDegrees(61.763))
+                        .withControlDistances(0, 0.250),
+                    new PathBuilder.Target(new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
+                        .withHeading(Rotation2d.fromDegrees(66.360))
+                        .withControlDistances(1.517, 0.476),
+                    new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
+                        .withHeading(Rotation2d.fromDegrees(120.689))
+                        .withControlDistances(0.288, 1.250),
+                    new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
+                        .withHeading(Rotation2d.fromDegrees(-104.349))
+                        .withControlDistances(0.955, 0.310),
+                    new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                        .withHeading(Rotation2d.fromDegrees(99.792))
+                        .withControlDistances(0.250, 0)
+                        .withEndingRotation(Rotation2d.kZero)
+                        .withEndingSpeed(2)));
+
+    return path.build();
   }
 }
