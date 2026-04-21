@@ -128,7 +128,6 @@ public class ScoringCommands {
 
   public static Command fullShake() {
 
-
     return Commands.either(
         Commands.sequence(
             new WaitCommand(1),

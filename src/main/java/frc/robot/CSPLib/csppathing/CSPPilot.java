@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,16 +21,8 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * CSPPilot is a drop-in replacement for the original AP/Autopilot classes, with a custom-path
- * utility built around PathPlannerPath's public pose list.
- *
- * <p>The core pose-parameterized drive behavior is intentionally kept the same: - constraints -
- * profile tolerances - target pose / entry angle / end velocity / rotation radius - calculate(...)
- * and atTarget(...)
- *
- * <p>The added CSPPath helper lets you: - sample a PathPlannerPath by normalized arc length -
- * estimate curvature from the sampled pose list - manipulate sampled poses and rebuild a new
- * PathPlannerPath
+ * A pose-parameterized motion controller, switching time to pose parameterization Best to be used
+ * with CSPPathing
  */
 public class CSPPilot {
   private final CSPProfile profile;
@@ -37,6 +30,10 @@ public class CSPPilot {
 
   public CSPPilot(CSPProfile profile) {
     this.profile = Objects.requireNonNull(profile, "profile cannot be null");
+  }
+
+  public CSPProfile getProfile() {
+    return profile;
   }
 
   /** Returns the next field-relative velocity for a target pose. */
@@ -58,6 +55,7 @@ public class CSPPilot {
         new Translation2d(
                 robotRelativeSpeeds.vxMetersPerSecond, robotRelativeSpeeds.vyMetersPerSecond)
             .rotateBy(current.getRotation());
+
     Translation2d initial = toTargetCoordinateFrame(fieldRelativeSpeeds, target);
     double disp = offset.getNorm();
 
@@ -66,6 +64,7 @@ public class CSPPilot {
       Translation2d goal =
           towardsTarget.times(
               profile.getConstraints().calculateMaxVelocity(disp) + target.getVelocity());
+
       Translation2d out = correct(initial, goal);
       Translation2d velo = toGlobalCoordinateFrame(out, target);
       Rotation2d rot = getRotationTarget(current.getRotation(), target, disp);
@@ -73,12 +72,17 @@ public class CSPPilot {
     }
 
     double speed = profile.getConstraints().calculateMaxVelocity(disp) + target.getVelocity();
-
     Translation2d goal = calculateSwirlyVelocity(offset, speed);
+
     Translation2d out = correct(initial, goal);
     Translation2d velo = toGlobalCoordinateFrame(out, target);
     Rotation2d rot = getRotationTarget(current.getRotation(), target, disp);
     return new CSPResult(MetersPerSecond.of(velo.getX()), MetersPerSecond.of(velo.getY()), rot);
+  }
+
+  /** Create a runtime follower for a PathPlannerPath. */
+  public PathFollower followPath(PathPlannerPath path) {
+    return new PathFollower(path);
   }
 
   /** Turns any translation into the target-relative frame. */
@@ -188,30 +192,95 @@ public class CSPPilot {
     return okXY && okTheta;
   }
 
-  /**
-   * Builds a custom path from a source PathPlannerPath by sampling its public pose list, passing
-   * those poses through a manipulator, and rebuilding a new PathPlannerPath.
-   */
   public static PathPlannerPath createCustomPath(
       PathPlannerPath original, UnaryOperator<List<Pose2d>> manipulator) {
     return createCustomPath(original, 0, manipulator);
   }
 
-  /**
-   * Same as createCustomPath(...), but first resamples the source path into a denser pose list. A
-   * resampleCount of 0 or 1 means "use the original sampled poses as-is".
-   */
   public static PathPlannerPath createCustomPath(
       PathPlannerPath original, int resampleCount, UnaryOperator<List<Pose2d>> manipulator) {
-
     CSPPath sampled = CSPPath.fromPathPlannerPath(original, resampleCount, manipulator);
     return sampled.toPathPlannerPath();
   }
 
-  /** The motion computed by CSPPilot.calculate(). */
   public record CSPResult(LinearVelocity vx, LinearVelocity vy, Rotation2d targetAngle) {}
 
-  /** Motion constraints. */
+  public final class PathFollower {
+    private final CSPPath path;
+    private final double lookaheadMeters;
+    private final double trackingWindowMeters;
+    private final double lateralGain;
+
+    private double lastProgress = 0.0;
+
+    private PathFollower(PathPlannerPath path) {
+      this(path, 0.35, 0.75, 3.5);
+    }
+
+    private PathFollower(
+        PathPlannerPath path,
+        double lookaheadMeters,
+        double trackingWindowMeters,
+        double lateralGain) {
+      this.path = CSPPath.fromPathPlannerPath(Objects.requireNonNull(path, "path cannot be null"));
+      this.lookaheadMeters = Math.max(0.0, lookaheadMeters);
+      this.trackingWindowMeters = Math.max(0.0, trackingWindowMeters);
+      this.lateralGain = Math.max(0.0, lateralGain);
+    }
+
+    public void reset() {
+      lastProgress = 0.0;
+    }
+
+    public CSPResult update(Pose2d current, ChassisSpeeds robotRelativeSpeeds) {
+      double totalLength = path.getTotalLength();
+      if (totalLength <= 1e-9) {
+        return new CSPResult(MetersPerSecond.of(0), MetersPerSecond.of(0), current.getRotation());
+      }
+
+      double progress = path.closestProgress(current, lastProgress, trackingWindowMeters);
+      progress = Math.max(progress, lastProgress);
+      lastProgress = progress;
+
+      double progressArc = path.arcLengthAt(progress);
+      double targetArc = Math.min(totalLength, progressArc + lookaheadMeters);
+      double targetProgress = targetArc / totalLength;
+
+      Pose2d translationGoal = path.sample(targetProgress);
+
+      Rotation2d targetRotation = path.rotationAt(progress);
+      targetRotation = nearestEquivalent(current.getRotation(), targetRotation);
+
+      Pose2d goal = new Pose2d(translationGoal.getTranslation(), targetRotation);
+      CSPResult raw = calculate(current, robotRelativeSpeeds, new CSPTarget(goal));
+
+      Translation2d desiredFieldVelocity =
+          new Translation2d(raw.vx().in(MetersPerSecond), raw.vy().in(MetersPerSecond));
+
+      Translation2d pathTangent = path.tangentAt(targetProgress);
+      Translation2d toGoal = goal.getTranslation().minus(current.getTranslation());
+
+      double alongAmount = toGoal.getX() * pathTangent.getX() + toGoal.getY() * pathTangent.getY();
+      Translation2d alongComponent = pathTangent.times(alongAmount);
+      Translation2d lateralError = toGoal.minus(alongComponent);
+
+      Translation2d correction = lateralError.times(lateralGain);
+      desiredFieldVelocity = desiredFieldVelocity.plus(correction);
+
+      return new CSPResult(
+          MetersPerSecond.of(desiredFieldVelocity.getX()),
+          MetersPerSecond.of(desiredFieldVelocity.getY()),
+          targetRotation);
+    }
+
+    public boolean isFinished(Pose2d current) {
+      double progress = path.closestProgress(current, lastProgress, trackingWindowMeters);
+      Pose2d end = path.samplePose(1.0);
+      return progress >= 0.999 && atTarget(current, new CSPTarget(end));
+    }
+  }
+
+  // Motion constraints.
   public static class CSPConstraints {
     protected double velocity;
     protected double acceleration;
@@ -264,7 +333,6 @@ public class CSPPilot {
     }
   }
 
-  /** Profile that carries constraints and tolerances. */
   public static class CSPProfile {
     protected CSPConstraints constraints;
     protected Distance errorXY;
@@ -272,29 +340,29 @@ public class CSPPilot {
     protected Distance beelineRadius;
 
     public CSPProfile(CSPConstraints constraints) {
-      this.constraints = Objects.requireNonNull(constraints, "constraints cannot be null");
+      this.constraints = constraints;
       errorXY = Meters.of(0);
       errorTheta = Rotations.of(0);
       beelineRadius = Meters.of(0);
     }
 
     public CSPProfile withErrorXY(Distance errorXY) {
-      this.errorXY = Objects.requireNonNull(errorXY, "errorXY cannot be null");
+      this.errorXY = errorXY;
       return this;
     }
 
     public CSPProfile withErrorTheta(Angle errorTheta) {
-      this.errorTheta = Objects.requireNonNull(errorTheta, "errorTheta cannot be null");
+      this.errorTheta = errorTheta;
       return this;
     }
 
     public CSPProfile withConstraints(CSPConstraints constraints) {
-      this.constraints = Objects.requireNonNull(constraints, "constraints cannot be null");
+      this.constraints = constraints;
       return this;
     }
 
     public CSPProfile withBeelineRadius(Distance beelineRadius) {
-      this.beelineRadius = Objects.requireNonNull(beelineRadius, "beelineRadius cannot be null");
+      this.beelineRadius = beelineRadius;
       return this;
     }
 
@@ -315,7 +383,6 @@ public class CSPPilot {
     }
   }
 
-  /** Goal pose for a standard CSP request. */
   public static class CSPTarget {
     protected Pose2d reference;
     protected Optional<Rotation2d> entryAngle;
@@ -323,7 +390,7 @@ public class CSPPilot {
     protected Optional<Distance> rotationRadius;
 
     public CSPTarget(Pose2d pose) {
-      this.reference = Objects.requireNonNull(pose, "pose cannot be null");
+      this.reference = pose;
       this.velocity = 0;
       this.entryAngle = Optional.empty();
       this.rotationRadius = Optional.empty();
@@ -331,14 +398,13 @@ public class CSPPilot {
 
     public CSPTarget withReference(Pose2d reference) {
       CSPTarget target = this.clone();
-      target.reference = Objects.requireNonNull(reference, "reference cannot be null");
+      target.reference = reference;
       return target;
     }
 
     public CSPTarget withEntryAngle(Rotation2d entryAngle) {
       CSPTarget target = this.clone();
-      target.entryAngle =
-          Optional.of(Objects.requireNonNull(entryAngle, "entryAngle cannot be null"));
+      target.entryAngle = Optional.of(entryAngle);
       return target;
     }
 
@@ -352,7 +418,7 @@ public class CSPPilot {
     /** Rotation goals are respected only within this radius. */
     public CSPTarget withRotationRadius(Distance radius) {
       CSPTarget copy = this.clone();
-      copy.rotationRadius = Optional.of(Objects.requireNonNull(radius, "radius cannot be null"));
+      copy.rotationRadius = Optional.of(radius);
       return copy;
     }
 
@@ -388,18 +454,13 @@ public class CSPPilot {
     }
   }
 
-  /**
-   * A pose-parameterized wrapper around PathPlannerPath's public pose list.
-   *
-   * <p>It does three jobs: - arc-length sampling - curvature estimation - pose-list manipulation +
-   * rebuild
-   */
   public static class CSPPath {
     private final PathPlannerPath source;
     private final List<Pose2d> poses;
     private final double[] cumulativeDistances;
     private final double[] curvatures;
     private final double totalLength;
+    private final List<RotationSample> rotationSamples;
 
     public static CSPPath fromPathPlannerPath(PathPlannerPath path) {
       return new CSPPath(path, 0, poses -> poses);
@@ -444,6 +505,7 @@ public class CSPPilot {
       this.cumulativeDistances = buildCumulativeDistances(this.poses);
       this.curvatures = buildCurvatures(this.poses);
       this.totalLength = cumulativeDistances[cumulativeDistances.length - 1];
+      this.rotationSamples = buildRotationSamplesFromPathPoints(source, this.totalLength);
     }
 
     private CSPPath(PathPlannerPath source, List<Pose2d> poses) {
@@ -455,6 +517,7 @@ public class CSPPilot {
       this.cumulativeDistances = buildCumulativeDistances(this.poses);
       this.curvatures = buildCurvatures(this.poses);
       this.totalLength = cumulativeDistances[cumulativeDistances.length - 1];
+      this.rotationSamples = buildRotationSamplesFromPathPoints(source, this.totalLength);
     }
 
     public List<Pose2d> getPoses() {
@@ -490,7 +553,13 @@ public class CSPPilot {
       double d2 = cumulativeDistances[i + 1];
       double localT = (targetDist - d1) / Math.max(1e-9, (d2 - d1));
 
-      return interpolate(poses.get(i), poses.get(i + 1), localT);
+      return lerpPose(poses.get(i), poses.get(i + 1), localT);
+    }
+
+    /** Convenience pose sample using interpolated translation and path-target rotation. */
+    public Pose2d samplePose(double s) {
+      Pose2d p = sample(s);
+      return new Pose2d(p.getTranslation(), rotationAt(s));
     }
 
     /** Arc length at normalized progress s. */
@@ -499,10 +568,7 @@ public class CSPPilot {
       return s * totalLength;
     }
 
-    /**
-     * Curvature estimate at normalized progress s. This is derived from the sampled pose list, not
-     * from any hidden PathPlanner internals.
-     */
+    /** Curvature estimate at normalized progress s. */
     public double curvatureAt(double s) {
       if (poses.size() < 3) {
         return 0.0;
@@ -538,15 +604,88 @@ public class CSPPilot {
       return Math.sqrt(Math.max(0.0, maxLateralAccel / kappa));
     }
 
+    /** Sample the path's heading using the PathPlanner path-point rotation targets. */
+    public Rotation2d rotationAt(double s) {
+      if (rotationSamples.isEmpty()) {
+        return sample(s).getRotation();
+      }
+
+      s = clamp01(s);
+
+      if (rotationSamples.size() == 1) {
+        return rotationSamples.get(0).rotation();
+      }
+
+      if (s <= rotationSamples.get(0).s()) {
+        return rotationSamples.get(0).rotation();
+      }
+
+      if (s >= rotationSamples.get(rotationSamples.size() - 1).s()) {
+        return rotationSamples.get(rotationSamples.size() - 1).rotation();
+      }
+
+      int i = 0;
+      while (i < rotationSamples.size() - 2 && rotationSamples.get(i + 1).s() < s) {
+        i++;
+      }
+
+      RotationSample a = rotationSamples.get(i);
+      RotationSample b = rotationSamples.get(i + 1);
+
+      double t = (s - a.s()) / Math.max(1e-9, b.s() - a.s());
+      double smooth = (1.0 - Math.cos(t * Math.PI)) / 2.0;
+
+      double aRad = a.rotation().getRadians();
+      double delta = normalizeRadians(b.rotation().getRadians() - aRad);
+      return new Rotation2d(normalizeRadians(aRad + delta * smooth));
+    }
+
+    /** Tangent direction of the path at normalized progress s. */
+    public Translation2d tangentAt(double s) {
+      double eps = Math.max(0.01, 1.0 / Math.max(40.0, poses.size() * 2.0));
+      double s0 = clamp01(s - eps);
+      double s1 = clamp01(s + eps);
+
+      Translation2d a = sample(s0).getTranslation();
+      Translation2d b = sample(s1).getTranslation();
+      Translation2d d = b.minus(a);
+
+      double n = d.getNorm();
+      if (n < 1e-9) {
+        return new Translation2d(1.0, 0.0);
+      }
+      return d.div(n);
+    }
+
     /** Find the closest normalized progress to a pose by projecting onto the sampled polyline. */
     public double closestProgress(Pose2d current) {
+      return closestProgress(current, 0.0, Double.POSITIVE_INFINITY);
+    }
+
+    /**
+     * Find the closest normalized progress using a hint and window.
+     *
+     * <p>This is what keeps self-crossing paths stable.
+     */
+    public double closestProgress(Pose2d current, double hintProgress, double searchWindowMeters) {
       if (totalLength <= 1e-9) {
         return 0.0;
       }
 
+      hintProgress = clamp01(hintProgress);
+      searchWindowMeters = Math.max(0.0, searchWindowMeters);
+
+      double hintArc = hintProgress * totalLength;
+      double minArc = Math.max(0.0, hintArc - searchWindowMeters);
+      double maxArc = Math.min(totalLength, hintArc + searchWindowMeters);
+
       Translation2d p = current.getTranslation();
-      double bestDist2 = Double.POSITIVE_INFINITY;
-      double bestArc = 0.0;
+
+      double bestWindowScore = Double.POSITIVE_INFINITY;
+      double bestWindowArc = hintArc;
+
+      double bestAnyScore = Double.POSITIVE_INFINITY;
+      double bestAnyArc = 0.0;
 
       for (int i = 0; i < poses.size() - 1; i++) {
         Translation2d a = poses.get(i).getTranslation();
@@ -571,14 +710,25 @@ public class CSPPilot {
         double dy = p.getY() - projY;
         double dist2 = dx * dx + dy * dy;
 
-        if (dist2 < bestDist2) {
-          bestDist2 = dist2;
-          double segLen = Math.sqrt(len2);
-          bestArc = cumulativeDistances[i] + segLen * t;
+        double segLen = Math.sqrt(len2);
+        double candidateArc = cumulativeDistances[i] + segLen * t;
+
+        double branchPenalty = candidateArc - hintArc;
+        double score = dist2 + 0.20 * branchPenalty * branchPenalty;
+
+        if (score < bestAnyScore) {
+          bestAnyScore = score;
+          bestAnyArc = candidateArc;
+        }
+
+        if (candidateArc >= minArc && candidateArc <= maxArc && score < bestWindowScore) {
+          bestWindowScore = score;
+          bestWindowArc = candidateArc;
         }
       }
 
-      return clamp01(bestArc / totalLength);
+      double chosenArc = Double.isFinite(bestWindowScore) ? bestWindowArc : bestAnyArc;
+      return clamp01(chosenArc / totalLength);
     }
 
     /**
@@ -614,11 +764,6 @@ public class CSPPilot {
       return distances;
     }
 
-    /**
-     * Curvature estimate from 3 consecutive points: kappa = 2 * cross / (ab * bc * ac)
-     *
-     * <p>This is signed curvature. Use the magnitude for speed limits.
-     */
     private static double[] buildCurvatures(List<Pose2d> poses) {
       int n = poses.size();
       double[] k = new double[n];
@@ -638,8 +783,10 @@ public class CSPPilot {
 
         double cross =
             cross(
-                p1.getX() - p0.getX(), p1.getY() - p0.getY(),
-                p2.getX() - p0.getX(), p2.getY() - p0.getY());
+                p1.getX() - p0.getX(),
+                p1.getY() - p0.getY(),
+                p2.getX() - p0.getX(),
+                p2.getY() - p0.getY());
 
         double denom = a * b * c;
         if (denom < 1e-12) {
@@ -654,11 +801,34 @@ public class CSPPilot {
       return k;
     }
 
+    private static List<RotationSample> buildRotationSamplesFromPathPoints(
+        PathPlannerPath source, double totalLength) {
+      List<RotationSample> out = new ArrayList<>();
+
+      List<PathPoint> points = source.getAllPathPoints();
+      if (points == null || points.isEmpty()) {
+        return List.of();
+      }
+
+      for (PathPoint point : points) {
+        if (point.rotationTarget == null) {
+          continue;
+        }
+
+        double s = totalLength > 1e-9 ? point.distanceAlongPath / totalLength : 0.0;
+        out.add(new RotationSample(clamp01(s), point.rotationTarget.rotation()));
+      }
+
+      out.sort((a, b) -> Double.compare(a.s(), b.s()));
+      return List.copyOf(out);
+    }
+
     private static double cross(double ax, double ay, double bx, double by) {
       return ax * by - ay * bx;
     }
 
-    private static Pose2d interpolate(Pose2d a, Pose2d b, double t) {
+    /** Smooth pose interpolation between two sampled poses. */
+    private static Pose2d lerpPose(Pose2d a, Pose2d b, double t) {
       t = Math.max(0.0, Math.min(1.0, t));
 
       double x = a.getX() + (b.getX() - a.getX()) * t;
@@ -671,6 +841,14 @@ public class CSPPilot {
 
       return new Pose2d(new Translation2d(x, y), new Rotation2d(rot));
     }
+
+    private record RotationSample(double s, Rotation2d rotation) {}
+  }
+
+  private static Rotation2d nearestEquivalent(Rotation2d reference, Rotation2d target) {
+    double ref = reference.getRadians();
+    double tgt = target.getRadians();
+    return new Rotation2d(ref + normalizeRadians(tgt - ref));
   }
 
   private static double clamp01(double v) {

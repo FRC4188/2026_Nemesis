@@ -7,26 +7,22 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.CSPLib.csppathing.CSPPathing;
+import frc.robot.CSPLib.csppathing.CSPPilot;
 // import frc.lib.pathbuilder.*;
-import frc.robot.CSPLib.csppathing.KalmanPathing;
 import frc.robot.CSPLib.csppathing.PathBuilder;
-import frc.robot.CSPLib.csppathing.PosePathing;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
@@ -47,7 +43,6 @@ import java.util.Random;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -75,6 +70,17 @@ public class RobotContainer {
   private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
   private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
   private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
+
+  private final CSPPilot csppilot =
+      new CSPPilot(
+          new CSPPilot.CSPProfile(
+                  new CSPPilot.CSPConstraints()
+                      .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL)
+                      .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC)
+                      .withJerk(10.0))
+              .withErrorXY(edu.wpi.first.units.Units.Centimeters.of(2))
+              .withErrorTheta(edu.wpi.first.units.Units.Degrees.of(0.5))
+              .withBeelineRadius(edu.wpi.first.units.Units.Centimeters.of(5)));
 
   public RobotContainer() {
     drive = Drive.getInstance();
@@ -148,90 +154,44 @@ public class RobotContainer {
 
     autoChooser.addOption("Nothing", Commands.none());
 
-    autoChooser.addOption(
-        "Kalman",
-        Commands.runOnce(
-                () ->
-                    drive.setPose(
-                        new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero)))
-            .andThen(
-                KalmanPathing.create(
-                    PathBuilder.build(
-                        new PathBuilder.Target(
-                                new Pose2d(
-                                    FieldConstants.Trench.right_trench_center.plus(
-                                        new Translation2d(0, -0.18)),
-                                    Rotation2d.kCCW_90deg))
-                            .withStartingSpeed(5)
-                            .withStartingRotation(Rotation2d.kCCW_90deg)
-                            .withOverrideRotations(
-                                new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
-                                new RotationTarget(0.60, Rotation2d.kCCW_90deg),
-                                new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
-                                new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
-                                new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
-                            .withHeading(Rotation2d.fromDegrees(61.763))
-                            .withControlDistances(0, 0.250),
-                        new PathBuilder.Target(new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
-                            .withHeading(Rotation2d.fromDegrees(66.360))
-                            .withControlDistances(1.517, 0.476),
-                        new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
-                            .withHeading(Rotation2d.fromDegrees(120.689))
-                            .withControlDistances(0.288, 1.250),
-                        new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
-                            .withHeading(Rotation2d.fromDegrees(-104.349))
-                            .withControlDistances(0.955, 0.310),
-                        new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                            .withHeading(Rotation2d.fromDegrees(99.792))
-                            .withControlDistances(0.250, 0)
-                            .withEndingRotation(Rotation2d.kZero)
-                            .withEndingSpeed(2)),
-                    new ChassisSpeeds(0, 0, 0),
-                    Rotation2d.kZero,
-                    Constants.DriveConstants.PP_CONFIG,
-                    new PPHolonomicDriveController(
-                        new PIDConstants(
-                            Constants.DriveConstants.DRIVE_PID.getP(),
-                            Constants.DriveConstants.DRIVE_PID.getI(),
-                            Constants.DriveConstants.DRIVE_PID.getD()),
-                        new PIDConstants(
-                            Constants.DriveConstants.ANGLE_PID.getP(),
-                            Constants.DriveConstants.ANGLE_PID.getI(),
-                            Constants.DriveConstants.ANGLE_PID.getD())),
-                    () -> drive.getPose(),
-                    drive::runVelocity,
-                    drive)));
-
-    autoChooser.addOption("experimental", PosePathing.buildTrialAuto());
+    PathPlannerPath path =
+        PathBuilder.build(
+            new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
+                        Rotation2d.kCCW_90deg))
+                .withStartingSpeed(5)
+                .withStartingRotation(Rotation2d.kCCW_90deg)
+                .withOverrideRotations(
+                    new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
+                    new RotationTarget(0.60, Rotation2d.kCCW_90deg),
+                    new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
+                    new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
+                    new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
+                .withHeading(Rotation2d.fromDegrees(61.763))
+                .withControlDistances(0, 0.250),
+            new PathBuilder.Target(new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
+                .withHeading(Rotation2d.fromDegrees(66.360))
+                .withControlDistances(1.517, 0.476),
+            new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
+                .withHeading(Rotation2d.fromDegrees(120.689))
+                .withControlDistances(0.288, 1.250),
+            new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
+                .withHeading(Rotation2d.fromDegrees(-104.349))
+                .withControlDistances(0.955, 0.310),
+            new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                .withHeading(Rotation2d.fromDegrees(99.792))
+                .withControlDistances(0.250, 0)
+                .withEndingRotation(Rotation2d.kZero)
+                .withEndingSpeed(2));
 
     autoChooser.addOption(
-        "right diagonal disruptor",
-        Commands.sequence(
-            Commands.runOnce(
-                () ->
-                    drive.setPose(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))),
-            new PosePathing(Constants.DriveConstants.ANGLE_PID)
-                .withStartPose(
-                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-                .withHandoffThreshold(0.1)
-                .addWaypoint(
-                    new Pose2d(
-                        FieldConstants.FuelField.right_far_corner.plus(
-                            new Translation2d(-0.5, 0.5)),
-                        Rotation2d.fromDegrees(205)),
-                    t ->
-                        t.withEntryAngle(Rotation2d.fromDegrees(45))
-                            .withVelocity(2)
-                            .withRotationRadius(Meters.of(2)))
-                .addWaypoint(
-                    new Pose2d(
-                        FieldConstants.FuelField.left_far_corner.plus(
-                            new Translation2d(-0.5, -0.5)),
-                        Rotation2d.fromDegrees(205)),
-                    t -> t.withEntryAngle(Rotation2d.kCCW_90deg).withVelocity(0))
-                .build()));
+        "test csppilot",
+        new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
+            .withStartPose(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+            .addPath(path)
+            .build());
 
     // Set up SysId routines
     // autoChooser.addOption(
@@ -300,13 +260,9 @@ public class RobotContainer {
                     || pilot.a().getAsBoolean()
                     || pilot.x().getAsBoolean()));
 
-    pilot
-        .rightBumper()
-        .whileTrue(ScoringCommands.staticAim());
+    pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
 
-    pilot
-        .a()
-        .whileTrue(ScoringCommands.passAim());
+    pilot.a().whileTrue(ScoringCommands.passAim());
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
