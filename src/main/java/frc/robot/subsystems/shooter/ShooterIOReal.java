@@ -85,7 +85,7 @@ public class ShooterIOReal implements ShooterIO {
     rightTempC = rightFollow.getDeviceTemp();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        5.0,
+        50.0,
         leftAppliedVolts,
         leftCurrentAmps,
         rightAppliedVolts,

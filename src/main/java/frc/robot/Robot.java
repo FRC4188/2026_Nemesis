@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.Mode;
@@ -31,6 +32,7 @@ public class Robot extends LoggedRobot {
 
   public Robot() {
     // Record metadata
+
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
@@ -77,6 +79,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     Pathfinding.setPathfinder(new LocalADStarAK());
+    RobotController.setBrownoutVoltage(5.75); // anything above 5 is fine but very sad
   }
 
   /** This function is called periodically during all modes. */

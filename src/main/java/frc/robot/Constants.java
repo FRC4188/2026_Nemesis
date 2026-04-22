@@ -172,10 +172,10 @@ public final class Constants {
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(0.0)
-            .withKD(0.0)
-            .withKS(0.0)
-            .withKG(0.0)
+            .withKP(500.0)
+            .withKD(50.0)
+            .withKS(3.0)
+            .withKG(5.5)
             .withGravityType(GravityTypeValue.Arm_Cosine);
     // public static final Slot0Configs hoodGains =
     //     new Slot0Configs()
@@ -202,7 +202,7 @@ public final class Constants {
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
     public static final Slot0Configs shooterGains =
-        new Slot0Configs().withKP(0.0).withKS(0.0).withKV(0.0);
+        new Slot0Configs().withKP(10.0).withKS(8.3).withKV(0.055);
 
     // public static final Slot0Configs shooterGains =
     //     new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(8.2).withKV(0.085);
@@ -263,10 +263,10 @@ public final class Constants {
 
     public static final Transform3d cameraFront =
         new Transform3d(
-            Units.inchesToMeters(1.28870),
-            Units.inchesToMeters(11.937500),
-            Units.inchesToMeters(21.206522),
-            new Rotation3d(0, Math.toRadians(9.8), 0));
+            Units.inchesToMeters(0.76379),
+            Units.inchesToMeters(11.11000),
+            Units.inchesToMeters(20.54013),
+            new Rotation3d(0, Math.toRadians(13), 0)); // prev 9.8
 
     // public static final Transform3d cameraFront =
     //     new Transform3d(
