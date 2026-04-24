@@ -2,9 +2,13 @@ package frc.robot.CSPLib.csppathing;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.ConstraintsZone;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,14 +25,16 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * A pose-parameterized motion controller, switching time to pose parameterization Best to be used
- * with CSPPathing
+ * A pose-parameterized motion controller, switching time to pose parameterization. Best to be used
+ * with CSPPathing.
  */
-
 /*
  * Basically a fork of Autopilot, just CSP style (4188 RAHHHH)
  */
 public class CSPPilot {
+  private static final double GRAVITY = 9.81;
+  private static final double DEFAULT_JERK = Double.POSITIVE_INFINITY;
+
   private final CSPProfile profile;
   private final double dt = 0.020;
 
@@ -40,8 +46,48 @@ public class CSPPilot {
     return profile;
   }
 
+  public record PathSeed(CSPConstraints constraints, double startingSpeed, double endingSpeed) {}
+
+  public PathSeed seedFrom(PathPlannerPath path) {
+    return seedFrom(path, null);
+  }
+
+  public PathSeed seedFrom(PathPlannerPath path, RobotConfig robotConfig) {
+    Objects.requireNonNull(path, "path cannot be null");
+
+    double startingSpeed = extractStartingSpeed(path);
+    double endingSpeed = extractEndingSpeed(path);
+
+    CSPConstraints constraints = profile.getConstraints();
+
+    PathConstraints global = path.getGlobalConstraints();
+    if (global != null && !global.unlimited()) {
+      constraints = mergeConstraints(constraints, global);
+    }
+
+    if (robotConfig != null) {
+      constraints = mergeConstraints(constraints, robotConfig);
+    }
+
+    return new PathSeed(constraints, startingSpeed, endingSpeed);
+  }
+
   // calculates the resulting chassis speeds necessary at that point in space
   public CSPResult calculate(Pose2d current, ChassisSpeeds robotRelativeSpeeds, CSPTarget target) {
+    return calculate(
+        current,
+        robotRelativeSpeeds,
+        target,
+        profile.getConstraints(),
+        profile.getConstraints().velocity);
+  }
+
+  private CSPResult calculate(
+      Pose2d current,
+      ChassisSpeeds robotRelativeSpeeds,
+      CSPTarget target,
+      CSPConstraints activeConstraints,
+      double speedCap) {
 
     Translation2d offset =
         toTargetCoordinateFrame(
@@ -58,32 +104,109 @@ public class CSPPilot {
             .rotateBy(current.getRotation());
 
     Translation2d initial = toTargetCoordinateFrame(fieldRelativeSpeeds, target);
+
     double disp = offset.getNorm();
+    double velocityCap = activeConstraints.velocity;
+    if (Double.isFinite(speedCap)) {
+      velocityCap = Math.min(velocityCap, Math.max(0.0, speedCap));
+    }
 
     if (target.getEntryAngle().isEmpty() || disp < profile.getBeelineRadius().in(Meters)) {
       Translation2d towardsTarget = offset.div(disp);
-      Translation2d goal =
-          towardsTarget.times(
-              profile.getConstraints().calculateMaxVelocity(disp) + target.getVelocity());
 
-      Translation2d out = correct(initial, goal);
+      double goalLimit = Math.min(activeConstraints.calculateMaxVelocity(disp), velocityCap);
+      if (target.getVelocity() > 1e-9) {
+        goalLimit = Math.min(goalLimit, target.getVelocity());
+      }
+
+      Translation2d goal = towardsTarget.times(goalLimit);
+      Translation2d out = correct(initial, goal, activeConstraints, velocityCap);
       Translation2d velo = toGlobalCoordinateFrame(out, target);
       Rotation2d rot = getRotationTarget(current.getRotation(), target, disp);
+
       return new CSPResult(MetersPerSecond.of(velo.getX()), MetersPerSecond.of(velo.getY()), rot);
     }
 
-    double speed = profile.getConstraints().calculateMaxVelocity(disp) + target.getVelocity();
-    Translation2d goal = calculateSwirlyVelocity(offset, speed);
+    double goalLimit = Math.min(activeConstraints.calculateMaxVelocity(disp), velocityCap);
+    if (target.getVelocity() > 1e-9) {
+      goalLimit = Math.min(goalLimit, target.getVelocity());
+    }
 
-    Translation2d out = correct(initial, goal);
+    Translation2d goal = calculateSwirlyVelocity(offset, goalLimit);
+    Translation2d out = correct(initial, goal, activeConstraints, velocityCap);
     Translation2d velo = toGlobalCoordinateFrame(out, target);
     Rotation2d rot = getRotationTarget(current.getRotation(), target, disp);
+
     return new CSPResult(MetersPerSecond.of(velo.getX()), MetersPerSecond.of(velo.getY()), rot);
   }
 
   // makes it concise, i just didn't want to call pathfollewer like that
   public PathFollower followPath(PathPlannerPath path) {
-    return new PathFollower(path);
+    PathSeed seed = seedFrom(path, null);
+    return new PathFollower(path, seed.constraints(), seed.startingSpeed(), seed.endingSpeed());
+  }
+
+  public PathFollower followPath(PathPlannerPath path, double startingSpeed, double endingSpeed) {
+    PathSeed seed = seedFrom(path, null);
+    return new PathFollower(path, seed.constraints(), startingSpeed, endingSpeed);
+  }
+
+  public PathFollower followPath(PathPlannerPath path, RobotConfig robotConfig) {
+    PathSeed seed = seedFrom(path, robotConfig);
+    return new PathFollower(path, seed.constraints(), seed.startingSpeed(), seed.endingSpeed());
+  }
+
+  public PathFollower followPath(
+      PathPlannerPath path, RobotConfig robotConfig, double startingSpeed, double endingSpeed) {
+    PathSeed seed = seedFrom(path, robotConfig);
+    return new PathFollower(path, seed.constraints(), startingSpeed, endingSpeed);
+  }
+
+  private CSPConstraints mergeConstraints(CSPConstraints base, PathConstraints pathConstraints) {
+    if (pathConstraints == null || pathConstraints.unlimited()) {
+      return base;
+    }
+
+    return new CSPConstraints(
+        Math.min(base.velocity, pathConstraints.maxVelocity().in(MetersPerSecond)),
+        Math.min(base.acceleration, pathConstraints.maxAcceleration().in(MetersPerSecondPerSecond)),
+        base.jerk);
+  }
+
+  private CSPConstraints mergeConstraints(CSPConstraints base, RobotConfig robotConfig) {
+    if (robotConfig == null || robotConfig.moduleConfig == null) {
+      return base;
+    }
+
+    double maxVelocity = robotConfig.moduleConfig.maxDriveVelocityMPS;
+
+    double tractionAccel = Double.POSITIVE_INFINITY;
+    if (Double.isFinite(robotConfig.massKG) && robotConfig.massKG > 1e-9) {
+      tractionAccel = robotConfig.wheelFrictionForce / robotConfig.massKG;
+    }
+    if (!(tractionAccel > 1e-9) || Double.isNaN(tractionAccel)) {
+      double wheelCof = robotConfig.moduleConfig.wheelCOF;
+      tractionAccel = Double.isFinite(wheelCof) ? wheelCof * GRAVITY : Double.POSITIVE_INFINITY;
+    }
+
+    return new CSPConstraints(
+        Math.min(base.velocity, maxVelocity),
+        Math.min(base.acceleration, tractionAccel),
+        base.jerk);
+  }
+
+  private double extractStartingSpeed(PathPlannerPath path) {
+    if (path == null || path.getIdealStartingState() == null) {
+      return 0.0;
+    }
+    return Math.max(0.0, path.getIdealStartingState().velocityMPS());
+  }
+
+  private double extractEndingSpeed(PathPlannerPath path) {
+    if (path == null || path.getGoalEndState() == null) {
+      return 0.0;
+    }
+    return Math.max(0.0, path.getGoalEndState().velocityMPS());
   }
 
   // Basically the reciprocal of withrobotrelativespeeds, it is in the target frame
@@ -99,7 +222,12 @@ public class CSPPilot {
   }
 
   // manages the max acceleration and max velocity to change the vectors
-  private Translation2d correct(Translation2d initial, Translation2d goal) {
+  private Translation2d correct(
+      Translation2d initial,
+      Translation2d goal,
+      CSPConstraints activeConstraints,
+      double speedCap) {
+
     Rotation2d angleOffset = Rotation2d.kZero;
     if (goal.getNorm() > 1e-9) {
       angleOffset = new Rotation2d(goal.getX(), goal.getY());
@@ -111,16 +239,19 @@ public class CSPPilot {
     double initialI = adjustedInitial.getX();
     double goalI = adjustedGoal.getX();
 
-    if (goalI > profile.getConstraints().velocity) {
-      goalI = profile.getConstraints().velocity;
+    double velocityCap = activeConstraints.velocity;
+    if (Double.isFinite(speedCap)) {
+      velocityCap = Math.min(velocityCap, Math.max(0.0, speedCap));
     }
 
-    double adjustedI =
-        Math.min(goalI, push(initialI, goalI, profile.getConstraints().acceleration));
+    if (goalI > velocityCap) {
+      goalI = velocityCap;
+    }
+
+    double adjustedI = Math.min(goalI, push(initialI, goalI, activeConstraints.acceleration));
     return new Translation2d(adjustedI, 0).rotateBy(angleOffset);
   }
 
-  /** Uses the provided acceleration to step the start value toward the end value. */
   private double push(double start, double end, double accel) {
     double maxChange = accel * dt;
     if (Math.abs(start - end) < maxChange) {
@@ -132,8 +263,7 @@ public class CSPPilot {
     return start + maxChange;
   }
 
-  /** Swirly motion calculation, scaled by the desired target speed. */
-  private Translation2d calculateSwirlyVelocity(Translation2d offset, double speed) {
+  private Translation2d calculateSwirlyVelocity(Translation2d offset, double speedLimit) {
     double disp = offset.getNorm();
     Rotation2d theta = new Rotation2d(offset.getX(), offset.getY());
     double rads = theta.getRadians();
@@ -147,17 +277,13 @@ public class CSPPilot {
       return new Translation2d(0, 0);
     }
 
-    return new Translation2d(vx, vy)
-        .div(norm)
-        .times(Math.min(speed, profile.getConstraints().calculateMaxVelocity(dist)));
+    return new Translation2d(vx, vy).div(norm).times(Math.max(0.0, speedLimit));
   }
 
-  /** Precomputed integral used by the swirly motion model. */
   private double calculateSwirlyLength(double theta, double radius) {
     if (Math.abs(theta) < 1e-9) {
       return radius;
     }
-
     theta = Math.abs(theta);
     double hypot = Math.hypot(theta, 1);
     double u1 = radius * hypot;
@@ -165,15 +291,11 @@ public class CSPPilot {
     return 0.5 * (u1 + u2);
   }
 
-  /**
-   * If the robot is within the rotation radius, use the target rotation. Otherwise preserve the
-   * current rotation.
-   */
+  // If the robot is within the rotation radius, use the target rotation.
   private Rotation2d getRotationTarget(Rotation2d current, CSPTarget target, double dist) {
     if (target.getRotationRadius().isEmpty()) {
       return target.getReference().getRotation();
     }
-
     double radius = target.getRotationRadius().get().in(Meters);
     if (radius > dist) {
       return target.getReference().getRotation();
@@ -181,7 +303,7 @@ public class CSPPilot {
     return current;
   }
 
-  /** Returns true if the robot is within tolerance of the target pose. */
+  // Returns true if the robot is within tolerance
   public boolean atTarget(Pose2d current, CSPTarget target) {
     Pose2d goal = target.getReference();
     boolean okXY =
@@ -208,25 +330,31 @@ public class CSPPilot {
 
   public final class PathFollower {
     private final CSPPath path;
+    private final CSPConstraints baseConstraints;
     private final double lookaheadMeters;
     private final double trackingWindowMeters;
     private final double lateralGain;
-
+    private final double startingSpeed;
+    private final double endingSpeed;
     private double lastProgress = 0.0;
 
-    private PathFollower(PathPlannerPath path) {
-      this(path, 0.35, 0.75, 3.5);
+    private PathFollower(PathPlannerPath path, double startingSpeed, double endingSpeed) {
+      this(path, seedFrom(path, null).constraints(), startingSpeed, endingSpeed);
     }
 
     private PathFollower(
         PathPlannerPath path,
-        double lookaheadMeters,
-        double trackingWindowMeters,
-        double lateralGain) {
+        CSPConstraints baseConstraints,
+        double startingSpeed,
+        double endingSpeed) {
       this.path = CSPPath.fromPathPlannerPath(Objects.requireNonNull(path, "path cannot be null"));
-      this.lookaheadMeters = Math.max(0.0, lookaheadMeters);
-      this.trackingWindowMeters = Math.max(0.0, trackingWindowMeters);
-      this.lateralGain = Math.max(0.0, lateralGain);
+      this.baseConstraints =
+          Objects.requireNonNull(baseConstraints, "baseConstraints cannot be null");
+      this.lookaheadMeters = 0.35;
+      this.trackingWindowMeters = 0.75;
+      this.lateralGain = 3.5;
+      this.startingSpeed = Math.max(0.0, startingSpeed);
+      this.endingSpeed = Math.max(0.0, endingSpeed);
     }
 
     public void reset() {
@@ -244,16 +372,42 @@ public class CSPPilot {
       lastProgress = progress;
 
       double progressArc = path.arcLengthAt(progress);
+      double remainingMeters = Math.max(0.0, totalLength - progressArc);
+
       double targetArc = Math.min(totalLength, progressArc + lookaheadMeters);
       double targetProgress = targetArc / totalLength;
 
       Pose2d translationGoal = path.sample(targetProgress);
-
       Rotation2d targetRotation = path.rotationAt(progress);
       targetRotation = nearestEquivalent(current.getRotation(), targetRotation);
 
       Pose2d goal = new Pose2d(translationGoal.getTranslation(), targetRotation);
-      CSPResult raw = calculate(current, robotRelativeSpeeds, new CSPTarget(goal));
+
+      CSPConstraints activeConstraints = constraintsAtProgress(path.getSourcePath(), progress);
+
+      double interpolatedSpeed = interpolateSpeed(startingSpeed, endingSpeed, targetProgress);
+      double brakeLimitedSpeed =
+          maxSpeedToReachEndSpeed(
+              Math.max(0.0, totalLength - progressArc), 0.0, activeConstraints.acceleration);
+
+      double pathSpeedCap = Math.min(interpolatedSpeed, brakeLimitedSpeed);
+      if (Double.isFinite(activeConstraints.velocity)) {
+        pathSpeedCap = Math.min(pathSpeedCap, activeConstraints.velocity);
+      }
+
+      if (remainingMeters <= Math.max(0.50, lookaheadMeters * 2.0)) {
+        pathSpeedCap = Math.min(pathSpeedCap, 0.35);
+      }
+
+      pathSpeedCap = Math.max(0.0, pathSpeedCap);
+
+      CSPResult raw =
+          calculate(
+              current,
+              robotRelativeSpeeds,
+              new CSPTarget(goal).withVelocity(pathSpeedCap),
+              activeConstraints,
+              pathSpeedCap);
 
       Translation2d desiredFieldVelocity =
           new Translation2d(raw.vx().in(MetersPerSecond), raw.vy().in(MetersPerSecond));
@@ -264,9 +418,19 @@ public class CSPPilot {
       double alongAmount = toGoal.getX() * pathTangent.getX() + toGoal.getY() * pathTangent.getY();
       Translation2d alongComponent = pathTangent.times(alongAmount);
       Translation2d lateralError = toGoal.minus(alongComponent);
-
       Translation2d correction = lateralError.times(lateralGain);
+
       desiredFieldVelocity = desiredFieldVelocity.plus(correction);
+
+      double finalCap = activeConstraints.velocity;
+      if (Double.isFinite(pathSpeedCap)) {
+        finalCap = Math.min(finalCap, Math.max(0.0, pathSpeedCap));
+      }
+
+      double mag = desiredFieldVelocity.getNorm();
+      if (mag > finalCap && mag > 1e-9) {
+        desiredFieldVelocity = desiredFieldVelocity.times(finalCap / mag);
+      }
 
       return new CSPResult(
           MetersPerSecond.of(desiredFieldVelocity.getX()),
@@ -274,10 +438,65 @@ public class CSPPilot {
           targetRotation);
     }
 
+    private CSPConstraints constraintsAtProgress(PathPlannerPath sourcePath, double progress) {
+      CSPConstraints base = baseConstraints;
+      List<ConstraintsZone> zones = sourcePath.getConstraintZones();
+
+      if (zones == null || zones.isEmpty()) {
+        return base;
+      }
+
+      List<?> waypoints = sourcePath.getWaypoints();
+      int waypointCount = waypoints == null ? 0 : waypoints.size();
+      if (waypointCount < 2) {
+        return base;
+      }
+
+      double waypointSpan = Math.max(1.0, waypointCount - 1.0);
+      double zoneProgress = clamp01(progress);
+
+      for (ConstraintsZone zone : zones) {
+        double zoneMin = zone.minPosition() / waypointSpan;
+        double zoneMax = zone.maxPosition() / waypointSpan;
+
+        if (zoneProgress >= zoneMin && zoneProgress <= zoneMax) {
+          PathConstraints pc = zone.constraints();
+          return new CSPConstraints(
+              Math.min(base.velocity, pc.maxVelocity().in(MetersPerSecond)),
+              Math.min(base.acceleration, pc.maxAcceleration().in(MetersPerSecondPerSecond)),
+              base.jerk);
+        }
+      }
+
+      return base;
+    }
+
     public boolean isFinished(Pose2d current) {
-      double progress = path.closestProgress(current, lastProgress, trackingWindowMeters);
       Pose2d end = path.samplePose(1.0);
-      return progress >= 0.999 && atTarget(current, new CSPTarget(end));
+
+      double xyTol = Math.max(profile.getErrorXY().in(Meters), 0.07);
+      double thetaTol = Math.max(profile.getErrorTheta().in(Radians), Math.toRadians(5));
+
+      double xyError = current.getTranslation().getDistance(end.getTranslation());
+      double thetaError =
+          Math.abs(normalizeRadians(current.getRotation().minus(end.getRotation()).getRadians()));
+
+      return xyError <= xyTol && thetaError <= thetaTol;
+    }
+
+    private double interpolateSpeed(double start, double end, double t) {
+      t = clamp01(t);
+      return Math.max(0.0, start + (end - start) * t);
+    }
+
+    private double maxSpeedToReachEndSpeed(double remainingMeters, double endSpeed, double accel) {
+      if (remainingMeters <= 1e-9) {
+        return endSpeed;
+      }
+      if (!(accel > 1e-9) || Double.isInfinite(accel)) {
+        return Double.POSITIVE_INFINITY;
+      }
+      return Math.sqrt(Math.max(0.0, endSpeed * endSpeed + 2.0 * accel * remainingMeters));
     }
   }
 
@@ -286,7 +505,6 @@ public class CSPPilot {
     protected double velocity;
     protected double acceleration;
     protected double jerk;
-
     protected final double x0;
     protected final double v0;
 
@@ -298,8 +516,17 @@ public class CSPPilot {
       this.velocity = velocity;
       this.acceleration = acceleration;
       this.jerk = jerk;
-      x0 = Math.pow(acceleration, 3.0) / (18.0 * jerk * jerk);
-      v0 = jerkConstrainedVelocity(x0);
+
+      if (Double.isFinite(acceleration)
+          && Double.isFinite(jerk)
+          && acceleration > 1e-9
+          && jerk > 1e-9) {
+        x0 = Math.pow(acceleration, 3.0) / (18.0 * jerk * jerk);
+        v0 = jerkConstrainedVelocity(x0);
+      } else {
+        x0 = 0.0;
+        v0 = 0.0;
+      }
     }
 
     public CSPConstraints(double acceleration, double jerk) {
@@ -319,10 +546,13 @@ public class CSPPilot {
     }
 
     protected double calculateMaxVelocity(double dist) {
+      double max;
       if (dist > x0) {
-        return accelerationConstrainedVelocity(dist);
+        max = accelerationConstrainedVelocity(dist);
+      } else {
+        max = jerkConstrainedVelocity(dist);
       }
-      return jerkConstrainedVelocity(dist);
+      return Math.min(max, velocity);
     }
 
     private double accelerationConstrainedVelocity(double dist) {
@@ -519,6 +749,10 @@ public class CSPPilot {
       this.rotationSamples = buildRotationSamplesFromPathPoints(source, this.totalLength);
     }
 
+    public PathPlannerPath getSourcePath() {
+      return source;
+    }
+
     public List<Pose2d> getPoses() {
       return poses;
     }
@@ -609,11 +843,9 @@ public class CSPPilot {
       if (rotationSamples.size() == 1) {
         return rotationSamples.get(0).rotation();
       }
-
       if (s <= rotationSamples.get(0).s()) {
         return rotationSamples.get(0).rotation();
       }
-
       if (s >= rotationSamples.get(rotationSamples.size() - 1).s()) {
         return rotationSamples.get(rotationSamples.size() - 1).rotation();
       }
@@ -625,12 +857,12 @@ public class CSPPilot {
 
       RotationSample a = rotationSamples.get(i);
       RotationSample b = rotationSamples.get(i + 1);
-
       double t = (s - a.s()) / Math.max(1e-9, b.s() - a.s());
       double smooth = (1.0 - Math.cos(t * Math.PI)) / 2.0;
 
       double aRad = a.rotation().getRadians();
       double delta = normalizeRadians(b.rotation().getRadians() - aRad);
+
       return new Rotation2d(normalizeRadians(aRad + delta * smooth));
     }
 
@@ -642,8 +874,8 @@ public class CSPPilot {
       Translation2d a = sample(s0).getTranslation();
       Translation2d b = sample(s1).getTranslation();
       Translation2d d = b.minus(a);
-
       double n = d.getNorm();
+
       if (n < 1e-9) {
         return new Translation2d(1.0, 0.0);
       }
@@ -670,7 +902,6 @@ public class CSPPilot {
 
       double bestWindowScore = Double.POSITIVE_INFINITY;
       double bestWindowArc = hintArc;
-
       double bestAnyScore = Double.POSITIVE_INFINITY;
       double bestAnyArc = 0.0;
 
@@ -735,19 +966,16 @@ public class CSPPilot {
     private static double[] buildCumulativeDistances(List<Pose2d> poses) {
       double[] distances = new double[poses.size()];
       distances[0] = 0.0;
-
       for (int i = 1; i < poses.size(); i++) {
         double d = poses.get(i).getTranslation().getDistance(poses.get(i - 1).getTranslation());
         distances[i] = distances[i - 1] + d;
       }
-
       return distances;
     }
 
     private static double[] buildCurvatures(List<Pose2d> poses) {
       int n = poses.size();
       double[] k = new double[n];
-
       if (n < 3) {
         return k;
       }
@@ -784,8 +1012,8 @@ public class CSPPilot {
     private static List<RotationSample> buildRotationSamplesFromPathPoints(
         PathPlannerPath source, double totalLength) {
       List<RotationSample> out = new ArrayList<>();
-
       List<PathPoint> points = source.getAllPathPoints();
+
       if (points == null || points.isEmpty()) {
         return List.of();
       }
@@ -794,7 +1022,6 @@ public class CSPPilot {
         if (point.rotationTarget == null) {
           continue;
         }
-
         double s = totalLength > 1e-9 ? point.distanceAlongPath / totalLength : 0.0;
         out.add(new RotationSample(clamp01(s), point.rotationTarget.rotation()));
       }
@@ -810,7 +1037,6 @@ public class CSPPilot {
     // lerp.
     private static Pose2d lerpPose(Pose2d a, Pose2d b, double t) {
       t = Math.max(0.0, Math.min(1.0, t));
-
       double x = a.getX() + (b.getX() - a.getX()) * t;
       double y = a.getY() + (b.getY() - a.getY()) * t;
 

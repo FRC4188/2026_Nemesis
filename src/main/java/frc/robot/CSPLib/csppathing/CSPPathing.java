@@ -2,6 +2,7 @@ package frc.robot.CSPLib.csppathing;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -16,17 +17,15 @@ import frc.robot.util.FieldConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class CSPPathing {
-
   private static final Drive drive = Drive.getInstance();
 
   private final CSPPilot pilot;
   private final ProfiledPIDController headingController;
   private final List<PathPlannerPath> paths = new ArrayList<>();
-
   private Pose2d startPose = null;
+  private RobotConfig robotConfig = null;
 
   public CSPPathing(CSPPilot pilot, ProfiledPIDController headingController) {
     this.pilot = Objects.requireNonNull(pilot, "pilot cannot be null");
@@ -36,6 +35,11 @@ public final class CSPPathing {
 
   public CSPPathing withStartPose(Pose2d pose) {
     this.startPose = pose;
+    return this;
+  }
+
+  public CSPPathing withRobotConfig(RobotConfig robotConfig) {
+    this.robotConfig = robotConfig;
     return this;
   }
 
@@ -57,61 +61,67 @@ public final class CSPPathing {
       throw new IllegalStateException("No paths defined");
     }
 
-    final int lastIndex = paths.size() - 1;
-    final AtomicInteger index = new AtomicInteger(0);
-    final CSPPilot.PathFollower[] followers = new CSPPilot.PathFollower[paths.size()];
+    List<Command> segments = new ArrayList<>();
 
-    Command main =
-        Commands.run(
-                () -> {
-                  Pose2d pose = drive.getPose();
-                  ChassisSpeeds robotSpeeds = drive.getChassisSpeeds();
+    for (int i = 0; i < paths.size(); i++) {
+      final PathPlannerPath path = paths.get(i);
+      final boolean firstSegment = i == 0;
 
-                  while (index.get() < lastIndex
-                      && followers[index.get()] != null
-                      && followers[index.get()].isFinished(pose)) {
-                    index.incrementAndGet();
-                  }
+      final CSPPilot.PathSeed seed =
+          robotConfig != null ? pilot.seedFrom(path, robotConfig) : pilot.seedFrom(path);
 
-                  CSPPilot.PathFollower follower = followers[index.get()];
-                  CSPPilot.CSPResult out = follower.update(pose, robotSpeeds);
+      final CSPPilot.PathFollower follower =
+          pilot.followPath(path, seed.constraints().velocity, seed.endingSpeed());
 
-                  double omega =
-                      headingController.calculate(
-                          pose.getRotation().getRadians(), out.targetAngle().getRadians());
+      Command segment =
+          Commands.sequence(
+              Commands.runOnce(
+                  () -> {
+                    follower.reset();
+                    if (firstSegment && startPose != null) {
+                      drive.setPose(startPose);
+                    }
+                    Pose2d pose = drive.getPose();
+                    headingController.reset(pose.getRotation().getRadians());
+                  },
+                  drive),
+              Commands.run(
+                      () -> {
+                        Pose2d pose = drive.getPose();
+                        ChassisSpeeds robotSpeeds = drive.getChassisSpeeds();
+                        CSPPilot.CSPResult out = follower.update(pose, robotSpeeds);
 
-                  ChassisSpeeds speeds =
-                      ChassisSpeeds.fromFieldRelativeSpeeds(
-                          out.vx().in(MetersPerSecond),
-                          out.vy().in(MetersPerSecond),
-                          omega,
-                          pose.getRotation());
+                        double omega =
+                            headingController.calculate(
+                                pose.getRotation().getRadians(), out.targetAngle().getRadians());
 
-                  drive.runVelocity(speeds);
-                },
-                drive)
-            .beforeStarting(
-                () -> {
-                  index.set(0);
+                        ChassisSpeeds speeds =
+                            ChassisSpeeds.fromFieldRelativeSpeeds(
+                                out.vx().in(MetersPerSecond),
+                                out.vy().in(MetersPerSecond),
+                                omega,
+                                pose.getRotation());
 
-                  Pose2d reset = startPose != null ? startPose : drive.getPose();
-                  headingController.reset(reset.getRotation().getRadians());
+                        drive.runVelocity(speeds);
+                      },
+                      drive)
+                  .until(() -> follower.isFinished(drive.getPose())));
 
-                  if (startPose != null) {
-                    drive.setPose(startPose);
-                  }
+      segments.add(segment);
+    }
 
-                  for (int i = 0; i < paths.size(); i++) {
-                    followers[i] = pilot.followPath(paths.get(i));
-                  }
-                })
-            .until(
-                () ->
-                    followers[lastIndex] != null
-                        && followers[lastIndex].isFinished(drive.getPose()))
-            .finallyDo(interrupted -> drive.stop());
-
-    return main;
+    return Commands.sequence(segments.toArray(new Command[0]))
+        .beforeStarting(
+            () -> {
+              if (startPose != null) {
+                drive.setPose(startPose);
+              }
+              headingController.reset(drive.getPose().getRotation().getRadians());
+            })
+        .finallyDo(
+            interrupted -> {
+              drive.stop();
+            });
   }
 
   public static Command buildTrialAuto(CSPPilot pilot, ProfiledPIDController headingController) {

@@ -36,11 +36,13 @@ public final class Constants {
   public static class Id {
     public static final int kWrist = 13;
     public static final int kIntake = 14;
+    public static final int kLeftShoot2 = 15;
     public static final int kHopper = 16;
     public static final int kIndexer = 17;
     public static final int kRightShooter = 18;
     public static final int kLeftShooter = 19;
     public static final int kHood = 20;
+    public static final int kLeftShoot3 = 21;
     public static final int kClimber = 22;
   }
 
@@ -100,6 +102,7 @@ public final class Constants {
 
     public static final double ANGLE_MAXVEL = DRIVE_MAXVEL / Drive.DRIVE_BASE_RADIUS;
     public static final double ANGLE_MAXACC = 20.0;
+
     public static final ProfiledPIDController ANGLE_PID =
         (new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(ANGLE_MAXVEL, ANGLE_MAXACC)));
@@ -172,10 +175,10 @@ public final class Constants {
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(500.0)
-            .withKD(50.0)
-            .withKS(3.0)
-            .withKG(5.5)
+            .withKP(0)
+            .withKD(0)
+            .withKS(0)
+            .withKG(0)
             .withGravityType(GravityTypeValue.Arm_Cosine);
     // public static final Slot0Configs hoodGains =
     //     new Slot0Configs()
@@ -192,17 +195,17 @@ public final class Constants {
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
-    public static final double kStatorCurrent = 60.0;
+    public static final double kStatorCurrent = 80.0;
     public static final double kSupplyCurrent = 50.0;
-    public static final double kPeakForwardTC = 60.0;
-    public static final double kPeakReverseTC = -60.0;
+    public static final double kPeakForwardTC = 80.0;
+    public static final double kPeakReverseTC = -80.0;
 
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
     public static final Slot0Configs shooterGains =
-        new Slot0Configs().withKP(10.0).withKS(8.3).withKV(0.055);
+        new Slot0Configs().withKP(0).withKS(0).withKV(0);
 
     // public static final Slot0Configs shooterGains =
     //     new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(8.2).withKV(0.085);

@@ -77,7 +77,7 @@ public class RobotContainer {
                   new CSPPilot.CSPConstraints()
                       .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL)
                       .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC)
-                      .withJerk(10.0))
+                      .withJerk(50))
               .withErrorXY(edu.wpi.first.units.Units.Centimeters.of(2))
               .withErrorTheta(edu.wpi.first.units.Units.Degrees.of(0.5))
               .withBeelineRadius(edu.wpi.first.units.Units.Centimeters.of(5)));
@@ -185,12 +185,86 @@ public class RobotContainer {
                 .withEndingRotation(Rotation2d.kZero)
                 .withEndingSpeed(2));
 
+    PathPlannerPath path1 =
+        PathBuilder.build(
+            new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                .withStartingSpeed(2),
+            new PathBuilder.Target(
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.15)),
+                    Rotation2d.kZero)));
+
     autoChooser.addOption(
         "test csppilot",
         new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
             .withStartPose(
                 new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .addPath(path)
+            .addPaths(path, path1)
+            .build());
+
+    autoChooser.addOption(
+        "nz bump",
+        Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))),
+            PathBuilder.path(
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+                    .withStartingSpeed(5),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.right_trench_neutral_preentrance,
+                        Rotation2d.kCCW_90deg)),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.FuelField.intake_right_midline_corner,
+                        Rotation2d.fromDegrees(110))),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110)))),
+            PathBuilder.path(
+                new PathBuilder.Target(
+                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110))),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.FuelField.middle_close_line.plus(new Translation2d(0, -0.5)),
+                        Rotation2d.kZero)),
+                new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Bump.right_bump_neutral_entrance.plus(
+                            new Translation2d(0.5, 0)),
+                        Rotation2d.kZero)),
+                new PathBuilder.Target(
+                        new Pose2d(
+                            FieldConstants.Bump.right_bump_alliance_entrance.plus(
+                                new Translation2d(-1, 0)),
+                            Rotation2d.kZero))
+                    .withEndingSpeed(2))));
+
+    PathPlannerPath cpath =
+        PathBuilder.build(
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg)),
+            new PathBuilder.Target(
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg)),
+            new PathBuilder.Target(
+                new Pose2d(
+                    FieldConstants.FuelField.intake_right_midline_corner,
+                    Rotation2d.fromDegrees(110))),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110))));
+
+    autoChooser.addOption(
+        "nz bump pose",
+        new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
+            .withStartPose(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+            .addPath(cpath)
             .build());
 
     // Set up SysId routines
@@ -281,13 +355,7 @@ public class RobotContainer {
                 () -> pilot.a().getAsBoolean()));
 
     // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
-    pilot
-        .getRightTButton()
-        .whileTrue(
-            Commands.either(
-                ScoringCommands.halfShake(),
-                ScoringCommands.fullShake(),
-                () -> copilot.b().getAsBoolean() || pilot.a().getAsBoolean()));
+    pilot.getRightTButton().whileTrue(ScoringCommands.slowUp());
 
     pilot
         .getLeftTButton()

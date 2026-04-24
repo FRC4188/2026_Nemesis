@@ -29,6 +29,8 @@ public class Shooter extends SubsystemBase {
 
   private final Alert leftDisconnectedAlert;
   private final Alert rightDisconnectedAlert;
+  private final Alert left2DisconnectedAlert;
+  private final Alert left3DisconnectedAlert;
 
   @AutoLogOutput(key = "Shooter/Setpoint RPM")
   private double setRPM = 0.0;
@@ -39,6 +41,8 @@ public class Shooter extends SubsystemBase {
 
     leftDisconnectedAlert = new Alert("Left shooter motor disconnected.", AlertType.kError);
     rightDisconnectedAlert = new Alert("Right shooter motor disconnected.", AlertType.kError);
+    left2DisconnectedAlert = new Alert("Left 2 shooter motor disconnected.", AlertType.kError);
+    left3DisconnectedAlert = new Alert("Left 3 shooter motor disconnected.", AlertType.kError);
   }
 
   public void setVelocityRPM(double RPM) {
@@ -66,5 +70,7 @@ public class Shooter extends SubsystemBase {
 
     leftDisconnectedAlert.set(!inputs.leftConnected);
     rightDisconnectedAlert.set(!inputs.rightConnected);
+    left2DisconnectedAlert.set(!inputs.left2Connected);
+    left3DisconnectedAlert.set(!inputs.left3Connected);
   }
 }
