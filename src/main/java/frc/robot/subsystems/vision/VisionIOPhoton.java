@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,13 +43,14 @@ public class VisionIOPhoton implements VisionIO {
 
   public boolean valid(int id) {
     // return true;
-    if (DriverStation.getAlliance().isPresent()
-        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-      return !(id > 16);
-    } else {
-      return !(id < 17);
-    }
-    // return !(id == 23 || id == 28 || id == 22 || id == 17);
+    // if (DriverStation.getAlliance().isPresent()
+    //     && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+    //   return !(id > 16);
+    // } else {
+    //   return !(id < 17);
+    // }
+    return !(id == 23 || id == 28 || id == 22 || id == 17 || id == 31 || id == 32 || id == 29
+        || id == 30);
   }
 
   @Override

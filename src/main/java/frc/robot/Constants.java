@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.CANBus;
@@ -22,6 +24,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.CSPLib.csppathing.CSPPilot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 
@@ -117,6 +120,21 @@ public final class Constants {
     public static void updateAnglePID(double kP, double kI, double kD, double kF) {
       ANGLE_PID.setPID(kP, kI, kD);
     }
+
+    public static final CSPPilot.CSPConstraints CONSTRAINTS =
+        new CSPPilot.CSPConstraints(
+            DRIVE_MAXVEL, // max velocity (m/s)
+            DRIVE_MAXACC, // max acceleration (m/s^2)
+            2.0 // jerk (m/s^3)
+            );
+
+    public static final CSPPilot.CSPProfile PROFILE =
+        new CSPPilot.CSPProfile(CONSTRAINTS)
+            .withErrorXY(Meters.of(0.03))
+            .withErrorTheta(Degrees.of(2))
+            .withBeelineRadius(Meters.of(0.4));
+
+    public static final CSPPilot PILOT = new CSPPilot(PROFILE);
 
     public static final RobotConfig PP_CONFIG =
         new RobotConfig(
