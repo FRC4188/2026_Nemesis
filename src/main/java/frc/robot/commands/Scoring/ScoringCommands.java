@@ -66,7 +66,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 5.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 9.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -91,7 +91,7 @@ public class ScoringCommands {
   }
 
   public static double RPMRegress(double distance) {
-    return 38 * Math.pow((distance - 1.5), 2) + 2200;
+    return 38 * Math.pow((distance - 1.5), 2) + 1800;
   }
 
   public static Rotation2d inclineHueristic(double distance) {
@@ -104,7 +104,7 @@ public class ScoringCommands {
 
   public static Command passShoot() {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(3000), shooter::stop, shooter),
+        Commands.runEnd(() -> shooter.setVelocityRPM(4200), shooter::stop, shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())

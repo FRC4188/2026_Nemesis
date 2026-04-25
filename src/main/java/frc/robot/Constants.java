@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -175,11 +176,13 @@ public final class Constants {
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs hoodGains =
         new Slot0Configs()
-            .withKP(0)
-            .withKD(0)
-            .withKS(0)
-            .withKG(0)
+            .withKP(500)
+            .withKD(50)
+            .withKS(3.0)
+            .withKG(5.5)
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             .withGravityType(GravityTypeValue.Arm_Cosine);
+
     // public static final Slot0Configs hoodGains =
     //     new Slot0Configs()
     //         .withKP(75.0)
@@ -191,21 +194,21 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 50.0;
+    public static final double kTolerance = 0.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
-    public static final double kStatorCurrent = 80.0;
+    public static final double kStatorCurrent = 60.0;
     public static final double kSupplyCurrent = 50.0;
-    public static final double kPeakForwardTC = 80.0;
-    public static final double kPeakReverseTC = -80.0;
+    public static final double kPeakForwardTC = 60.0;
+    public static final double kPeakReverseTC = -60.0;
 
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
     public static final Slot0Configs shooterGains =
-        new Slot0Configs().withKP(0).withKS(0).withKV(0);
+        new Slot0Configs().withKP(8).withKS(5).withKV(0.0125);
 
     // public static final Slot0Configs shooterGains =
     //     new Slot0Configs().withKP(10.0).withKI(0.0).withKD(0.0).withKS(8.2).withKV(0.085);
