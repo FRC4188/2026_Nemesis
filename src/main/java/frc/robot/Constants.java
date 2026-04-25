@@ -123,15 +123,15 @@ public final class Constants {
 
     public static final CSPPilot.CSPConstraints CONSTRAINTS =
         new CSPPilot.CSPConstraints(
-            DRIVE_MAXVEL, // max velocity (m/s)
-            DRIVE_MAXACC, // max acceleration (m/s^2)
-            2.0 // jerk (m/s^3)
+            1000, // max velocity (m/s)
+            1000, // max acceleration (m/s^2)
+            1000 // jerk (m/s^3)
             );
 
     public static final CSPPilot.CSPProfile PROFILE =
         new CSPPilot.CSPProfile(CONSTRAINTS)
-            .withErrorXY(Meters.of(0.03))
-            .withErrorTheta(Degrees.of(2))
+            .withErrorXY(Meters.of(0.1))
+            .withErrorTheta(Degrees.of(3))
             .withBeelineRadius(Meters.of(0.4));
 
     public static final CSPPilot PILOT = new CSPPilot(PROFILE);

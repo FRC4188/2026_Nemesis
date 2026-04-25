@@ -194,6 +194,14 @@ public class RobotContainer {
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.15)),
                     Rotation2d.kZero)));
 
+    autoChooser.addOption(
+        "c swipe pose testing",
+        new CSPPathing(Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
+            .withStartPose(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+            .addPaths(path, path1)
+            .build());
+
     // autoChooser.addOption(
     //     "test csppilot",
     //     new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)

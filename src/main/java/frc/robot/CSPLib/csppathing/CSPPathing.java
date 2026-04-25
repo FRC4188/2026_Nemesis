@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants;
 import java.util.ArrayList;
@@ -71,18 +72,16 @@ public final class CSPPathing {
           robotConfig != null ? pilot.seedFrom(path, robotConfig) : pilot.seedFrom(path);
 
       final CSPPilot.PathFollower follower =
-          pilot.followPath(path, seed.constraints(), seed.startingSpeed(), seed.endingSpeed());
+          pilot.followPath(path, Constants.DriveConstants.CONSTRAINTS, 1000, 1000);
 
       Command segment =
           Commands.sequence(
               Commands.runOnce(
                   () -> {
                     follower.reset();
-
                     if (firstSegment && startPose != null) {
                       drive.setPose(startPose);
                     }
-
                     Pose2d pose = drive.getPose();
                     headingController.reset(pose.getRotation().getRadians());
                   },
