@@ -196,6 +196,7 @@ public class ShooterIOReal implements ShooterIO {
   public void setVelocity(double RPM) {
     if (RPM == 0.0) {
       setTorqueCurrent(0);
+      return;
     }
     leftLeader.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
   }

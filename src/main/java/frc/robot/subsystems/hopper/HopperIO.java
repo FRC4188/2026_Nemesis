@@ -14,6 +14,7 @@ public interface HopperIO {
     public double indexerAppliedVolts = 0.0;
     public double indexerCurrentAmps = 0.0;
     public double indexerTempC = 0.0;
+    public double indexerRPM = 0.0;
   }
 
   public default void updateInputs(HopperIOInputs inputs) {}
@@ -21,4 +22,6 @@ public interface HopperIO {
   public default void setAggitateVolts(double volts) {}
 
   public default void setIndexerVolts(double volts) {}
+
+  public default void setIndexerVelocity(double RPM) {}
 }

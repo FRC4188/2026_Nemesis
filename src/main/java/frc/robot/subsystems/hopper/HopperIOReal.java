@@ -5,11 +5,14 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -28,11 +31,13 @@ public class HopperIOReal implements HopperIO {
   private final StatusSignal<Voltage> indexerAppliedVolts;
   private final StatusSignal<Current> indexerCurrentAmps;
   private final StatusSignal<Temperature> indexerTempC;
+  private final StatusSignal<AngularVelocity> indexerVelocity;
 
   private final Debouncer aggitateDebouncer = new Debouncer(0.5, DebounceType.kFalling);
   private final Debouncer indexerDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+  private final VelocityTorqueCurrentFOC velocityTCrequest = new VelocityTorqueCurrentFOC(0.0);
 
   public HopperIOReal() {
     indexerMotor = new TalonFX(Constants.Id.kIndexer, Constants.Robot.rio);
@@ -46,6 +51,11 @@ public class HopperIOReal implements HopperIO {
                     .withSupplyCurrentLimit(Constants.IndexerConstants.kSupplyCurrent))
             .withVoltage(
                 new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12))
+            .withTorqueCurrent(
+                new TorqueCurrentConfigs()
+                    .withPeakForwardTorqueCurrent(Constants.IndexerConstants.kPeakForwardTC)
+                    .withPeakReverseTorqueCurrent(Constants.IndexerConstants.kPeakReverseTC))
+            .withSlot0(Constants.IndexerConstants.indexGains)
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withNeutralMode(Constants.IndexerConstants.kNuetralMode)
@@ -73,6 +83,9 @@ public class HopperIOReal implements HopperIO {
     indexerAppliedVolts = indexerMotor.getMotorVoltage();
     indexerCurrentAmps = indexerMotor.getStatorCurrent();
     indexerTempC = indexerMotor.getDeviceTemp();
+    indexerVelocity = indexerMotor.getVelocity();
+
+    indexerVelocity.setUpdateFrequency(50.0);
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         5.0,
@@ -98,6 +111,15 @@ public class HopperIOReal implements HopperIO {
   }
 
   @Override
+  public void setIndexerVelocity(double RPM) {
+    if (RPM == 0.0) {
+      setIndexerVolts(0.0);
+      return;
+    }
+    indexerMotor.setControl(velocityTCrequest.withVelocity(RPM / 60.0));
+  }
+
+  @Override
   public void updateInputs(HopperIOInputs inputs) {
     inputs.aggitateConnected =
         aggitateDebouncer.calculate(
@@ -105,7 +127,8 @@ public class HopperIOReal implements HopperIO {
                 .isOK());
     inputs.indexerConnected =
         indexerDebouncer.calculate(
-            BaseStatusSignal.refreshAll(indexerAppliedVolts, indexerCurrentAmps, indexerTempC)
+            BaseStatusSignal.refreshAll(
+                    indexerAppliedVolts, indexerCurrentAmps, indexerTempC, indexerVelocity)
                 .isOK());
     inputs.aggitateAppliedVolts = aggitateAppliedVolts.getValueAsDouble();
     inputs.aggitateCurrentAmps = aggitateCurrentAmps.getValueAsDouble();
@@ -113,5 +136,6 @@ public class HopperIOReal implements HopperIO {
     inputs.indexerAppliedVolts = indexerAppliedVolts.getValueAsDouble();
     inputs.indexerCurrentAmps = indexerCurrentAmps.getValueAsDouble();
     inputs.indexerTempC = indexerTempC.getValueAsDouble();
+    inputs.indexerRPM = indexerVelocity.getValueAsDouble() * 60.0;
   }
 }
