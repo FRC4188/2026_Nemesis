@@ -20,9 +20,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
-// import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.csppathing.CSPPathing;
-import frc.robot.CSPLib.csppathing.CSPPilot;
+import frc.robot.CSPLib.csppathing.PosePathing;
+// import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
@@ -71,16 +71,16 @@ public class RobotContainer {
   private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
   private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
 
-  private final CSPPilot csppilot =
-      new CSPPilot(
-          new CSPPilot.CSPProfile(
-                  new CSPPilot.CSPConstraints()
-                      .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL)
-                      .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC)
-                      .withJerk(50))
-              .withErrorXY(edu.wpi.first.units.Units.Centimeters.of(2))
-              .withErrorTheta(edu.wpi.first.units.Units.Degrees.of(0.5))
-              .withBeelineRadius(edu.wpi.first.units.Units.Centimeters.of(5)));
+  // private final CSPPilot csppilot =
+  //     new CSPPilot(
+  //         new CSPPilot.CSPProfile(
+  //                 new CSPPilot.CSPConstraints()
+  //                     .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL)
+  //                     .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC * 1.3)
+  //                     .withJerk(10))
+  //             .withErrorXY(edu.wpi.first.units.Units.Centimeters.of(2))
+  //             .withErrorTheta(edu.wpi.first.units.Units.Degrees.of(0.5))
+  //             .withBeelineRadius(edu.wpi.first.units.Units.Centimeters.of(5)));
 
   public RobotContainer() {
     drive = Drive.getInstance();
@@ -194,13 +194,31 @@ public class RobotContainer {
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.15)),
                     Rotation2d.kZero)));
 
+    // autoChooser.addOption(
+    //     "test csppilot",
+    //     new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
+    //         .withStartPose(
+    //             new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+    //         .addPaths(path, path1)
+    //         .build());
+
     autoChooser.addOption(
-        "test csppilot",
-        new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
+        "pathhhhh",
+        new CSPPathing(Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
             .withStartPose(
                 new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .addPaths(path, path1)
+            .addPath(path)
+            .addPath(path1)
             .build());
+
+    autoChooser.addOption(
+        "AP Testing", 
+        new PosePathing(Constants.DriveConstants.ANGLE_PID).withStartPose(new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+        .withHandoffThreshold(0.5)
+        .addWaypoint(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg))
+        .addWaypoint(new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(115)))
+        .addWaypoint(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(115))).build()
+        );
 
     autoChooser.addOption(
         "nz bump",
@@ -248,7 +266,8 @@ public class RobotContainer {
     PathPlannerPath cpath =
         PathBuilder.build(
             new PathBuilder.Target(
-                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg)),
+                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+                .withStartingSpeed(5),
             new PathBuilder.Target(
                 new Pose2d(
                     FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg)),
@@ -257,21 +276,23 @@ public class RobotContainer {
                     FieldConstants.FuelField.intake_right_midline_corner,
                     Rotation2d.fromDegrees(110))),
             new PathBuilder.Target(
-                new Pose2d(FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110))));
+                    new Pose2d(
+                        FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110)))
+                .withEndingSpeed(2));
 
-    autoChooser.addOption(
-        "nz bump pose",
-        new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
-            .withStartPose(
-                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .addPath(cpath)
-            .build());
+    // autoChooser.addOption(
+    //     "nz bump pose",
+    //     new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
+    //         .withStartPose(
+    //             new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+    //         .addPath(cpath)
+    //         .build());
 
     // Set up SysId routines
-    // autoChooser.addOption(
-    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    // autoChooser.addOption(
-    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization());
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization());
 
     // Configure the button bindings
     configureButtonBindings();

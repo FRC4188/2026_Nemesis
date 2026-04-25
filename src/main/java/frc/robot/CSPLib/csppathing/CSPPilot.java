@@ -336,6 +336,9 @@ public class CSPPilot {
     private final double endingSpeed;
     private double lastProgress = 0.0;
 
+    private Translation2d lastCommandedFieldVelocity = null;
+    private Translation2d lastCommandedFieldAcceleration = null;
+
     private PathFollower(PathPlannerPath path, double startingSpeed, double endingSpeed) {
       this(path, seedFrom(path, null).constraints(), startingSpeed, endingSpeed);
     }
@@ -357,6 +360,8 @@ public class CSPPilot {
 
     public void reset() {
       lastProgress = 0.0;
+      lastCommandedFieldVelocity = null;
+      lastCommandedFieldAcceleration = null;
     }
 
     public CSPResult update(Pose2d current, ChassisSpeeds robotRelativeSpeeds) {
@@ -389,7 +394,8 @@ public class CSPPilot {
           maxSpeedToReachEndSpeed(
               Math.max(0.0, totalLength - progressArc),
               endingSpeed,
-              activeConstraints.acceleration);
+              activeConstraints.acceleration,
+              activeConstraints.jerk);
 
       double pathSpeedCap = Math.min(interpolatedSpeed, brakeLimitedSpeed);
       if (Double.isFinite(activeConstraints.velocity)) {
@@ -428,10 +434,13 @@ public class CSPPilot {
         finalCap = Math.min(finalCap, Math.max(0.0, pathSpeedCap));
       }
 
-      double mag = desiredFieldVelocity.getNorm();
-      if (mag > finalCap && mag > 1e-9) {
-        desiredFieldVelocity = desiredFieldVelocity.times(finalCap / mag);
-      }
+      desiredFieldVelocity = limitMagnitude(desiredFieldVelocity, finalCap);
+
+      desiredFieldVelocity =
+          applyAccelerationAndJerkLimits(
+              desiredFieldVelocity, activeConstraints.acceleration, activeConstraints.jerk);
+
+      desiredFieldVelocity = limitMagnitude(desiredFieldVelocity, finalCap);
 
       return new CSPResult(
           MetersPerSecond.of(desiredFieldVelocity.getX()),
@@ -490,14 +499,69 @@ public class CSPPilot {
       return Math.max(0.0, start + (end - start) * t);
     }
 
-    private double maxSpeedToReachEndSpeed(double remainingMeters, double endSpeed, double accel) {
+    /**
+     * Approximates the maximum speed that still allows reaching the requested end speed within the
+     * remaining distance under both acceleration and jerk constraints.
+     *
+     * <p>The jerk term is intentionally used as a stopping-distance limiter, similar to the
+     * Autopilot approach.
+     */
+    private double maxSpeedToReachEndSpeed(
+        double remainingMeters, double endSpeed, double accel, double jerk) {
       if (remainingMeters <= 1e-9) {
-        return endSpeed;
+        return Math.max(0.0, endSpeed);
       }
-      if (!(accel > 1e-9) || Double.isInfinite(accel)) {
-        return Double.POSITIVE_INFINITY;
+
+      double safeEndSpeed = Math.max(0.0, endSpeed);
+
+      double accelLimited = Double.POSITIVE_INFINITY;
+      if (Double.isFinite(accel) && accel > 1e-9) {
+        accelLimited = Math.sqrt(safeEndSpeed * safeEndSpeed + 2.0 * accel * remainingMeters);
       }
-      return Math.sqrt(Math.max(0.0, endSpeed * endSpeed + 2.0 * accel * remainingMeters));
+
+      double jerkLimited = Double.POSITIVE_INFINITY;
+      if (Double.isFinite(jerk) && jerk > 1e-9) {
+        jerkLimited =
+            Math.cbrt(
+                safeEndSpeed * safeEndSpeed * safeEndSpeed
+                    + 4.5 * jerk * remainingMeters * remainingMeters);
+      }
+
+      return Math.min(accelLimited, jerkLimited);
+    }
+
+    private Translation2d applyAccelerationAndJerkLimits(
+        Translation2d desiredVelocity, double maxAcceleration, double maxJerk) {
+      Translation2d currentVelocity = lastCommandedFieldVelocity;
+      Translation2d currentAcceleration = lastCommandedFieldAcceleration;
+
+      if (currentVelocity == null || currentAcceleration == null) {
+        currentVelocity = desiredVelocity;
+        currentAcceleration = new Translation2d(0.0, 0.0);
+        lastCommandedFieldVelocity = currentVelocity;
+        lastCommandedFieldAcceleration = currentAcceleration;
+        return desiredVelocity;
+      }
+
+      Translation2d desiredAcceleration = desiredVelocity.minus(currentVelocity).div(dt);
+
+      Translation2d limitedAcceleration = desiredAcceleration;
+
+      if (Double.isFinite(maxJerk) && maxJerk > 1e-9) {
+        double maxDeltaA = maxJerk * dt;
+        limitedAcceleration = limitDeltaVector(currentAcceleration, desiredAcceleration, maxDeltaA);
+      }
+
+      if (Double.isFinite(maxAcceleration) && maxAcceleration > 1e-9) {
+        limitedAcceleration = limitMagnitude(limitedAcceleration, maxAcceleration);
+      }
+
+      Translation2d nextVelocity = currentVelocity.plus(limitedAcceleration.times(dt));
+
+      lastCommandedFieldVelocity = nextVelocity;
+      lastCommandedFieldAcceleration = limitedAcceleration;
+
+      return nextVelocity;
     }
   }
 
@@ -1068,5 +1132,31 @@ public class CSPPilot {
       out += 2.0 * Math.PI;
     }
     return out;
+  }
+
+  private static Translation2d limitMagnitude(Translation2d vector, double maxMagnitude) {
+    if (!(maxMagnitude > 1e-9) || Double.isInfinite(maxMagnitude)) {
+      return vector;
+    }
+    double mag = vector.getNorm();
+    if (mag <= maxMagnitude || mag < 1e-9) {
+      return vector;
+    }
+    return vector.times(maxMagnitude / mag);
+  }
+
+  private static Translation2d limitDeltaVector(
+      Translation2d current, Translation2d desired, double maxDeltaMagnitude) {
+    if (!(maxDeltaMagnitude > 1e-9) || Double.isInfinite(maxDeltaMagnitude)) {
+      return desired;
+    }
+
+    Translation2d delta = desired.minus(current);
+    double deltaMag = delta.getNorm();
+    if (deltaMag <= maxDeltaMagnitude || deltaMag < 1e-9) {
+      return desired;
+    }
+
+    return current.plus(delta.times(maxDeltaMagnitude / deltaMag));
   }
 }

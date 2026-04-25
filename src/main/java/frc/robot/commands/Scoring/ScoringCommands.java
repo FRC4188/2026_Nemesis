@@ -35,7 +35,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 9.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 12.0), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
@@ -66,7 +66,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 9.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 12.0), hopper::stop, hopper))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -87,7 +87,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 9.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 12.0), hopper::stop, hopper))));
   }
 
   public static double RPMRegress(double distance) {
@@ -110,7 +110,7 @@ public class ScoringCommands {
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(
-                            () -> hopper.runHopperVolts(9.0, 9.0), hopper::stop, hopper))));
+                            () -> hopper.runHopperVolts(9.0, 12.0), hopper::stop, hopper))));
   }
 
   public static Command shake() {

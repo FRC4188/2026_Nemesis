@@ -78,9 +78,11 @@ public final class CSPPathing {
               Commands.runOnce(
                   () -> {
                     follower.reset();
+
                     if (firstSegment && startPose != null) {
                       drive.setPose(startPose);
                     }
+
                     Pose2d pose = drive.getPose();
                     headingController.reset(pose.getRotation().getRadians());
                   },
