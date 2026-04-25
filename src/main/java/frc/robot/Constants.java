@@ -218,10 +218,14 @@ public final class Constants {
   }
 
   public static class IndexerConstants {
-    public static final double kStatorCurrent = 40.0;
+    public static final double kStatorCurrent = 50.0;
     public static final double kSupplyCurrent = 30.0;
+    public static final double kPeakForwardTC = 50.0;
+    public static final double kPeakReverseTC = -50.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
+    public static final Slot0Configs indexGains =
+        new Slot0Configs().withKP(12.5).withKS(6.2).withKV(0.085);
   }
 
   public static class HopperConstants {

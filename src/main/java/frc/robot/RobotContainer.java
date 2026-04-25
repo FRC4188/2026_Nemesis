@@ -268,10 +268,10 @@ public class RobotContainer {
             .build());
 
     // Set up SysId routines
-    // autoChooser.addOption(
-    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    // autoChooser.addOption(
-    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization());
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization());
 
     // Configure the button bindings
     configureButtonBindings();
@@ -355,7 +355,10 @@ public class RobotContainer {
                 () -> pilot.a().getAsBoolean()));
 
     // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
-    pilot.getRightTButton().whileTrue(ScoringCommands.slowUp());
+    pilot
+        .getRightTButton()
+        .whileTrue(ScoringCommands.slowUp())
+        .onFalse(ScoringCommands.downNoStall());
 
     pilot
         .getLeftTButton()
@@ -365,7 +368,7 @@ public class RobotContainer {
         .leftBumper()
         .whileTrue(
             Commands.parallel(
-                Commands.runEnd(() -> hopper.runHopperVolts(-6.0, -6.0), hopper::stop, hopper),
+                Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
                 Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
 
     // Commands.either(
@@ -382,7 +385,6 @@ public class RobotContainer {
 
     copilot.x().onTrue(ScoringCommands.downNoStall());
     copilot.a().onTrue(ScoringCommands.goodStow());
-
     copilot.leftBumper().whileTrue(ScoringCommands.shake());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 

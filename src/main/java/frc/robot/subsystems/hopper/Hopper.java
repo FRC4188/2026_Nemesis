@@ -4,9 +4,13 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Hopper extends SubsystemBase {
+  @AutoLogOutput(key = "Indexer/Setpoint RPM")
+  private double setRPM = 0.0;
+
   private static Hopper instance = null;
 
   public static synchronized Hopper getInstance() {
@@ -34,9 +38,13 @@ public class Hopper extends SubsystemBase {
     indexerDisconnectedAlert = new Alert("Indexer motor disconnected.", AlertType.kError);
   }
 
-  public void runHopperVolts(double a_volts, double i_volts) {
+  public void runHopper(double a_volts, double iRPM) {
     io.setAggitateVolts(a_volts);
-    io.setIndexerVolts(i_volts);
+    io.setIndexerVelocity(iRPM);
+  }
+
+  public boolean indexAtGoal() {
+    return setRPM - inputs.indexerRPM < 50;
   }
 
   public void stop() {

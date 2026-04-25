@@ -31,7 +31,7 @@ public class Wrist extends SubsystemBase {
   private double setpoint = 0.0;
 
   @AutoLogOutput(key = "Wrist/Shake Enable?")
-  public boolean shakeEnable = false;
+  public boolean shakeEnable = true;
 
   public void enableShake(boolean enable) {
     shakeEnable = enable;
