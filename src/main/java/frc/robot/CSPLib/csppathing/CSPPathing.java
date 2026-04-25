@@ -72,7 +72,7 @@ public final class CSPPathing {
           robotConfig != null ? pilot.seedFrom(path, robotConfig) : pilot.seedFrom(path);
 
       final CSPPilot.PathFollower follower =
-          pilot.followPath(path, Constants.DriveConstants.CONSTRAINTS, 1000, 1000);
+          pilot.followPath(path, Constants.DriveConstants.CONSTRAINTS, 4, 2);
 
       Command segment =
           Commands.sequence(

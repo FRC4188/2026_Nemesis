@@ -160,7 +160,7 @@ public class RobotContainer {
                     new Pose2d(
                         FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
                         Rotation2d.kCCW_90deg))
-                .withStartingSpeed(5)
+                .withStartingSpeed(3)
                 .withStartingRotation(Rotation2d.kCCW_90deg)
                 .withOverrideRotations(
                     new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
