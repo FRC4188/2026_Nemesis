@@ -197,9 +197,10 @@ public class ScoringCommands {
   public static Command slowUp() {
     return Commands.either(
         Commands.sequence(
-            new WaitCommand(1.5),
-            Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
-                .until(() -> wrist.getAngle() > 80)),
+                new WaitCommand(2.0),
+                Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
+                    .until(() -> wrist.getAngle() > 80))
+            .alongWith(Commands.runEnd(() -> intake.intakeVolts(7.5), intake::stop, intake)),
         Commands.none(),
         () -> wrist.shakeEnable);
   }
