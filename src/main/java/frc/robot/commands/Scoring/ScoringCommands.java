@@ -49,22 +49,34 @@ public class ScoringCommands {
         hood);
   }
 
+  public static boolean initialShots = true;
+
   public static Command staticShoot() {
     return Commands.parallel(
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
                     RPMRegress(
-                        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getNorm())),
+                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                                .minus(drive.getPose().getTranslation())
+                                .getNorm())
+                        + ((initialShots) ? 300 : 0)),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 4200), hopper::stop, hopper))));
+                        Commands.parallel(
+                            Commands.runEnd(
+                                () -> hopper.runHopper(9.0, 4200), hopper::stop, hopper),
+                            new WaitCommand(0.1)
+                                .andThen(
+                                    new WaitUntilCommand(() -> hopper.indexAtGoal())
+                                        .andThen(
+                                            Commands.startEnd(
+                                                () -> initialShots = false,
+                                                () -> initialShots = true)))))));
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -101,7 +113,15 @@ public class ScoringCommands {
 
   public static Command passShoot() {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(4200), shooter::stop, shooter),
+        Commands.runEnd(
+            () ->
+                shooter.setVelocityRPM(
+                    (2500.0 / 6.0)
+                            * (AllianceFlip.apply(drive.getPose()).getX()
+                                - FieldConstants.field_center.getX())
+                        + 2800),
+            shooter::stop,
+            shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())

@@ -1,5 +1,9 @@
 package frc.robot.CSPLib.csppathing;
 
+import static edu.wpi.first.units.Units.Centimeters;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import com.therekrab.autopilot.APConstraints;
 import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
@@ -21,19 +25,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import static edu.wpi.first.units.Units.Centimeters;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 
 public final class PosePathing {
 
   private static final Drive drive = Drive.getInstance();
 
   private static final APConstraints baseConstraints =
-      new APConstraints()
-          .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC)
-          .withJerk(2.0)
-          .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL);
+      new APConstraints().withAcceleration(1000).withJerk(1000.0).withVelocity(1000);
 
   private static final APProfile baseProfile =
       new APProfile(baseConstraints)
@@ -88,9 +86,7 @@ public final class PosePathing {
   }
 
   public PosePathing addWaypoint(
-      Pose2d pose,
-      Function<APTarget, APTarget> config,
-      APConstraints speedConstraints) {
+      Pose2d pose, Function<APTarget, APTarget> config, APConstraints speedConstraints) {
 
     int waypointIndex = waypoints.size();
     APTarget baseTarget = new APTarget(pose).withEntryAngle(autoEntryAngleFor(pose, waypointIndex));
@@ -100,11 +96,7 @@ public final class PosePathing {
     return this;
   }
 
-  public PosePathing addWaypoint(
-      Pose2d pose,
-      APTarget target,
-      APConstraints speedConstraints) {
-
+  public PosePathing addWaypoint(Pose2d pose, APTarget target, APConstraints speedConstraints) {
     waypoints.add(new Waypoint(pose, target, speedConstraints));
     return this;
   }
@@ -121,15 +113,15 @@ public final class PosePathing {
     Command main =
         Commands.run(
                 () -> {
-
                   Pose2d pose = drive.getPose();
                   ChassisSpeeds robotSpeeds = drive.getChassisSpeeds();
 
-                 while (index.get() < lastIndex &&
-    distance(pose, waypoints.get(index.get()).pose) <= handoffThresholdMeters) {
+                  while (index.get() < lastIndex
+                      && distance(pose, waypoints.get(index.get()).pose)
+                          <= handoffThresholdMeters) {
 
-  index.incrementAndGet();
-}
+                    index.incrementAndGet();
+                  }
 
                   Waypoint wp = waypoints.get(index.get());
 
@@ -146,8 +138,7 @@ public final class PosePathing {
 
                   double omega =
                       headingController.calculate(
-                          pose.getRotation().getRadians(),
-                          out.targetAngle().getRadians());
+                          pose.getRotation().getRadians(), out.targetAngle().getRadians());
 
                   ChassisSpeeds speeds =
                       ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -159,15 +150,17 @@ public final class PosePathing {
                   drive.runVelocity(speeds);
                 },
                 drive)
-            .beforeStarting(() -> {
-              index.set(0);
-              Pose2d reset = startPose != null ? startPose : drive.getPose();
-              headingController.reset(reset.getRotation().getRadians());
-              if (startPose != null) drive.setPose(startPose);
-            })
-            .until(() ->
-                index.get() == lastIndex &&
-                baseAutopilot.atTarget(drive.getPose(), waypoints.get(lastIndex).target))
+            .beforeStarting(
+                () -> {
+                  index.set(0);
+                  Pose2d reset = startPose != null ? startPose : drive.getPose();
+                  headingController.reset(reset.getRotation().getRadians());
+                  if (startPose != null) drive.setPose(startPose);
+                })
+            .until(
+                () ->
+                    index.get() == lastIndex
+                        && baseAutopilot.atTarget(drive.getPose(), waypoints.get(lastIndex).target))
             .finallyDo(interrupted -> drive.stop());
 
     return main;
@@ -200,16 +193,12 @@ public final class PosePathing {
     PosePathing path =
         new PosePathing(Constants.DriveConstants.ANGLE_PID)
             .withStartPose(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_center,
-                    Rotation2d.kCCW_90deg))
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
             .withHandoffThreshold(0.5)
 
             // fast segment
             .addWaypoint(
-                new Pose2d(
-                    FieldConstants.FuelField.right_midline_corner,
-                    Rotation2d.kCCW_90deg),
+                new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.kCCW_90deg),
                 t -> t.withEntryAngle(Rotation2d.fromDegrees(45)).withVelocity(1),
                 new APConstraints().withAcceleration(8.0).withJerk(3.0))
 
@@ -228,26 +217,21 @@ public final class PosePathing {
                     FieldConstants.field_center.plus(new Translation2d(-0.3, 0)),
                     Rotation2d.fromDegrees(110)))
             .withHandoffThreshold(0.5)
-
             .addWaypoint(
-                new Pose2d(
-                    FieldConstants.FuelField.right_close_corner,
-                    Rotation2d.kCCW_90deg),
-                t -> t.withVelocity(DriveConstants.DRIVE_MAXVEL)
-                      .withEntryAngle(Rotation2d.kCW_90deg.plus(Rotation2d.fromDegrees(-20))))
-
+                new Pose2d(FieldConstants.FuelField.right_close_corner, Rotation2d.kCCW_90deg),
+                t ->
+                    t.withVelocity(DriveConstants.DRIVE_MAXVEL)
+                        .withEntryAngle(Rotation2d.kCW_90deg.plus(Rotation2d.fromDegrees(-20))))
             .addWaypoint(
                 new Pose2d(
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.3)),
                     Rotation2d.kCCW_90deg),
                 t -> t.withVelocity(DriveConstants.DRIVE_MAXVEL).withEntryAngle(Rotation2d.k180deg))
-
             .addWaypoint(
                 new Pose2d(
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.3)),
                     Rotation2d.kCCW_90deg),
                 t -> t.withVelocity(1).withoutEntryAngle())
-
             .addWaypoint(
                 new Pose2d(
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(-0.40, -0.19)),
@@ -259,11 +243,10 @@ public final class PosePathing {
                     .withVelocity(1));
 
     return Commands.sequence(
-        Commands.runOnce(() ->
-            drive.setPose(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_center,
-                    Rotation2d.kCCW_90deg))),
+        Commands.runOnce(
+            () ->
+                drive.setPose(
+                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))),
         path.build(),
         path2.build());
   }

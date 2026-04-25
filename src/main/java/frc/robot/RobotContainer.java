@@ -212,13 +212,19 @@ public class RobotContainer {
             .build());
 
     autoChooser.addOption(
-        "AP Testing", 
-        new PosePathing(Constants.DriveConstants.ANGLE_PID).withStartPose(new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-        .withHandoffThreshold(0.5)
-        .addWaypoint(new Pose2d(FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg))
-        .addWaypoint(new Pose2d(FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(115)))
-        .addWaypoint(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(115))).build()
-        );
+        "AP Testing",
+        new PosePathing(Constants.DriveConstants.ANGLE_PID)
+            .withStartPose(
+                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+            .withHandoffThreshold(0.5)
+            .addWaypoint(
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg))
+            .addWaypoint(
+                new Pose2d(
+                    FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(115)))
+            .addWaypoint(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(115)))
+            .build());
 
     autoChooser.addOption(
         "nz bump",
