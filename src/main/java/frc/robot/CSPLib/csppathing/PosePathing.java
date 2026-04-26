@@ -35,9 +35,9 @@ public final class PosePathing {
 
   private static final APProfile baseProfile =
       new APProfile(baseConstraints)
-          .withErrorXY(Centimeters.of(3))
+          .withErrorXY(Centimeters.of(7))
           .withErrorTheta(Degrees.of(1))
-          .withBeelineRadius(Centimeters.of(5));
+          .withBeelineRadius(Centimeters.of(13));
 
   private static final Autopilot baseAutopilot = new Autopilot(baseProfile);
 

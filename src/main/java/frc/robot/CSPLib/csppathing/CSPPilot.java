@@ -463,9 +463,7 @@ public class CSPPilot {
         if (zoneProgress >= zoneMin && zoneProgress <= zoneMax) {
           PathConstraints pc = zone.constraints();
           return new CSPConstraints(
-              Math.max(base.velocity, pc.maxVelocity().in(MetersPerSecond)),
-              1000,
-              1000);
+              Math.max(base.velocity, pc.maxVelocity().in(MetersPerSecond)), 1000, 1000);
         }
       }
 
