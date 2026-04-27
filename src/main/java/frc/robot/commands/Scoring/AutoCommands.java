@@ -450,9 +450,9 @@ public class AutoCommands {
             .andThen(AutoCommands.autoShoot())
             .withTimeout(
                 switch (cycle) {
-                  case NZ -> 8.0;
-                  case NONE -> 10.0;
-                  case DOUBLE -> 6.0;
+                  case NZ -> 3.0;
+                  case NONE -> 3.0;
+                  case DOUBLE -> 3.0;
                 })
             .andThen(Robot.isReal() ? ScoringCommands.downNoStall() : Commands.none()),
         switch (cycle) {

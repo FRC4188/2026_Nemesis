@@ -130,7 +130,7 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    80 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
+                    90 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
