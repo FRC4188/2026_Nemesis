@@ -134,19 +134,20 @@ public class RobotContainer {
     cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
 
     autoChooser.addOption(
-        "PsuedoBoard (TIME)",
+        "PsuedoBoard Delayed",
         Commands.defer(
             () ->
                 AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
     
     autoChooser.addOption(
-        "PoseBoard (POSE)",
+        "PoseBoard Delayed",
         Commands.defer(
             () ->
                 AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
-    // autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
+    
+    autoChooser.addDefaultOption("PoseBoard", AutoCommands.constructedAuto);
 
     autoChooser.addOption(
         "FORWARD Right Disruptor",
@@ -549,13 +550,13 @@ public class RobotContainer {
         || cycleChooser.get() != AutoCommands.curCycle
         || swipeChooser.get() != AutoCommands.curSwipe) {
       AutoCommands.constructedAuto =
-          AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+          AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
       AutoCommands.curStart = startChooser.get();
       AutoCommands.curCycle = cycleChooser.get();
       AutoCommands.curSwipe = swipeChooser.get();
     }
 
-    autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
+    autoChooser.addDefaultOption("PoseBoard", AutoCommands.constructedAuto);
   }
 
   public void periodic() {

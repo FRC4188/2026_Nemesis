@@ -53,7 +53,7 @@ public class AutoCommands {
   private static final Hopper hopper = Hopper.getInstance();
   private static final Wrist wrist = Wrist.getInstance();
 
-  public static Command constructedAuto = pseudoBoard(curStart, curSwipe, curCycle);
+  public static Command constructedAuto = poseBoard(curStart, curSwipe, curCycle);
 
   public static Command autoShoot() {
     return Commands.parallel(
