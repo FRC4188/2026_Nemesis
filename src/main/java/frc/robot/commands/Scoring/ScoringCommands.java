@@ -122,7 +122,7 @@ public class ScoringCommands {
   }
 
   public static Command passAim() {
-    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(50)), hood::stop, hood);
+    return Commands.runEnd(() -> hood.setAngle(Rotation2d.fromDegrees(40)), hood::stop, hood);
   }
 
   public static Command passShoot() {
@@ -130,10 +130,7 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    (2500.0 / 6.0)
-                            * (AllianceFlip.apply(drive.getPose()).getX()
-                                - FieldConstants.field_center.getX())
-                        + 2800),
+                    80 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
@@ -231,6 +228,7 @@ public class ScoringCommands {
   public static Command slowUp() {
     return Commands.either(
         Commands.sequence(
+                new WaitCommand(2.0),
                 Commands.runOnce(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
                 // Commands.runOnce(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.25),
                 new WaitCommand(1.5),

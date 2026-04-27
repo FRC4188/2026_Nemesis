@@ -18,6 +18,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 import frc.robot.CSPLib.csppathing.CSPPathing;
@@ -137,16 +139,17 @@ public class RobotContainer {
         "PsuedoBoard Delayed",
         Commands.defer(
             () ->
-                AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+                AutoCommands.pseudoBoard(
+                    startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
-    
+
     autoChooser.addOption(
         "PoseBoard Delayed",
         Commands.defer(
             () ->
                 AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
-    
+
     autoChooser.addDefaultOption("PoseBoard", AutoCommands.constructedAuto);
 
     autoChooser.addOption(
@@ -433,7 +436,10 @@ public class RobotContainer {
     // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
     pilot
         .getRightTButton()
-        .whileTrue(ScoringCommands.slowUp())
+        .whileTrue(
+            new WaitCommand(0.1)
+                .andThen(
+                    new WaitUntilCommand(() -> shooter.atGoal()).andThen(ScoringCommands.slowUp())))
         .onFalse(ScoringCommands.downNoStall());
 
     pilot

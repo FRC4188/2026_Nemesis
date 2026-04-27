@@ -69,7 +69,7 @@ public class AutoCommands {
         Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
-        ScoringCommands.halfShake());
+        ScoringCommands.slowUp());
   }
 
   public static Command pseudoBoard(Start start, Swipe swipe, Cycle cycle) {
@@ -605,7 +605,7 @@ public class AutoCommands {
                                         FieldConstants.Trench.right_trench_center,
                                         Rotation2d.kCCW_90deg);
                                   })
-                              .withStartingSpeed(5)
+                              .withStartingSpeed(10)
                               .withCurve(0.4),
                           new PathBuilder.Target(
                                   switch (start) {
@@ -849,7 +849,7 @@ public class AutoCommands {
                                 })
                             .withCurve(0.4)
                             .withSpeed(1)
-                            .withStartingSpeed(5),
+                            .withStartingSpeed(10),
                         new PathBuilder.Target(
                                 switch (start) {
                                   case LEFT -> new Pose2d(
@@ -901,18 +901,19 @@ public class AutoCommands {
                             },
                             0.35),
                         new PathBuilder.Target(
-                            new Pose2d(
-                                switch (swipe) {
-                                  case CENTER -> FieldConstants.field_center.plus(
-                                      new Translation2d(0, -0.2));
-                                  case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
-                                      new Translation2d(0, -0.2));
-                                },
-                                switch (start) {
-                                  case LEFT -> Rotation2d.kCW_90deg;
-                                  case RIGHT -> Rotation2d.kCCW_90deg;
-                                }),
-                            0.35).withEndingSpeed(2)))
+                                new Pose2d(
+                                    switch (swipe) {
+                                      case CENTER -> FieldConstants.field_center.plus(
+                                          new Translation2d(0, -0.2));
+                                      case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
+                                          new Translation2d(0, -0.2));
+                                    },
+                                    switch (start) {
+                                      case LEFT -> Rotation2d.kCW_90deg;
+                                      case RIGHT -> Rotation2d.kCCW_90deg;
+                                    }),
+                                0.35)
+                            .withEndingSpeed(10)))
                 .build(),
             PathBuilder.triggerWhenFar(
                 switch (start) {
@@ -951,17 +952,18 @@ public class AutoCommands {
                 .addPath(
                     PathBuilder.build(
                         new PathBuilder.Target(
-                            new Pose2d(
-                                switch (swipe) {
-                                  case CENTER -> FieldConstants.field_center.plus(
-                                      new Translation2d(0, -0.2));
-                                  case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
-                                      new Translation2d(0, -0.2));
-                                },
-                                switch (start) {
-                                  case RIGHT -> Rotation2d.kCCW_90deg;
-                                  case LEFT -> Rotation2d.kCW_90deg;
-                                })).withStartingSpeed(5),
+                                new Pose2d(
+                                    switch (swipe) {
+                                      case CENTER -> FieldConstants.field_center.plus(
+                                          new Translation2d(0, -0.2));
+                                      case CLOSE -> FieldConstants.FuelField.intake_midline.plus(
+                                          new Translation2d(0, -0.2));
+                                    },
+                                    switch (start) {
+                                      case RIGHT -> Rotation2d.kCCW_90deg;
+                                      case LEFT -> Rotation2d.kCW_90deg;
+                                    }))
+                            .withStartingSpeed(10),
                         new PathBuilder.Target(
                             new Pose2d(
                                 switch (start) {
@@ -1011,23 +1013,25 @@ public class AutoCommands {
                             1,
                             0.5),
                         new PathBuilder.Target(
-                            new Pose2d(
-                                FieldConstants.Trench.right_trench_alliance_entrance.getX() - 1.1,
-                                switch (start) {
-                                  case RIGHT -> FieldConstants.Trench
-                                          .right_trench_alliance_preentrance
-                                          .getY()
-                                      + 0.15;
-                                  case LEFT -> FieldConstants.Trench
-                                          .left_trench_alliance_preentrance
-                                          .getY()
-                                      - 0.15;
-                                },
-                                switch (start) {
-                                  case RIGHT -> Rotation2d.fromDegrees(70);
-                                  case LEFT -> Rotation2d.fromRadians(-70);
-                                }),
-                            1).withEndingSpeed(2)))
+                                new Pose2d(
+                                    FieldConstants.Trench.right_trench_alliance_entrance.getX()
+                                        - 1.1,
+                                    switch (start) {
+                                      case RIGHT -> FieldConstants.Trench
+                                              .right_trench_alliance_preentrance
+                                              .getY()
+                                          + 0.15;
+                                      case LEFT -> FieldConstants.Trench
+                                              .left_trench_alliance_preentrance
+                                              .getY()
+                                          - 0.15;
+                                    },
+                                    switch (start) {
+                                      case RIGHT -> Rotation2d.fromDegrees(70);
+                                      case LEFT -> Rotation2d.fromRadians(-70);
+                                    }),
+                                1)
+                            .withEndingSpeed(10)))
                 .build()),
         Commands.runOnce(() -> PathBuilder.stopTarget())
             .andThen(AutoCommands.autoShoot())
@@ -1044,19 +1048,22 @@ public class AutoCommands {
               switch (start) {
                 case RIGHT -> new CSPPathing(
                         Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
-                    .withStartPose(new Pose2d(FieldConstants.Trench.right_trench_alliance_entrance.getX() - 1.1, switch (start) {
-                                  case RIGHT -> FieldConstants.Trench
-                                          .right_trench_alliance_preentrance
-                                          .getY()
-                                      + 0.15;
-                                  case LEFT -> FieldConstants.Trench
-                                          .left_trench_alliance_preentrance
-                                          .getY()
-                                      - 0.15;
-                                }, Rotation2d.kZero))
+                    .withStartPose(
+                        new Pose2d(
+                            FieldConstants.Trench.right_trench_alliance_entrance.getX() - 1.1,
+                            switch (start) {
+                              case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance
+                                      .getY()
+                                  + 0.15;
+                              case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance
+                                      .getY()
+                                  - 0.15;
+                            },
+                            Rotation2d.kZero))
                     .addPath(
                         PathBuilder.build(
-                            new PathBuilder.Target(new Pose2d(1.981, 1.150, Rotation2d.kZero)).withStartingSpeed(3.5),
+                            new PathBuilder.Target(new Pose2d(1.981, 1.150, Rotation2d.kZero))
+                                .withStartingSpeed(10),
                             new PathBuilder.Target(
                                 new Pose2d(
                                     FieldConstants.Trench.right_trench_alliance_preentrance,
@@ -1071,7 +1078,7 @@ public class AutoCommands {
                                         Rotation2d.kCCW_90deg))
                                 .withRotationSpread(2.5)
                                 .withRotationLead(1)
-                                .withEndingSpeed(5)
+                                .withEndingSpeed(10)
                                 .withCommand(
                                     Commands.runEnd(
                                         () -> intake.intakeVolts(8.5), intake::stop, intake))))
@@ -1085,8 +1092,11 @@ public class AutoCommands {
                     .addPath(
                         PathBuilder.build(
                             new PathBuilder.Target(
-                                new Pose2d(
-                                    1.981, FieldConstants.field_width - 1.150, Rotation2d.kZero)).withStartingSpeed(5),
+                                    new Pose2d(
+                                        1.981,
+                                        FieldConstants.field_width - 1.150,
+                                        Rotation2d.kZero))
+                                .withStartingSpeed(10),
                             new PathBuilder.Target(
                                 new Pose2d(
                                     FieldConstants.Trench.left_trench_alliance_preentrance,
@@ -1101,7 +1111,7 @@ public class AutoCommands {
                                         Rotation2d.kCW_90deg))
                                 .withRotationSpread(2.5)
                                 .withRotationLead(1)
-                                .withEndingSpeed(2)
+                                .withEndingSpeed(10)
                                 .withCommand(
                                     Commands.runEnd(
                                         () -> intake.intakeVolts(8.5), intake::stop, intake))))
@@ -1130,7 +1140,7 @@ public class AutoCommands {
                                               FieldConstants.Trench.right_trench_center.plus(
                                                   new Translation2d(0, -0.18)),
                                               Rotation2d.kCCW_90deg))
-                                      .withEndingSpeed(5))))
+                                      .withEndingSpeed(10))))
                       .build()
                       // .alongWith(ScoringCommands.downNoStall())
                       .andThen(
@@ -1156,7 +1166,7 @@ public class AutoCommands {
                                                       FieldConstants.Trench.right_trench_center
                                                           .plus(new Translation2d(0, -0.18)),
                                                       Rotation2d.kCCW_90deg))
-                                              .withStartingSpeed(5)
+                                              .withStartingSpeed(10)
                                               .withStartingRotation(Rotation2d.kCCW_90deg)
                                               .withOverrideRotations(
                                                   new RotationTarget(
@@ -1187,36 +1197,40 @@ public class AutoCommands {
                                               .withHeading(Rotation2d.fromDegrees(99.792))
                                               .withControlDistances(0.250, 0)
                                               .withEndingRotation(Rotation2d.kZero)
-                                              .withEndingSpeed(2))))
+                                              .withEndingSpeed(10))))
                               .build()),
                   Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
               Commands.runOnce(intake::stop),
               Commands.deadline(
-                  new CSPPathing(Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
-                      .withStartPose(
-                          (start == Start.LEFT)
-                              ? new Pose2d(
-                                  5.968 + 0.2, FieldConstants.field_width - 0.608, Rotation2d.kZero)
-                              : new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                      .addPath(
-                          PathBuilder.build(
-                              PathBuilder.mirror(
-                                  () -> (start == Start.LEFT),
-                                  new PathBuilder.Target(
-                                          new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                                      .withStartingSpeed(5),
-                                  new PathBuilder.Target(
-                                      new Pose2d(
-                                          FieldConstants.Trench.right_trench_center.plus(
-                                              new Translation2d(0, -0.15)),
-                                          Rotation2d.kZero)),
-                                          
-                                new PathBuilder.Target(
-                                      new Pose2d(
-                                          FieldConstants.Trench.right_trench_center.plus(
-                                              new Translation2d(-2.2, 0.4)),
-                                          Rotation2d.kZero)).withEndingSpeed(2))))
-                      .build()).andThen(autoShoot().withTimeout(6)));
+                      new CSPPathing(
+                              Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
+                          .withStartPose(
+                              (start == Start.LEFT)
+                                  ? new Pose2d(
+                                      5.968 + 0.2,
+                                      FieldConstants.field_width - 0.608,
+                                      Rotation2d.kZero)
+                                  : new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                          .addPath(
+                              PathBuilder.build(
+                                  PathBuilder.mirror(
+                                      () -> (start == Start.LEFT),
+                                      new PathBuilder.Target(
+                                              new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                                          .withStartingSpeed(10),
+                                      new PathBuilder.Target(
+                                          new Pose2d(
+                                              FieldConstants.Trench.right_trench_center.plus(
+                                                  new Translation2d(0, -0.15)),
+                                              Rotation2d.kZero)),
+                                      new PathBuilder.Target(
+                                              new Pose2d(
+                                                  FieldConstants.Trench.right_trench_center.plus(
+                                                      new Translation2d(-2.2, 0.4)),
+                                                  Rotation2d.kZero))
+                                          .withEndingSpeed(10))))
+                          .build())
+                  .andThen(autoShoot().withTimeout(6)));
         });
   }
 
@@ -1389,7 +1403,7 @@ public class AutoCommands {
                                     FieldConstants.Trench.right_trench_intermediate.plus(
                                         new Translation2d(0, 0.35)),
                                     new Rotation2d()))
-                            .withStartingSpeed(5)
+                            .withStartingSpeed(10)
                             .withStartingRotation(Rotation2d.fromDegrees(120))
                             .withHeading(Rotation2d.fromDegrees(75.270))
                             .withControlDistances(0, 1.024)
