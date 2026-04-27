@@ -212,7 +212,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 0.0;
+    public static final double kTolerance = 25.0;
     public static final double kMaxRPM = 4800.0;
     public static final double kGearRatio = 1.0;
 
@@ -243,7 +243,7 @@ public final class Constants {
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
     public static final Slot0Configs indexGains =
-        new Slot0Configs().withKP(12.5).withKS(6.2).withKV(0.085);
+        new Slot0Configs().withKP(15.0).withKS(6.2).withKV(0.085);
   }
 
   public static class HopperConstants {

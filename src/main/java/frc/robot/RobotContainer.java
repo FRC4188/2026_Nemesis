@@ -420,7 +420,7 @@ public class RobotContainer {
 
     copilot.x().onTrue(ScoringCommands.downNoStall());
     copilot.a().onTrue(ScoringCommands.goodStow());
-    copilot.leftBumper().whileTrue(ScoringCommands.shake());
+    copilot.leftBumper().whileTrue(ScoringCommands.slowUp());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
     copilot

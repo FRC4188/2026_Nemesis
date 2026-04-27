@@ -34,7 +34,7 @@ public class ScoringCommands {
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 4200), hopper::stop, hopper))));
+                        Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper))));
   }
 
   public static Command staticAim() {
@@ -53,30 +53,31 @@ public class ScoringCommands {
 
   public static Command staticShoot() {
     return Commands.parallel(
-        Commands.runEnd(
-            () ->
-                shooter.setVelocityRPM(
-                    RPMRegress(
-                            AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                                .minus(drive.getPose().getTranslation())
-                                .getNorm())
-                        + ((initialShots) ? 300 : 0)),
-            shooter::stop,
-            shooter),
-        new WaitCommand(0.1)
-            .andThen(
-                new WaitUntilCommand(() -> shooter.atGoal())
-                    .andThen(
-                        Commands.parallel(
-                            Commands.runEnd(
-                                () -> hopper.runHopper(9.0, 4200), hopper::stop, hopper),
-                            new WaitCommand(0.1)
-                                .andThen(
-                                    new WaitUntilCommand(() -> hopper.indexAtGoal())
-                                        .andThen(
-                                            Commands.startEnd(
-                                                () -> initialShots = false,
-                                                () -> initialShots = true))))))).finallyDo(() -> initialShots = true);
+            Commands.runEnd(
+                () ->
+                    shooter.setVelocityRPM(
+                        RPMRegress(
+                                AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                                    .minus(drive.getPose().getTranslation())
+                                    .getNorm())
+                            + ((initialShots) ? 300 : 0)),
+                shooter::stop,
+                shooter),
+            new WaitCommand(0.1)
+                .andThen(
+                    new WaitUntilCommand(() -> shooter.atGoal())
+                        .andThen(
+                            Commands.parallel(
+                                Commands.runEnd(
+                                    () -> hopper.runHopper(9.0, 5000), hopper::stop, hopper),
+                                new WaitCommand(0.1)
+                                    .andThen(
+                                        new WaitUntilCommand(() -> hopper.indexAtGoal())
+                                            .andThen(
+                                                Commands.startEnd(
+                                                    () -> initialShots = false,
+                                                    () -> initialShots = true)))))))
+        .finallyDo(() -> initialShots = true);
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -88,25 +89,28 @@ public class ScoringCommands {
 
   public static Command manualShoot(DoubleSupplier distance) {
     return Commands.parallel(
-        Commands.runEnd(
-            () -> shooter.setVelocityRPM(RPMRegress(Units.feetToMeters(distance.getAsDouble()))
-                                   + ((initialShots) ? 300 : 0)),
-            shooter::stop,
-            shooter),
-        new WaitCommand(0.1)
-            .andThen(
-                new WaitUntilCommand(() -> shooter.atGoal())
-                    .andThen(
-                        Commands.parallel(
-                            Commands.runEnd(
-                                () -> hopper.runHopper(9.0, 4200), hopper::stop, hopper),
-                            new WaitCommand(0.1)
-                                .andThen(
-                                    new WaitUntilCommand(() -> hopper.indexAtGoal())
-                                        .andThen(
-                                            Commands.startEnd(
-                                                () -> initialShots = false,
-                                                () -> initialShots = true))))))).finallyDo(() -> initialShots = true);
+            Commands.runEnd(
+                () ->
+                    shooter.setVelocityRPM(
+                        RPMRegress(Units.feetToMeters(distance.getAsDouble()))
+                            + ((initialShots) ? 300 : 0)),
+                shooter::stop,
+                shooter),
+            new WaitCommand(0.1)
+                .andThen(
+                    new WaitUntilCommand(() -> shooter.atGoal())
+                        .andThen(
+                            Commands.parallel(
+                                Commands.runEnd(
+                                    () -> hopper.runHopper(9.0, 5000), hopper::stop, hopper),
+                                new WaitCommand(0.1)
+                                    .andThen(
+                                        new WaitUntilCommand(() -> hopper.indexAtGoal())
+                                            .andThen(
+                                                Commands.startEnd(
+                                                    () -> initialShots = false,
+                                                    () -> initialShots = true)))))))
+        .finallyDo(() -> initialShots = true);
   }
 
   public static double RPMRegress(double distance) {
@@ -136,7 +140,7 @@ public class ScoringCommands {
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 4200), hopper::stop, hopper))));
+                        Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper))));
   }
 
   public static Command shake() {
@@ -227,7 +231,9 @@ public class ScoringCommands {
   public static Command slowUp() {
     return Commands.either(
         Commands.sequence(
-                new WaitCommand(2.0),
+                Commands.runOnce(() -> wrist.runWristVolts(3), wrist).withTimeout(0.5),
+                // Commands.runOnce(() -> wrist.runWristVolts(-3), wrist).withTimeout(0.25),
+                new WaitCommand(1.5),
                 Commands.runEnd(() -> wrist.runWristVolts(3), wrist::stop, wrist)
                     .until(() -> wrist.getAngle() > 80))
             .alongWith(Commands.runEnd(() -> intake.intakeVolts(7.5), intake::stop, intake)),
