@@ -76,7 +76,7 @@ public class ScoringCommands {
                                         .andThen(
                                             Commands.startEnd(
                                                 () -> initialShots = false,
-                                                () -> initialShots = true)))))));
+                                                () -> initialShots = true))))))).finallyDo(() -> initialShots = true);
   }
 
   public static Command manualAim(DoubleSupplier distance) {
@@ -89,14 +89,24 @@ public class ScoringCommands {
   public static Command manualShoot(DoubleSupplier distance) {
     return Commands.parallel(
         Commands.runEnd(
-            () -> shooter.setVelocityRPM(RPMRegress(Units.feetToMeters(distance.getAsDouble()))),
+            () -> shooter.setVelocityRPM(RPMRegress(Units.feetToMeters(distance.getAsDouble()))
+                                   + ((initialShots) ? 300 : 0)),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 4200), hopper::stop, hopper))));
+                        Commands.parallel(
+                            Commands.runEnd(
+                                () -> hopper.runHopper(9.0, 4200), hopper::stop, hopper),
+                            new WaitCommand(0.1)
+                                .andThen(
+                                    new WaitUntilCommand(() -> hopper.indexAtGoal())
+                                        .andThen(
+                                            Commands.startEnd(
+                                                () -> initialShots = false,
+                                                () -> initialShots = true))))))).finallyDo(() -> initialShots = true);
   }
 
   public static double RPMRegress(double distance) {
