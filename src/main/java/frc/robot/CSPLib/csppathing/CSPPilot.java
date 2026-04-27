@@ -65,7 +65,7 @@ public class CSPPilot {
       constraints = mergeConstraints(constraints, robotConfig);
     }
 
-    return new PathSeed(constraints, 1000, 1000);
+    return new PathSeed(constraints, startingSpeed, Math.max(1.5, endingSpeed));
   }
 
   public CSPResult calculate(Pose2d current, ChassisSpeeds robotRelativeSpeeds, CSPTarget target) {
@@ -463,9 +463,7 @@ public class CSPPilot {
         if (zoneProgress >= zoneMin && zoneProgress <= zoneMax) {
           PathConstraints pc = zone.constraints();
           return new CSPConstraints(
-              Math.max(base.velocity, pc.maxVelocity().in(MetersPerSecond)),
-              1000,
-              1000);
+              Math.max(base.velocity, pc.maxVelocity().in(MetersPerSecond)), 1000, 1000);
         }
       }
 

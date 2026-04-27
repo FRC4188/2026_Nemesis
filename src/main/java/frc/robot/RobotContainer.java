@@ -134,13 +134,19 @@ public class RobotContainer {
     cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
 
     autoChooser.addOption(
-        "PsuedoBoard Delayed",
+        "PsuedoBoard (TIME)",
         Commands.defer(
             () ->
-                AutoCommands.pseudoBoard(
-                    startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+                AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
             Set.of(shooter, hopper, wrist, intake, hood)));
-    autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
+    
+    autoChooser.addOption(
+        "PoseBoard (POSE)",
+        Commands.defer(
+            () ->
+                AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+            Set.of(shooter, hopper, wrist, intake, hood)));
+    // autoChooser.addDefaultOption("PsuedoBoard", AutoCommands.constructedAuto);
 
     autoChooser.addOption(
         "FORWARD Right Disruptor",
@@ -193,6 +199,40 @@ public class RobotContainer {
                 new Pose2d(
                     FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.15)),
                     Rotation2d.kZero)));
+
+    PathPlannerPath firstswipe =
+        PathBuilder.build(
+            new PathBuilder.Target(
+                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
+                .withStartingSpeed(5),
+            new PathBuilder.Target(
+                new Pose2d(
+                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg)),
+            new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(110)))
+                .withSpeed(0.4),
+            new PathBuilder.Target(
+                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110)))
+                .withSpeed(0.4));
+
+    PathPlannerPath across =
+        PathBuilder.build(
+            new PathBuilder.Target(
+                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110)))
+                .withSpeed(0.4)
+                .withStartingSpeed(5),
+            new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.FuelField.left_midline_corner, Rotation2d.fromDegrees(110)))
+                .withSpeed(0.4),
+            new PathBuilder.Target(
+                    new Pose2d(
+                        FieldConstants.Trench.left_trench_neutral_preentrance,
+                        Rotation2d.kCW_90deg))
+                .withRotationLead(2),
+            new PathBuilder.Target(
+                new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)));
 
     autoChooser.addOption(
         "c swipe pose testing",
