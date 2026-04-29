@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.RotationTarget;
@@ -28,7 +30,9 @@ import frc.robot.CSPLib.csppathing.PosePathing;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
+import frc.robot.commands.Scoring.Paths;
 import frc.robot.commands.Scoring.ScoringCommands;
+import frc.robot.commands.Scoring.AutoCommands.Start;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -114,8 +118,8 @@ public class RobotContainer {
         Constants.DriveConstants.ANGLE_PID,
         Constants.DriveConstants.PP_CONFIG,
         new PathConstraints(
-            Constants.DriveConstants.DRIVE_MAXVEL,
-            Constants.DriveConstants.DRIVE_MAXACC,
+            4.5,
+            7.6,
             Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
             Constants.DriveConstants.ANGLE_MAXACC * 0.8),
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
@@ -144,15 +148,6 @@ public class RobotContainer {
             Set.of(shooter, hopper, wrist, intake, hood)));
 
     autoChooser.addOption(
-        "PoseBoard Delayed",
-        Commands.defer(
-            () ->
-                AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get()),
-            Set.of(shooter, hopper, wrist, intake, hood)));
-
-    autoChooser.addDefaultOption("PoseBoard", AutoCommands.constructedAuto);
-
-    autoChooser.addOption(
         "FORWARD Right Disruptor",
         AutoCommands.rightDisrupt(drive, intake, hopper, shooter, wrist, hood));
 
@@ -160,191 +155,13 @@ public class RobotContainer {
         "FORWARD Left Disruptor",
         AutoCommands.leftDisrupt(drive, intake, hopper, shooter, wrist, hood));
 
-    autoChooser.addOption("BACKWARD Full Depot", AutoCommands.fullDepot());
+    // autoChooser.addOption("BACKWARD Full Depot", AutoCommands.fullDepot());
 
     autoChooser.addOption("Nothing", Commands.none());
 
-    PathPlannerPath path =
-        PathBuilder.build(
-            new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.18)),
-                        Rotation2d.kCCW_90deg))
-                .withStartingSpeed(3)
-                .withStartingRotation(Rotation2d.kCCW_90deg)
-                .withOverrideRotations(
-                    new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
-                    new RotationTarget(0.60, Rotation2d.kCCW_90deg),
-                    new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
-                    new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
-                    new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
-                .withHeading(Rotation2d.fromDegrees(61.763))
-                .withControlDistances(0, 0.250),
-            new PathBuilder.Target(new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
-                .withHeading(Rotation2d.fromDegrees(66.360))
-                .withControlDistances(1.517, 0.476),
-            new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
-                .withHeading(Rotation2d.fromDegrees(120.689))
-                .withControlDistances(0.288, 1.250),
-            new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
-                .withHeading(Rotation2d.fromDegrees(-104.349))
-                .withControlDistances(0.955, 0.310),
-            new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                .withHeading(Rotation2d.fromDegrees(99.792))
-                .withControlDistances(0.250, 0)
-                .withEndingRotation(Rotation2d.kZero)
-                .withEndingSpeed(2));
+    autoChooser.addOption("Right Follower", AutoCommands.follower(Start.RIGHT));
 
-    PathPlannerPath path1 =
-        PathBuilder.build(
-            new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                .withStartingSpeed(2),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_center.plus(new Translation2d(0, -0.15)),
-                    Rotation2d.kZero)));
-
-    PathPlannerPath firstswipe =
-        PathBuilder.build(
-            new PathBuilder.Target(
-                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-                .withStartingSpeed(5),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg)),
-            new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(110)))
-                .withSpeed(0.4),
-            new PathBuilder.Target(
-                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110)))
-                .withSpeed(0.4));
-
-    PathPlannerPath across =
-        PathBuilder.build(
-            new PathBuilder.Target(
-                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110)))
-                .withSpeed(0.4)
-                .withStartingSpeed(5),
-            new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.left_midline_corner, Rotation2d.fromDegrees(110)))
-                .withSpeed(0.4),
-            new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.Trench.left_trench_neutral_preentrance,
-                        Rotation2d.kCW_90deg))
-                .withRotationLead(2),
-            new PathBuilder.Target(
-                new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg)));
-
-    autoChooser.addOption(
-        "c swipe pose testing",
-        new CSPPathing(Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
-            .withStartPose(
-                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .addPaths(path, path1)
-            .build());
-
-    // autoChooser.addOption(
-    //     "test csppilot",
-    //     new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
-    //         .withStartPose(
-    //             new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-    //         .addPaths(path, path1)
-    //         .build());
-
-    autoChooser.addOption(
-        "pathhhhh",
-        new CSPPathing(Constants.DriveConstants.PILOT, Constants.DriveConstants.ANGLE_PID)
-            .withStartPose(
-                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .addPath(path)
-            .addPath(path1)
-            .build());
-
-    autoChooser.addOption(
-        "AP Testing",
-        new PosePathing(Constants.DriveConstants.ANGLE_PID)
-            .withStartPose(
-                new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-            .withHandoffThreshold(0.5)
-            .addWaypoint(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg))
-            .addWaypoint(
-                new Pose2d(
-                    FieldConstants.FuelField.right_midline_corner, Rotation2d.fromDegrees(115)))
-            .addWaypoint(new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(115)))
-            .build());
-
-    autoChooser.addOption(
-        "nz bump",
-        Commands.sequence(
-            Commands.runOnce(
-                () ->
-                    drive.setPose(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))),
-            PathBuilder.path(
-                new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-                    .withStartingSpeed(5),
-                new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.Trench.right_trench_neutral_preentrance,
-                        Rotation2d.kCCW_90deg)),
-                new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.intake_right_midline_corner,
-                        Rotation2d.fromDegrees(110))),
-                new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110)))),
-            PathBuilder.path(
-                new PathBuilder.Target(
-                    new Pose2d(FieldConstants.field_center, Rotation2d.fromDegrees(110))),
-                new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.middle_close_line.plus(new Translation2d(0, -0.5)),
-                        Rotation2d.kZero)),
-                new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.Bump.right_bump_neutral_entrance.plus(
-                            new Translation2d(0.5, 0)),
-                        Rotation2d.kZero)),
-                new PathBuilder.Target(
-                        new Pose2d(
-                            FieldConstants.Bump.right_bump_alliance_entrance.plus(
-                                new Translation2d(-1, 0)),
-                            Rotation2d.kZero))
-                    .withEndingSpeed(2))));
-
-    PathPlannerPath cpath =
-        PathBuilder.build(
-            new PathBuilder.Target(
-                    new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-                .withStartingSpeed(5),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.Trench.right_trench_neutral_preentrance, Rotation2d.kCCW_90deg)),
-            new PathBuilder.Target(
-                new Pose2d(
-                    FieldConstants.FuelField.intake_right_midline_corner,
-                    Rotation2d.fromDegrees(110))),
-            new PathBuilder.Target(
-                    new Pose2d(
-                        FieldConstants.FuelField.intake_midline, Rotation2d.fromDegrees(110)))
-                .withEndingSpeed(2));
-
-    // autoChooser.addOption(
-    //     "nz bump pose",
-    //     new CSPPathing(csppilot, Constants.DriveConstants.ANGLE_PID)
-    //         .withStartPose(
-    //             new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg))
-    //         .addPath(cpath)
-    //         .build());
+    autoChooser.addOption("Left Follower", AutoCommands.follower(Start.LEFT));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -556,13 +373,15 @@ public class RobotContainer {
         || cycleChooser.get() != AutoCommands.curCycle
         || swipeChooser.get() != AutoCommands.curSwipe) {
       AutoCommands.constructedAuto =
-          AutoCommands.poseBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+          AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+      AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
       AutoCommands.curStart = startChooser.get();
       AutoCommands.curCycle = cycleChooser.get();
       AutoCommands.curSwipe = swipeChooser.get();
     }
 
-    autoChooser.addDefaultOption("PoseBoard", AutoCommands.constructedAuto);
+    autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
+    autoChooser.addDefaultOption("PickYaPoison", AutoCommands.custom);
   }
 
   public void periodic() {

@@ -94,7 +94,7 @@ public final class Constants {
 
   public static class DriveConstants {
     public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    public static final double DRIVE_MAXACC = 8.0;
+    public static final double DRIVE_MAXACC = 10.0;
     public static final ProfiledPIDController DRIVE_PID =
         new ProfiledPIDController(
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));

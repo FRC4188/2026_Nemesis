@@ -3,41 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.4706777777777775,
-        "y": 0.5984777777777766
+        "x": 2.878,
+        "y": 0.639
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.899422222222224,
-        "y": 0.6488666666666665
+        "x": 2.6564907689999813,
+        "y": 0.7549036694060216
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "trenchshot"
     },
     {
       "anchor": {
-        "x": 8.229688888888889,
-        "y": 1.7171111111111101
+        "x": 4.515041518386715,
+        "y": 0.382253855278766
       },
       "prevControl": {
-        "x": 8.209533333333333,
-        "y": 1.2333777777777766
-      },
-      "nextControl": {
-        "x": 8.296921942476109,
-        "y": 3.3307043972043235
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 8.229688888888889,
-        "y": 3.9946888888888887
-      },
-      "prevControl": {
-        "x": 8.32038888888889,
-        "y": 1.9589777777777773
+        "x": 3.9017674970344016,
+        "y": 0.27466192170818315
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,11 +32,11 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.9700996677740807,
-      "maxWaypointRelativePos": 2.0,
+      "minWaypointRelativePos": 0,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 1.5,
+        "maxVelocity": 2.0,
+        "maxAcceleration": 8.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -71,14 +55,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 112.61986494804032
+    "velocity": 5.0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": 70.84609371840165
   },
   "useDefaultConstraints": true
 }

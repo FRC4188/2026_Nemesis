@@ -1,9 +1,14 @@
 package frc.robot.commands.Scoring;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -55,6 +60,8 @@ public class AutoCommands {
 
   public static Command constructedAuto = poseBoard(curStart, curSwipe, curCycle);
 
+  public static Command custom = Commands.none();
+
   public static Command autoShoot() {
     return Commands.parallel(
         DriveCommands.joystickCombined(
@@ -70,6 +77,47 @@ public class AutoCommands {
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
         ScoringCommands.slowUp());
+  }
+
+  public static Command newAuto(Start start, Cycle cycle) {
+    return (switch (cycle) {
+        case NONE -> Commands.sequence(
+            Commands.runOnce(() -> drive.setPose(Paths.getFirstPose(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()))),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
+            autoShoot().withTimeout(4),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchToSecond : Paths.trenchToSecond.mirrorPath())
+        );
+        case NZ -> Commands.sequence(
+            Commands.runOnce(() -> drive.setPose(Paths.getFirstPose(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()))),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
+            autoShoot().withTimeout(4),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchToSecond : Paths.trenchToSecond.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.secondSwipe : Paths.secondSwipe.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.secondToTrench : Paths.secondToTrench.mirrorPath())
+        );
+        case DOUBLE -> Commands.sequence(
+            Commands.runOnce(() -> drive.setPose(Paths.getFirstPose(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()))),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
+            autoShoot().withTimeout(4),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.trenchToSecond : Paths.trenchToSecond.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.secondSwipe : Paths.secondSwipe.mirrorPath()),
+            AutoBuilder.followPath(start == Start.RIGHT ? Paths.secondToTrench : Paths.secondToTrench.mirrorPath()),
+            autoShoot().withTimeout(4)
+        );
+    });
+  }
+
+  public static Command follower(Start start) {
+    return Commands.sequence(
+        Commands.runOnce(() -> drive.setPose(Paths.getFirstPose(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()).plus(new Transform2d(0.0, (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? 1 : -1) * Units.inchesToMeters(36), new Rotation2d())))),
+        new WaitCommand(2.5),
+        AutoBuilder.followPath(start == Start.RIGHT ? Paths.firstSwipe : Paths.firstSwipe.mirrorPath()),
+        AutoBuilder.followPath(start == Start.RIGHT ? Paths.bumpReturn : Paths.bumpReturn.mirrorPath()),
+        autoShoot().withTimeout(6)
+    );
   }
 
   public static Command pseudoBoard(Start start, Swipe swipe, Cycle cycle) {
@@ -292,8 +340,7 @@ public class AutoCommands {
                           case RIGHT -> new Pose2d(
                               FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
                         })
-                    .withCurve(0.4)
-                    .withSpeed(1),
+                    .withCurve(0.4),
                 new PathBuilder.Target(
                         switch (start) {
                           case LEFT -> new Pose2d(
@@ -338,7 +385,7 @@ public class AutoCommands {
                           },
                           Rotation2d.kCCW_90deg);
                     },
-                    0.35),
+                    1),
                 new PathBuilder.Target(
                     new Pose2d(
                         switch (swipe) {
@@ -351,7 +398,7 @@ public class AutoCommands {
                           case LEFT -> Rotation2d.kCW_90deg;
                           case RIGHT -> Rotation2d.kCCW_90deg;
                         }),
-                    0.35)),
+                    1)),
             PathBuilder.triggerWhenFar(
                 switch (start) {
                   case LEFT -> FieldConstants.Trench.left_trench_center;
@@ -450,9 +497,9 @@ public class AutoCommands {
             .andThen(AutoCommands.autoShoot())
             .withTimeout(
                 switch (cycle) {
-                  case NZ -> 8.0;
-                  case NONE -> 10.0;
-                  case DOUBLE -> 6.0;
+                  case NZ -> 4.0;
+                  case NONE -> 4.0;
+                  case DOUBLE -> 4.0;
                 })
             .andThen(Robot.isReal() ? ScoringCommands.downNoStall() : Commands.none()),
         switch (cycle) {
@@ -555,15 +602,22 @@ public class AutoCommands {
               Commands.runOnce(intake::stop),
               Commands.deadline(
                   PathBuilder.path(
-                      PathBuilder.mirror(
-                          () -> (start == Start.LEFT),
-                          new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
-                              .withStartingSpeed(2),
-                          new PathBuilder.Target(
-                              new Pose2d(
-                                  FieldConstants.Trench.right_trench_center.plus(
-                                      new Translation2d(0, -0.15)),
-                                  Rotation2d.kZero))))));
+                          PathBuilder.mirror(
+                              () -> (start == Start.LEFT),
+                              new PathBuilder.Target(
+                                      new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+                                  .withStartingSpeed(2),
+                              new PathBuilder.Target(
+                                  new Pose2d(
+                                      FieldConstants.Trench.right_trench_center.plus(
+                                          new Translation2d(0, -0.15)),
+                                      Rotation2d.kZero)),
+                              new PathBuilder.Target(
+                                  new Pose2d(
+                                      FieldConstants.Trench.right_trench_center.plus(
+                                          new Translation2d(-2.2, 0.4)),
+                                      Rotation2d.kZero))))
+                      .andThen(autoShoot().withTimeout(6))));
         });
   }
 
@@ -605,7 +659,7 @@ public class AutoCommands {
                                         FieldConstants.Trench.right_trench_center,
                                         Rotation2d.kCCW_90deg);
                                   })
-                              .withStartingSpeed(10)
+                              .withStartingSpeed(5)
                               .withCurve(0.4),
                           new PathBuilder.Target(
                                   switch (start) {
