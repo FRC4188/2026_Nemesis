@@ -7,11 +7,7 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.RotationTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -24,15 +20,12 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
-import frc.robot.CSPLib.csppathing.CSPPathing;
-import frc.robot.CSPLib.csppathing.PosePathing;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
-import frc.robot.commands.Scoring.Paths;
-import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.Scoring.AutoCommands.Start;
+import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -381,7 +374,7 @@ public class RobotContainer {
     }
 
     autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
-    autoChooser.addDefaultOption("PickYaPoison", AutoCommands.custom);
+    autoChooser.addDefaultOption("GOOD PICK THIS ONE!!!", AutoCommands.custom);
   }
 
   public void periodic() {
