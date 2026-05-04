@@ -167,7 +167,7 @@ public final class Constants {
     public static final double kStatorCurrent = 40;
     public static final double kSupplyCurrent = 30;
     public static final double kStallCurrent = 40; // placeholder
-    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
+    public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
     public static final InvertedValue kInvertedValue = InvertedValue.Clockwise_Positive;
     public static final Slot0Configs wristGains =
         new Slot0Configs()
@@ -213,7 +213,7 @@ public final class Constants {
 
   public static class ShooterConstants {
     public static final double kTolerance = 25.0;
-    public static final double kMaxRPM = 4800.0;
+    public static final double kMaxRPM = 5000.0;
     public static final double kGearRatio = 1.0;
 
     public static final double kStatorCurrent = 60.0;

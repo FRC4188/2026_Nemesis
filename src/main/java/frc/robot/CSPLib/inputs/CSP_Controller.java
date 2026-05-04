@@ -12,6 +12,7 @@ import frc.robot.Constants;
 public class CSP_Controller extends CommandXboxController {
   public enum Scale {
     LINEAR,
+    WILL,
     SQUARED,
     CUBED,
     QUARTIC
@@ -29,6 +30,8 @@ public class CSP_Controller extends CommandXboxController {
     switch (scale) {
       case LINEAR:
         return input;
+      case WILL:
+        return Math.signum(input) * Math.abs(Math.pow(Math.abs(input), 1.5));
       case SQUARED:
         return Math.signum(input) * Math.pow(input, 2);
       case CUBED:

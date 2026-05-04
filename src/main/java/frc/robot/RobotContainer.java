@@ -16,8 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
@@ -26,6 +24,7 @@ import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.AutoCommands.Start;
 import frc.robot.commands.Scoring.ScoringCommands;
+import frc.robot.commands.Scoring.pseudo;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -39,7 +38,6 @@ import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -132,13 +130,13 @@ public class RobotContainer {
     cycleChooser.addOption("None", AutoCommands.Cycle.NONE);
     cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
 
-    autoChooser.addOption(
-        "PsuedoBoard Delayed",
-        Commands.defer(
-            () ->
-                AutoCommands.pseudoBoard(
-                    startChooser.get(), swipeChooser.get(), cycleChooser.get()),
-            Set.of(shooter, hopper, wrist, intake, hood)));
+    // autoChooser.addOption(
+    //     "PsuedoBoard Delayed",
+    //     Commands.defer(
+    //         () ->
+    //             AutoCommands.pseudoBoard(
+    //                 startChooser.get(), swipeChooser.get(), cycleChooser.get()),
+    //         Set.of(shooter, hopper, wrist, intake, hood)));
 
     autoChooser.addOption(
         "FORWARD Right Disruptor",
@@ -155,6 +153,21 @@ public class RobotContainer {
     autoChooser.addOption("Right Follower", AutoCommands.follower(Start.RIGHT));
 
     autoChooser.addOption("Left Follower", AutoCommands.follower(Start.LEFT));
+
+    autoChooser.addOption("Left Double Bump", AutoCommands.doubleSwipeBothBump(Start.LEFT));
+
+    autoChooser.addOption("Right Double Bump", AutoCommands.doubleSwipeBothBump(Start.RIGHT));
+
+    autoChooser.addOption("PSEUDO TESTING", pseudo.pseudoBoard());
+
+    autoChooser.addOption(
+        "1323 match",
+        Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(AllianceFlip.apply(new Pose2d(3.547, 4.008, Rotation2d.kZero)))),
+            Commands.parallel(ScoringCommands.staticAim(), ScoringCommands.staticShoot())
+                .withTimeout(6.0)));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -194,7 +207,7 @@ public class RobotContainer {
             //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
             // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () -> -pilot.getCorrectedRight(Scale.SQUARED).getX(),
+            () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
             //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 (pilot.x().getAsBoolean())
@@ -243,14 +256,19 @@ public class RobotContainer {
                     () -> pilot.rightBumper().getAsBoolean()),
                 () -> pilot.a().getAsBoolean()));
 
-    // pilot.getRightTButton().whileTrue(new WaitCommand(4).andThen(ScoringCommands.testShake()));
-    pilot
-        .getRightTButton()
-        .whileTrue(
-            new WaitCommand(0.1)
-                .andThen(
-                    new WaitUntilCommand(() -> shooter.atGoal()).andThen(ScoringCommands.slowUp())))
-        .onFalse(ScoringCommands.downNoStall());
+    // automataic up
+    // pilot
+    //     .getRightTButton()
+    //     .whileTrue(
+    //         new WaitCommand(0.1)
+    //             .andThen(
+    //                 new WaitUntilCommand(() -> shooter.atGoal())
+    //                     .andThen(
+    //                         Commands.either(
+    //                             ScoringCommands.slowUp(Size.HALF),
+    //                             ScoringCommands.slowUp(Size.FULL),
+    //                             () -> copilot.leftBumper().getAsBoolean()))))
+    //     .onFalse(ScoringCommands.downNoStall());
 
     pilot
         .getLeftTButton()
@@ -263,21 +281,16 @@ public class RobotContainer {
                 Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
                 Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
 
-    // Commands.either(
-    //     ScoringCommands.halfShake(), ScoringCommands.fullShake(), () ->
-    // copilot.b().getAsBoolean());
-
     copilot
         .y()
         .whileTrue(
             Commands.runEnd(
-                () -> wrist.runWristVolts(5 * -copilot.getLeftY(Scale.LINEAR)),
+                () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
                 wrist::stop,
                 wrist));
 
     copilot.x().onTrue(ScoringCommands.downNoStall());
     copilot.a().onTrue(ScoringCommands.goodStow());
-    copilot.leftBumper().whileTrue(ScoringCommands.slowUp());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
     copilot
@@ -365,16 +378,16 @@ public class RobotContainer {
     if (startChooser.get() != AutoCommands.curStart
         || cycleChooser.get() != AutoCommands.curCycle
         || swipeChooser.get() != AutoCommands.curSwipe) {
-      AutoCommands.constructedAuto =
-          AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+      //   AutoCommands.constructedAuto =
+      //       AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
       AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
       AutoCommands.curStart = startChooser.get();
       AutoCommands.curCycle = cycleChooser.get();
       AutoCommands.curSwipe = swipeChooser.get();
     }
 
-    autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
-    autoChooser.addDefaultOption("GOOD PICK THIS ONE!!!", AutoCommands.custom);
+    // autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
+    autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
   }
 
   public void periodic() {

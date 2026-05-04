@@ -61,7 +61,8 @@ public class Shooter extends SubsystemBase {
   }
 
   public boolean atGoal() {
-    return setRPM - inputs.leftVelocityRPM < Constants.ShooterConstants.kTolerance;
+    return setRPM - ((inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0)
+        < Constants.ShooterConstants.kTolerance;
   }
 
   public void periodic() {

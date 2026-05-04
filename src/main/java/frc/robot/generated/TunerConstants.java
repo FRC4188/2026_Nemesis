@@ -25,7 +25,7 @@ public class TunerConstants {
           .withKP(2000)
           .withKI(0)
           .withKD(100)
-          .withKS(1)
+          .withKS(0)
           .withKV(0)
           .withKA(0)
           .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);

@@ -42,14 +42,14 @@ public class VisionIOPhoton implements VisionIO {
   }
 
   public boolean valid(int id) {
-    // return true;
     // if (DriverStation.getAlliance().isPresent()
     //     && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
     //   return !(id > 16);
     // } else {
     //   return !(id < 17);
     // }
-    return true;
+    // return true;
+    return !(id == 29 || id == 30 || id == 13 || id == 14);
   }
 
   @Override
