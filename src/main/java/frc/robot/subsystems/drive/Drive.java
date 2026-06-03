@@ -38,6 +38,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -279,6 +281,32 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     }
     // kinematics.resetHeadings(headings);
     // stop();
+  }
+
+  //odd, amirite
+  public void stopPerpendicular(DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+    stopWithX();
+
+    double curTranslationalSpeed = 
+      Math.sqrt(
+        Math.pow(getChassisSpeeds().vxMetersPerSecond, 2)
+         + Math.pow(getChassisSpeeds().vyMetersPerSecond, 2));
+
+    double wantedTranslationalSpeed = 
+      Math.sqrt(
+        Math.pow(xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL, 2)
+         + Math.pow(ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL, 2));
+
+    if(Math.abs(curTranslationalSpeed - wantedTranslationalSpeed) > 0.5) {
+      for(int i = 0; i < modules.length; i++) {
+        modules[i].runSetpoint(
+          new SwerveModuleState(
+            0.0, 
+            new Translation2d(getChassisSpeeds().vxMetersPerSecond, getChassisSpeeds().vyMetersPerSecond)
+            .getAngle()
+            .rotateBy(Rotation2d.kCCW_90deg)));
+      }
+    }
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

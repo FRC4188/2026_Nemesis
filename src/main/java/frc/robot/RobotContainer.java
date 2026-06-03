@@ -201,6 +201,12 @@ public class RobotContainer {
                     || pilot.a().getAsBoolean()
                     || pilot.x().getAsBoolean()));
 
+    driveInput.whileFalse(
+      Commands.run(
+        () -> drive.stopPerpendicular(
+          () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(), 
+          () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX()), drive));
+
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
