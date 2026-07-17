@@ -8,6 +8,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.path.PathConstraints;
+import com.team4188.voyager.VoyagerLib;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -16,16 +18,19 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
+import frc.robot.CSPLib.csppathing.CSPPath;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.AutoCommands;
 import frc.robot.commands.Scoring.AutoCommands.Start;
+import frc.robot.commands.Scoring.Paths;
 import frc.robot.commands.Scoring.ScoringCommands;
-import frc.robot.commands.Scoring.pseudo;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -57,6 +62,8 @@ public class RobotContainer {
   private final Wrist wrist;
   private final Vision vis;
   private final SimulationVisualizer simvis;
+
+  private final CSPPath cspPath = new CSPPath();
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -93,6 +100,33 @@ public class RobotContainer {
             () -> Units.degreesToRadians(wrist.getAngle()),
             () -> Units.degreesToRadians(hood.getAngle()));
 
+    VoyagerLib.configure(
+        drive, drive::getPose, drive::setPose, drive::getChassisSpeeds, drive::runVelocity, true);
+    VoyagerLib.setDefaultGlobalConstraints(
+        Constants.DriveConstants.DRIVE_MAXVEL / 2, // maxVelocityMetersPerSec
+        Constants.DriveConstants.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXVEL), // maxVelocityDegPerSec
+        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXACC), // maxAccelerationDegPerSec2
+        0.03, // endTranslationToleranceMeters
+        2.0, // endRotationToleranceDeg
+        0.2 // intermediateHandoffRadiusMeters
+        );
+    VoyagerLib.setModuleOrientationConsumer(drive::setModuleOrientations);
+    VoyagerLib.setPIDControllers(
+        new PIDController(
+            Constants.DriveConstants.DRIVE_PID.getP(),
+            Constants.DriveConstants.DRIVE_PID.getI(),
+            Constants.DriveConstants.DRIVE_PID.getD()),
+        new PIDController(
+            Constants.DriveConstants.ANGLE_PID.getP(),
+            Constants.DriveConstants.ANGLE_PID.getI(),
+            Constants.DriveConstants.ANGLE_PID.getD()),
+        new PIDController(2, 0, 0));
+
+    VoyagerLib.addEvent("Delay", Commands.waitSeconds(4.0));
+    VoyagerLib.addEvent("Shoot Half", AutoCommands.autoShoot(AutoCommands.Size.HALF).withTimeout(2.0));
+    VoyagerLib.addEvent("Shoot Full", AutoCommands.autoShoot(AutoCommands.Size.FULL).withTimeout(4.0));
+
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
     PathBuilder.configureField(FieldConstants.field_width, FieldConstants.field_length);
@@ -116,6 +150,30 @@ public class RobotContainer {
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         drive);
     // PBExperimental.configure(drive);
+
+    cspPath.configure(
+        (SubsystemBase) drive,
+        drive::getPose,
+        drive::getChassisSpeeds,
+        drive::runVelocity,
+        new PIDController(
+            Constants.DriveConstants.DRIVE_PID.getP(),
+            Constants.DriveConstants.DRIVE_PID.getI(),
+            Constants.DriveConstants.DRIVE_PID.getD()),
+        new PIDController(
+            Constants.DriveConstants.ANGLE_PID.getP(),
+            Constants.DriveConstants.ANGLE_PID.getI(),
+            Constants.DriveConstants.ANGLE_PID.getD()),
+        new PIDController(2, 0, 0),
+        new Path.DefaultGlobalConstraints(
+            4.5, // maxVelocityMetersPerSec
+            10.0, // maxAccelerationMetersPerSec2
+            600, // maxVelocityDegPerSec
+            2000, // maxAccelerationDegPerSec2
+            0.03, // endTranslationToleranceMeters
+            2.0, // endRotationToleranceDeg
+            0.25 // intermediateHandoffRadiusMeters
+            ));
 
     // These 4 choosers are subbing for PB's dashboard fyi
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -158,7 +216,7 @@ public class RobotContainer {
 
     autoChooser.addOption("Right Double Bump", AutoCommands.doubleSwipeBothBump(Start.RIGHT));
 
-    autoChooser.addOption("PSEUDO TESTING", pseudo.pseudoBoard());
+    autoChooser.addOption("csppath test", cspPath.build(Paths.firstSwipe, false));
 
     autoChooser.addOption(
         "1323 match",
@@ -313,7 +371,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return VoyagerLib.runSelectedAuto();
   }
 
   // maybe making this easier for different positions in sim?!
@@ -375,19 +433,19 @@ public class RobotContainer {
 
   public void preperiodic() {
 
-    if (startChooser.get() != AutoCommands.curStart
-        || cycleChooser.get() != AutoCommands.curCycle
-        || swipeChooser.get() != AutoCommands.curSwipe) {
-      //   AutoCommands.constructedAuto =
-      //       AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
-      AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
-      AutoCommands.curStart = startChooser.get();
-      AutoCommands.curCycle = cycleChooser.get();
-      AutoCommands.curSwipe = swipeChooser.get();
-    }
+    // if (startChooser.get() != AutoCommands.curStart
+    //     || cycleChooser.get() != AutoCommands.curCycle
+    //     || swipeChooser.get() != AutoCommands.curSwipe) {
+    //   //   AutoCommands.constructedAuto =
+    //         AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
+    //   AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
+    //   AutoCommands.curStart = startChooser.get();
+    //   AutoCommands.curCycle = cycleChooser.get();
+    //   AutoCommands.curSwipe = swipeChooser.get();
+    // }
 
-    // autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
-    autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
+    // // autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
+    // autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
   }
 
   public void periodic() {

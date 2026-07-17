@@ -1,0 +1,33 @@
+{
+  "autos": [
+    {
+      "id": "pathf4d7857ac328464f983ab73b17c42102",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "FirstSwipe"
+        },
+        {
+          "type": "event",
+          "name": "Shoot Full"
+        },
+        {
+          "type": "path",
+          "name": "NextSwipe"
+        },
+        {
+          "type": "path",
+          "name": "GoOverAndShoot"
+        },
+        {
+          "type": "event",
+          "name": "Shoot Half"
+        },
+        {
+          "type": "path",
+          "name": "ReturnToNZ"
+        }
+      ]
+    }
+  ]
+}

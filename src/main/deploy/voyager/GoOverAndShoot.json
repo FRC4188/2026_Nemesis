@@ -1,0 +1,21 @@
+{
+  "waypoints": [
+    {
+      "x": 5.73982628600578,
+      "y": 2.3745979356274165,
+      "angle": -88.90999999999997,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.0868599938709487,
+      "y": 2.3498320993518753,
+      "angle": 51.180000000000064,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [],
+  "constraint_zones": []
+}
