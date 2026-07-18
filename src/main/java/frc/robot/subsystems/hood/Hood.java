@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.statemachine.StateMachine;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -29,6 +30,8 @@ public class Hood extends SubsystemBase {
   private final HoodIOInputsAutoLogged inputs;
 
   private final Alert hoodDisconnectedAlert;
+  private final StateMachine<HoodState> stateMachine =
+      new StateMachine<>("Hood/StateMachine", HoodState.IDLE);
 
   @AutoLogOutput(key = "Hood/Setpoint Degrees")
   private double setpoint = 0.0;
@@ -43,11 +46,13 @@ public class Hood extends SubsystemBase {
   }
 
   public void runHoodVolts(double volts) {
+    setState(HoodState.MANUAL_VOLTAGE, "runHoodVolts");
     setpoint = 0.0;
     io.setVolts(volts);
   }
 
   public void stop() {
+    setState(HoodState.IDLE, "stop");
     io.setVolts(0.0);
   }
 
@@ -60,6 +65,7 @@ public class Hood extends SubsystemBase {
   }
 
   public void setAngle(Rotation2d angle) {
+    setState(HoodState.AIMING_MANUAL_DISTANCE, "setAngle");
     setpoint = angle.getDegrees() + offset.getAsDouble();
     io.setPosition(
         Rotation2d.fromDegrees(
@@ -70,12 +76,43 @@ public class Hood extends SubsystemBase {
   }
 
   public void stow() {
+    setState(HoodState.STOWED, "stow");
     setpoint = 0.0;
-    setAngle(Rotation2d.kZero);
+    setAngleOutput(Rotation2d.kZero);
   }
 
   public void zero() {
+    setState(HoodState.ZEROING, "zero");
     io.setZero();
+  }
+
+  public void setStaticAim(Rotation2d angle) {
+    setState(HoodState.AIMING_STATIC, "staticAim");
+    setAngleOutput(angle);
+  }
+
+  public void setPassAim(Rotation2d angle) {
+    setState(HoodState.PASS_AIM, "passAim");
+    setAngleOutput(angle);
+  }
+
+  public HoodState getState() {
+    return stateMachine.getCurrentState();
+  }
+
+  private void setAngleOutput(Rotation2d angle) {
+    setpoint = angle.getDegrees() + offset.getAsDouble();
+    io.setPosition(
+        Rotation2d.fromDegrees(
+            MathUtil.clamp(
+                setpoint,
+                Constants.HoodConstants.Min_A.getDegrees(),
+                Constants.HoodConstants.Max_A.getDegrees())));
+  }
+
+  private void setState(HoodState state, String reason) {
+    stateMachine.requestState(state);
+    stateMachine.transitionTo(state, reason);
   }
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
@@ -91,6 +128,7 @@ public class Hood extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
+    stateMachine.periodic();
 
     hoodDisconnectedAlert.set(!inputs.motorConnected);
   }

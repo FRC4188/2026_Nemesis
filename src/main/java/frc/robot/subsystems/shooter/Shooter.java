@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.statemachine.StateMachine;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,6 +32,8 @@ public class Shooter extends SubsystemBase {
   private final Alert rightDisconnectedAlert;
   private final Alert left2DisconnectedAlert;
   private final Alert left3DisconnectedAlert;
+  private final StateMachine<ShooterState> stateMachine =
+      new StateMachine<>("Shooter/StateMachine", ShooterState.IDLE);
 
   @AutoLogOutput(key = "Shooter/Setpoint RPM")
   private double setRPM = 0.0;
@@ -46,16 +49,21 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setVelocityRPM(double RPM) {
+    if (stateMachine.getCurrentState() != ShooterState.SHOOTING) {
+      setState(ShooterState.SPINNING_UP, "setVelocityRPM");
+    }
     setRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
     io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
   }
 
   public void runTC(double amps) {
+    setState(ShooterState.TORQUE_CURRENT, "runTC");
     setRPM = 0;
     io.setTorqueCurrent(amps);
   }
 
   public void stop() {
+    setState(ShooterState.IDLE, "stop");
     setRPM = 0;
     io.setTorqueCurrent(0.0);
   }
@@ -65,9 +73,23 @@ public class Shooter extends SubsystemBase {
         < Constants.ShooterConstants.kTolerance;
   }
 
+  public ShooterState getState() {
+    return stateMachine.getCurrentState();
+  }
+
+  public void markShooting() {
+    setState(ShooterState.SHOOTING, "feeding");
+  }
+
+  private void setState(ShooterState state, String reason) {
+    stateMachine.requestState(state);
+    stateMachine.transitionTo(state, reason);
+  }
+
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
+    stateMachine.periodic();
 
     leftDisconnectedAlert.set(!inputs.leftConnected);
     rightDisconnectedAlert.set(!inputs.rightConnected);

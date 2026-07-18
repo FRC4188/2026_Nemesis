@@ -73,7 +73,7 @@ public class AutoCommands {
                     .minus(drive.getPose().getTranslation())
                     .getAngle(),
             () -> true),
-        Commands.runEnd(() -> intake.intakeVolts(1.5), () -> intake.stop()).withTimeout(1),
+        ScoringCommands.intakeVoltsWithoutRequirement(1.5).withTimeout(1),
         ScoringCommands.staticAim(),
         ScoringCommands.staticShoot(),
         ScoringCommands.slowUp(size));
@@ -103,7 +103,7 @@ public class AutoCommands {
                       ? FieldConstants.Trench.right_trench_center
                       : FieldConstants.Trench.left_trench_center,
                   0.25,
-                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                  ScoringCommands.intakeVolts(8.5))),
           AutoBuilder.followPath(
               start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
           autoShoot(Size.FULL).withTimeout(4),
@@ -131,7 +131,7 @@ public class AutoCommands {
                       ? FieldConstants.Trench.right_trench_center
                       : FieldConstants.Trench.left_trench_center,
                   0.25,
-                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                  ScoringCommands.intakeVolts(8.5))),
           AutoBuilder.followPath(
               start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
           autoShoot(Size.FULL).withTimeout(5),
@@ -141,7 +141,7 @@ public class AutoCommands {
           Commands.deadline(
               AutoBuilder.followPath(
                   start == Start.RIGHT ? Paths.secondSwipe : Paths.secondSwipe.mirrorPath()),
-              Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
+              ScoringCommands.intakeVolts(8.5)),
           AutoBuilder.followPath(
               start == Start.RIGHT ? Paths.secondToTrench : Paths.secondToTrench.mirrorPath()));
       case DOUBLE -> Commands.sequence(
@@ -166,7 +166,7 @@ public class AutoCommands {
                       ? FieldConstants.Trench.right_trench_center
                       : FieldConstants.Trench.left_trench_center,
                   0.25,
-                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                  ScoringCommands.intakeVolts(8.5))),
           AutoBuilder.followPath(
               start == Start.RIGHT ? Paths.trenchReturn : Paths.trenchReturn.mirrorPath()),
           autoShoot(Size.FULL).withTimeout(5.0),
@@ -176,7 +176,7 @@ public class AutoCommands {
           Commands.deadline(
               AutoBuilder.followPath(
                   start == Start.RIGHT ? Paths.secondSwipe : Paths.secondSwipe.mirrorPath()),
-              Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
+              ScoringCommands.intakeVolts(8.5)),
           AutoBuilder.followPath(
               start == Start.RIGHT ? Paths.secondToTrench : Paths.secondToTrench.mirrorPath()),
           autoShoot(Size.HALF).withTimeout(4));
@@ -204,7 +204,7 @@ public class AutoCommands {
                     ? FieldConstants.Trench.right_trench_center
                     : FieldConstants.Trench.left_trench_center,
                 0.25,
-                Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                ScoringCommands.intakeVolts(8.5))),
         AutoBuilder.followPath(
             start == Start.RIGHT ? Paths.bumpReturnSwipe : Paths.bumpReturnSwipe.mirrorPath()),
         autoShoot(Size.FULL).withTimeout(5),
@@ -214,7 +214,7 @@ public class AutoCommands {
         Commands.deadline(
             AutoBuilder.followPath(
                 start == Start.RIGHT ? Paths.hairpinBump : Paths.hairpinBump.mirrorPath()),
-            Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
+            ScoringCommands.intakeVolts(8.5)),
         autoShoot(Size.HALF).withTimeout(4));
   }
 
@@ -250,7 +250,7 @@ public class AutoCommands {
                     ? FieldConstants.Trench.right_trench_neutral_entrance
                     : FieldConstants.Trench.left_trench_neutral_entrance,
                 0.2,
-                Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                ScoringCommands.intakeVolts(8.5))),
         AutoBuilder.followPath(
             start == Start.RIGHT ? Paths.bumpReturn : Paths.bumpReturn.mirrorPath()),
         autoShoot(Size.HALF).withTimeout(6));
@@ -360,7 +360,7 @@ public class AutoCommands {
                     };
                   },
                   1,
-                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake))),
+                  ScoringCommands.intakeVolts(8.5))),
           Commands.deadline(
               PathBuilder.path(
                   new PathBuilder.Target(
@@ -554,7 +554,7 @@ public class AutoCommands {
                   };
                 },
                 1,
-                Commands.runEnd(() -> intake.intakeVolts(7.5), intake::stop, intake))),
+                ScoringCommands.intakeVolts(7.5))),
         Commands.deadline(
             PathBuilder.path(
                 new PathBuilder.Target(
@@ -658,8 +658,7 @@ public class AutoCommands {
                                 Rotation2d.kCCW_90deg))
                         .withRotationSpread(2.5)
                         .withRotationLead(1)
-                        .withCommand(
-                            Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+                        .withCommand(ScoringCommands.intakeVolts(8.5)));
                   // .alongWith(ScoringCommands.forceDown());
 
                 case LEFT -> PathBuilder.path(
@@ -679,8 +678,7 @@ public class AutoCommands {
                                 Rotation2d.kCW_90deg))
                         .withRotationSpread(2.5)
                         .withRotationLead(1)
-                        .withCommand(
-                            Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+                        .withCommand(ScoringCommands.intakeVolts(8.5)));
                   // .alongWith(ScoringCommands.downNoStall());
               },
               Commands.none());
@@ -734,7 +732,7 @@ public class AutoCommands {
                                       .withControlDistances(0.250, 0)
                                       .withEndingRotation(Rotation2d.kZero)
                                       .withEndingSpeed(2)))),
-                  Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)),
+                  ScoringCommands.intakeVolts(8.5)),
               Commands.runOnce(intake::stop),
               Commands.deadline(
                   PathBuilder.path(
@@ -781,9 +779,7 @@ public class AutoCommands {
                         .withSpeed(0.8)
                         .withRotationSpread(1.5)
                         .withRotationLead(2)
-                        .withCommand(
-                            () ->
-                                Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)),
+                        .withCommand(() -> ScoringCommands.intakeVolts(8)),
                     new PathBuilder.Target(
                             new Pose2d(
                                 FieldConstants.FuelField.left_midline_corner,
@@ -848,9 +844,7 @@ public class AutoCommands {
                         .withSpeed(0.8)
                         .withRotationSpread(1.5)
                         .withRotationLead(2)
-                        .withCommand(
-                            () ->
-                                Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake)),
+                        .withCommand(() -> ScoringCommands.intakeVolts(8)),
                     new PathBuilder.Target(
                             new Pose2d(
                                 FieldConstants.FuelField.right_midline_corner,
@@ -955,7 +949,7 @@ public class AutoCommands {
             PathBuilder.triggerWhenClose(
                 FieldConstants.FuelField.right_midline_corner,
                 0.3,
-                Commands.runEnd(() -> intake.intakeVolts(8), intake::stop, intake))),
+                ScoringCommands.intakeVolts(8))),
         Commands.runOnce(intake::stop, intake));
   }
 

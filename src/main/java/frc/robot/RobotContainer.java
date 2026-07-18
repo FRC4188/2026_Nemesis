@@ -30,6 +30,7 @@ import frc.robot.commands.Scoring.AutoCommands.Start;
 import frc.robot.commands.Scoring.Paths;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.drivecontrol.DriveController;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -39,9 +40,9 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.superstructure.Superstructure;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-import java.util.List;
 import java.util.Random;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -62,6 +63,8 @@ public class RobotContainer {
   private final Wrist wrist;
   private final Vision vis;
   private final SimulationVisualizer simvis;
+  private final Superstructure superstructure;
+  private final DriveController driveController;
 
   private final CSPPath cspPath = new CSPPath();
 
@@ -94,6 +97,8 @@ public class RobotContainer {
     hopper = Hopper.getInstance();
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
+    superstructure = Superstructure.getInstance();
+    driveController = DriveController.getInstance();
     simvis =
         new SimulationVisualizer(
             "Models",
@@ -124,8 +129,10 @@ public class RobotContainer {
         new PIDController(2, 0, 0));
 
     VoyagerLib.addEvent("Delay", Commands.waitSeconds(4.0));
-    VoyagerLib.addEvent("Shoot Half", AutoCommands.autoShoot(AutoCommands.Size.HALF).withTimeout(2.0));
-    VoyagerLib.addEvent("Shoot Full", AutoCommands.autoShoot(AutoCommands.Size.FULL).withTimeout(4.0));
+    VoyagerLib.addEvent(
+        "Shoot Half", AutoCommands.autoShoot(AutoCommands.Size.HALF).withTimeout(2.0));
+    VoyagerLib.addEvent(
+        "Shoot Full", AutoCommands.autoShoot(AutoCommands.Size.FULL).withTimeout(4.0));
 
     // Set up auto routines
     // PathBuilder.configure(drive); // Add all subsystems as parameters later
@@ -260,39 +267,16 @@ public class RobotContainer {
                     || pilot.x().getAsBoolean()));
 
     driveInput.whileTrue(
-        DriveCommands.joystickCombined(
+        DriveCommands.joystickStateMachine(
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
             //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
             // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
             //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
-            () ->
-                (pilot.x().getAsBoolean())
-                    ? (drive.getPose().getTranslation().getY() > FieldConstants.field_center.getY())
-                        ? Rotation2d.kCW_90deg
-                        : Rotation2d.kCCW_90deg
-                    : (pilot.a().getAsBoolean()
-                        ? drive
-                            .getPose()
-                            .getTranslation()
-                            .nearest(
-                                List.of(
-                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
-                                    AllianceFlip.apply(
-                                        new Translation2d(
-                                            FieldConstants.Depot.left_far_corner.getX(),
-                                            FieldConstants.field_width
-                                                - FieldConstants.Depot.left_far_corner.getY()))))
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()
-                        : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()),
-            () ->
-                pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.x().getAsBoolean()));
+            () -> pilot.rightBumper().getAsBoolean(),
+            () -> pilot.a().getAsBoolean(),
+            () -> pilot.x().getAsBoolean()));
 
     pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
 
@@ -328,24 +312,11 @@ public class RobotContainer {
     //                             () -> copilot.leftBumper().getAsBoolean()))))
     //     .onFalse(ScoringCommands.downNoStall());
 
-    pilot
-        .getLeftTButton()
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake));
+    pilot.getLeftTButton().whileTrue(ScoringCommands.intake());
 
-    pilot
-        .leftBumper()
-        .whileTrue(
-            Commands.parallel(
-                Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
-                Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
+    pilot.leftBumper().whileTrue(ScoringCommands.eject());
 
-    copilot
-        .y()
-        .whileTrue(
-            Commands.runEnd(
-                () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
-                wrist::stop,
-                wrist));
+    copilot.y().whileTrue(ScoringCommands.wristManual(() -> 3 * -copilot.getLeftY(Scale.LINEAR)));
 
     copilot.x().onTrue(ScoringCommands.downNoStall());
     copilot.a().onTrue(ScoringCommands.goodStow());
@@ -450,6 +421,10 @@ public class RobotContainer {
 
   public void periodic() {
 
+    superstructure.periodic();
+    ScoringCommands.initialShots = superstructure.getInitialShots();
+    driveController.periodic();
+
     // shooter.setVelocityRPM(shooterRPMset.getAsDouble());
 
     // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
@@ -538,6 +513,14 @@ public class RobotContainer {
   // so weird
   public void genericReset() {
     autoWinner = ' ';
+    superstructure.clearAllRequests();
+    driveController.requestIdle();
+  }
+
+  public void teleopInit() {
+    driveController.cancelAuto();
+    driveController.requestIdle();
+    superstructure.clearAllRequests();
   }
 
   public void displaySimFieldToAdvantageScope() {

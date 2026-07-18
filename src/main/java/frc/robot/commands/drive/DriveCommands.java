@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
+import frc.robot.drivecontrol.DriveController;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlip;
 import java.text.DecimalFormat;
@@ -28,6 +29,7 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final Drive drive = Drive.getInstance();
+  private static final DriveController driveController = DriveController.getInstance();
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
@@ -97,6 +99,28 @@ public class DriveCommands {
                 angleController.reset(
                     drive.getRotation().getRadians(),
                     drive.getChassisSpeeds().omegaRadiansPerSecond));
+  }
+
+  /** Thin command-lifecycle wrapper around the migrated teleop DriveController. */
+  public static Command joystickStateMachine(
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      BooleanSupplier rightBumperHeld,
+      BooleanSupplier aHeld,
+      BooleanSupplier xHeld) {
+    return Commands.runEnd(
+        () ->
+            driveController.acceptTeleopInput(
+                xSupplier.getAsDouble(),
+                ySupplier.getAsDouble(),
+                omegaSupplier.getAsDouble(),
+                rightBumperHeld.getAsBoolean(),
+                aHeld.getAsBoolean(),
+                xHeld.getAsBoolean(),
+                drive.getPose()),
+        driveController::requestIdle,
+        drive);
   }
 
   /**

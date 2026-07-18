@@ -1,0 +1,14 @@
+package frc.robot.drivecontrol;
+
+public enum DriveTransitionReason {
+  INITIALIZED,
+  REQUESTED,
+  REQUEST_ENDED,
+  MODE_CHANGED,
+  DISABLED,
+  AUTO_CANCELLED,
+  CHARACTERIZATION_STARTED,
+  CHARACTERIZATION_ENDED,
+  REJECTED,
+  FAULTED
+}

@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.statemachine.StateMachine;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -30,6 +31,8 @@ public class Hopper extends SubsystemBase {
 
   private final Alert aggitateDisconnectedAlert;
   private final Alert indexerDisconnectedAlert;
+  private final StateMachine<HopperState> stateMachine =
+      new StateMachine<>("Hopper/StateMachine", HopperState.IDLE);
 
   public Hopper(HopperIO io) {
     this.io = io;
@@ -39,6 +42,11 @@ public class Hopper extends SubsystemBase {
   }
 
   public void runHopper(double a_volts, double iRPM) {
+    HopperState state =
+        a_volts < 0.0
+            ? HopperState.REVERSE
+            : (iRPM != 0.0 ? HopperState.INDEXING : HopperState.FEEDING);
+    setState(state, "runHopper");
     io.setAggitateVolts(a_volts);
     io.setIndexerVelocity(iRPM);
   }
@@ -48,13 +56,24 @@ public class Hopper extends SubsystemBase {
   }
 
   public void stop() {
+    setState(HopperState.IDLE, "stop");
     io.setAggitateVolts(0.0);
     io.setIndexerVolts(0.0);
+  }
+
+  public HopperState getState() {
+    return stateMachine.getCurrentState();
+  }
+
+  private void setState(HopperState state, String reason) {
+    stateMachine.requestState(state);
+    stateMachine.transitionTo(state, reason);
   }
 
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hopper", inputs);
+    stateMachine.periodic();
 
     aggitateDisconnectedAlert.set(!inputs.aggitateConnected);
     indexerDisconnectedAlert.set(!inputs.indexerConnected);
