@@ -177,6 +177,8 @@ public final class Constants {
             .withKS(0.0)
             .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
+
+    public static final double fuelStatorCurrent = kStallCurrent; // placeholder
   }
 
   public static class HoodConstants {

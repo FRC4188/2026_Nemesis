@@ -71,6 +71,10 @@ public class Wrist extends SubsystemBase {
     io.setZero();
   }
 
+  public double getStatorCurrent() {
+    return inputs.currentAmps;
+  }
+
   @AutoLogOutput(key = "Wrist/Angle Degrees")
   public double getAngle() {
     return inputs.position.getDegrees();

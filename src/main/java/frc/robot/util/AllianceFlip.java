@@ -23,6 +23,22 @@ public class AllianceFlip {
     }
   }
 
+  public static Translation2d flipX(Translation2d pos) {
+    return new Translation2d(FieldConstants.field_length - pos.getX(), pos.getY());
+  }
+
+  public static Pose2d flipX(Pose2d pos) {
+    return new Pose2d(FieldConstants.field_length - pos.getX(), pos.getY(), pos.getRotation());
+  }
+
+  public static Translation2d flipY(Translation2d pos) {
+    return new Translation2d(pos.getX(), FieldConstants.field_width - pos.getY());
+  }
+
+  public static Pose2d flipY(Pose2d pos) {
+    return new Pose2d(pos.getX(), FieldConstants.field_width - pos.getY(), pos.getRotation());
+  }
+
   public static Pose2d apply(Pose2d pos) {
     if (canFlip()) {
       return new Pose2d(flipX(pos.getX()), flipY(pos.getY()), apply(pos.getRotation()));
