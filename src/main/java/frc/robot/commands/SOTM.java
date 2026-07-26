@@ -21,8 +21,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -53,30 +51,34 @@ public class SOTM { // Experimental Class for Offseason
     double displaceX;
     double displaceY;
 
-    double deltaVx = commandedFCSpeeds.vxMetersPerSecond - currentFCSpeeds.vxMetersPerSecond;
-    double deltaVy = commandedFCSpeeds.vyMetersPerSecond - currentFCSpeeds.vyMetersPerSecond;
-    double deltaSpeed = Math.sqrt(deltaVx * deltaVx + deltaVy * deltaVy);
+    // double deltaVx = commandedFCSpeeds.vxMetersPerSecond - currentFCSpeeds.vxMetersPerSecond;
+    // double deltaVy = commandedFCSpeeds.vyMetersPerSecond - currentFCSpeeds.vyMetersPerSecond;
+    // double deltaSpeed = Math.sqrt(deltaVx * deltaVx + deltaVy * deltaVy);
 
-    if (deltaSpeed <= 1) {
-      displaceX = currentFCSpeeds.vxMetersPerSecond * flightTime;
-      displaceY = currentFCSpeeds.vyMetersPerSecond * flightTime;
-    } else {
-      double accelerationX = Constants.DriveConstants.DRIVE_MAXACC * deltaVx / deltaSpeed;
-      double accelerationY = Constants.DriveConstants.DRIVE_MAXACC * deltaVy / deltaSpeed;
+    displaceX = currentFCSpeeds.vxMetersPerSecond * flightTime;
+    displaceY = currentFCSpeeds.vyMetersPerSecond * flightTime;
 
-      double timeToReachSpeed = deltaSpeed / Constants.DriveConstants.DRIVE_MAXACC;
-      double accelerationTime = Math.min(flightTime, timeToReachSpeed);
-      double velocityTime = Math.max(0, flightTime - timeToReachSpeed);
+    // if (deltaSpeed <= minimumAcceleration) {
+    //   displaceX = currentFCSpeeds.vxMetersPerSecond * flightTime;
+    //   displaceY = currentFCSpeeds.vyMetersPerSecond * flightTime;
+    // } else {
+    //   double accelerationX = Constants.DriveConstants.DRIVE_MAXACC * deltaVx / deltaSpeed;
+    //   double accelerationY = Constants.DriveConstants.DRIVE_MAXACC * deltaVy / deltaSpeed;
 
-      displaceX =
-          currentFCSpeeds.vxMetersPerSecond * accelerationTime
-              + 0.5 * accelerationX * accelerationTime * accelerationTime
-              + commandedFCSpeeds.vxMetersPerSecond * velocityTime;
-      displaceY =
-          currentFCSpeeds.vyMetersPerSecond * accelerationTime
-              + 0.5 * accelerationY * accelerationTime * accelerationTime
-              + commandedFCSpeeds.vyMetersPerSecond * velocityTime;
-    }
+    //   double timeToReachSpeed = deltaSpeed / Constants.DriveConstants.DRIVE_MAXACC;
+    //   double accelerationTime = Math.min(flightTime, timeToReachSpeed);
+    //   double velocityTime = Math.max(0, flightTime - timeToReachSpeed);
+
+    //   displaceX =
+    //       currentFCSpeeds.vxMetersPerSecond * accelerationTime
+    //           + 0.5 * accelerationX * accelerationTime * accelerationTime
+    //           + commandedFCSpeeds.vxMetersPerSecond * velocityTime;
+    //   displaceY =
+    //       currentFCSpeeds.vyMetersPerSecond * accelerationTime
+    //           + 0.5 * accelerationY * accelerationTime * accelerationTime
+    //           + commandedFCSpeeds.vyMetersPerSecond * velocityTime;
+
+    // }
 
     return target.plus(new Transform2d(-displaceX, -displaceY, new Rotation2d()));
   }
@@ -91,88 +93,94 @@ public class SOTM { // Experimental Class for Offseason
     ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
 
     return Commands.runEnd(
-        () -> {
-          double omega = 0.0;
-          if (!dynamicLock.getAsBoolean() && !staticLock.getAsBoolean()) {
-            omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
-            drive.acceptVision(true);
-          } else {
-            ChassisSpeeds currentSpeeds = drive.getChassisSpeeds();
-            ChassisSpeeds requestedSpeeds =
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    new ChassisSpeeds(
-                        xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17, ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17, 0),
-                    AllianceFlip.apply(drive.getRotation()));
+            () -> {
+              double omega = 0.0;
+              if (!dynamicLock.getAsBoolean() && !staticLock.getAsBoolean()) {
+                omega = omegaSupplier.getAsDouble() * Constants.DriveConstants.ANGLE_MAXVEL;
+                drive.acceptVision(true);
+              } else {
+                ChassisSpeeds currentSpeeds = drive.getChassisSpeeds();
+                ChassisSpeeds requestedSpeeds =
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        new ChassisSpeeds(
+                            xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
+                            ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
+                            0),
+                        AllianceFlip.apply(drive.getRotation()));
 
-            omega = (dynamicLock.getAsBoolean()) ?
-                angleController.calculate(
-                    drive.getRotation().getRadians(),
-                    AllianceFlip.apply(
-                            lookahead(
-                                    new Pose2d(target.get(), new Rotation2d()),
-                                    currentSpeeds,
-                                    requestedSpeeds,
-                                    TOF_SECONDS)
-                                .getTranslation())
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()
-                        .minus(Constants.DriveConstants.local_offset)
-                        .getRadians()) : angleController.calculate(
-                    drive.getRotation().getRadians(),
-                    AllianceFlip.apply(
-                            target.get())
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()
-                        .minus(Constants.DriveConstants.local_offset)
-                        .getRadians());
+                omega =
+                    (dynamicLock.getAsBoolean())
+                        ? angleController.calculate(
+                            drive.getRotation().getRadians(),
+                            AllianceFlip.apply(
+                                    lookahead(
+                                            new Pose2d(target.get(), new Rotation2d()),
+                                            currentSpeeds,
+                                            requestedSpeeds,
+                                            TOF_SECONDS)
+                                        .getTranslation())
+                                .minus(drive.getPose().getTranslation())
+                                .getAngle()
+                                .minus(Constants.DriveConstants.local_offset)
+                                .getRadians())
+                        : angleController.calculate(
+                            drive.getRotation().getRadians(),
+                            AllianceFlip.apply(target.get())
+                                .minus(drive.getPose().getTranslation())
+                                .getAngle()
+                                .minus(Constants.DriveConstants.local_offset)
+                                .getRadians());
 
-            if (angleController.atGoal()) {
-              if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
-                drive.stopWithX();
-                drive.acceptVision(false);
-                return;
+                if (angleController.atGoal()) {
+                  if (xSupplier.getAsDouble() == 0.0 && ySupplier.getAsDouble() == 0.0) {
+                    drive.stopWithX();
+                    drive.acceptVision(false);
+                    return;
+                  }
+                  omega = 0.0;
+                  drive.acceptVision(false);
+                } else {
+                  drive.acceptVision(true);
+                }
               }
-              omega = 0.0;
-              drive.acceptVision(false);
-            } else {
+
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xSupplier.getAsDouble()
+                          * Constants.DriveConstants.DRIVE_MAXVEL
+                          * (dynamicLock.getAsBoolean() ? 0.17 : 1.0),
+                      ySupplier.getAsDouble()
+                          * Constants.DriveConstants.DRIVE_MAXVEL
+                          * (dynamicLock.getAsBoolean() ? 0.17 : 1.0),
+                      omega);
+
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds, AllianceFlip.apply(drive.getRotation())));
+            },
+            () -> {
+              drive.stopWithX();
               drive.acceptVision(true);
-            }
-          }
-
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xSupplier.getAsDouble()
-                      * Constants.DriveConstants.DRIVE_MAXVEL
-                      * (dynamicLock.getAsBoolean() ? 0.17 : 1.0),
-                  ySupplier.getAsDouble()
-                      * Constants.DriveConstants.DRIVE_MAXVEL
-                      * (dynamicLock.getAsBoolean() ? 0.17 : 1.0),
-                  omega);
-
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlip.apply(drive.getRotation())));
-        },
-        () -> {
-          drive.stopWithX();
-          drive.acceptVision(true);
-        }).beforeStarting(
+            },
+            drive)
+        .beforeStarting(
             () ->
                 angleController.reset(
                     drive.getRotation().getRadians(),
-                    drive.getChassisSpeeds().omegaRadiansPerSecond)).alongWith(
-                        Commands.either(
-                            dynamicShoot(
-                                ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    new ChassisSpeeds(
-                                        xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17, ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17, 0),
-                                    AllianceFlip.apply(drive.getRotation())),
-                                drive.getChassisSpeeds(),
-                                () -> target.get()),
-                            Commands.none(),
-                            () -> dynamicLock.getAsBoolean() || !staticLock.getAsBoolean()
-                        )
-                    );
+                    drive.getChassisSpeeds().omegaRadiansPerSecond))
+        .alongWith(
+            Commands.either(
+                dynamicShoot(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        new ChassisSpeeds(
+                            xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
+                            ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
+                            0),
+                        AllianceFlip.apply(drive.getRotation())),
+                    drive.getChassisSpeeds(),
+                    target),
+                ScoringCommands.shoot(() -> 0.0),
+                () -> dynamicLock.getAsBoolean() || !staticLock.getAsBoolean()));
   }
 
   public static boolean initialShots = true;
@@ -181,60 +189,76 @@ public class SOTM { // Experimental Class for Offseason
       ChassisSpeeds requestedSpeeds, ChassisSpeeds currentSpeeds, Supplier<Translation2d> target) {
     return Commands.either(
         Commands.parallel(
-                Commands.runEnd(
-                    () ->
-                        hood.setAngle(
-                            ScoringCommands.inclineHueristic(
-                                AllianceFlip.apply(target.get())
+            Commands.runEnd(
+                () ->
+                    hood.setAngle(
+                        ScoringCommands.inclineHueristic(
+                            AllianceFlip.apply(target.get())
+                                .minus(drive.getPose().getTranslation())
+                                .getNorm())),
+                hood::stop,
+                hood),
+            Commands.runEnd(
+                () ->
+                    shooter.setVelocityRPM(
+                        ScoringCommands.RPMRegress(
+                                AllianceFlip.apply(
+                                        lookahead(
+                                                new Pose2d(target.get(), new Rotation2d()),
+                                                currentSpeeds,
+                                                requestedSpeeds,
+                                                TOF_SECONDS)
+                                            .getTranslation())
                                     .minus(drive.getPose().getTranslation())
-                                    .getNorm())),
-                    hood::stop,
-                    hood),
-                Commands.runEnd(
-                    () ->
-                        shooter.setVelocityRPM(
-                            ScoringCommands.RPMRegress(
-                                    AllianceFlip.apply(lookahead(new Pose2d(target.get(), new Rotation2d()), currentSpeeds, requestedSpeeds, TOF_SECONDS).getTranslation())
-                                        .minus(drive.getPose().getTranslation())
-                                        .getNorm())
-                                + ((initialShots) ? 200 : 0)),
-                    shooter::stop,
-                    shooter),
-                new WaitCommand(0.1)
-                    .andThen(
-                        new WaitUntilCommand(
-                                () ->
-                                    shooter.atGoal() && hood.atGoal())
-                            .andThen(
-                                Commands.parallel(
-                                    Commands.runEnd(
-                                        () -> hopper.runHopper(9.0, 5000), hopper::stop, hopper),
-                                    new WaitCommand(0.1)
-                                        .andThen(
-                                            new WaitUntilCommand(() -> hopper.indexAtGoal())
-                                                .andThen(
-                                                    Commands.startEnd(
-                                                        () -> initialShots = false,
-                                                        () -> initialShots = true))))))),
+                                    .getNorm())
+                            + ((initialShots) ? 200 : 0)),
+                shooter::stop,
+                shooter),
+            new WaitCommand(0.1)
+                .andThen(
+                    new WaitUntilCommand(() -> shooter.atGoal() && hood.atGoal())
+                        .andThen(
+                            Commands.parallel(
+                                Commands.runEnd(
+                                    () -> hopper.runHopper(9.0, 5000), hopper::stop, hopper),
+                                new WaitCommand(0.1)
+                                    .andThen(
+                                        new WaitUntilCommand(() -> hopper.indexAtGoal())
+                                            .andThen(
+                                                Commands.startEnd(
+                                                    () -> initialShots = false,
+                                                    () -> initialShots = true))))))),
         Commands.parallel(
-                ScoringCommands.passAim(),
-                Commands.waitUntil(
-                        () -> hood.atGoal())
-                    .andThen(Commands.parallel(
-        Commands.runEnd(
-            () ->
-                shooter.setVelocityRPM(
-                    110 * Units.metersToFeet(AllianceFlip.apply(lookahead(new Pose2d(target.get(), new Rotation2d()), currentSpeeds, requestedSpeeds, TOF_SECONDS).getTranslation()
-                                        .minus(FieldConstants.Depot.left_far_corner))
-                                        .getX())),
-            shooter::stop,
-            shooter),
-        new WaitCommand(0.1)
-            .andThen(
-                new WaitUntilCommand(() -> shooter.atGoal())
-                    .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper)))))),
-        () -> target.get().equals(FieldConstants.Hub.hub_center_2d)
-    );
+            ScoringCommands.passAim(),
+            Commands.waitUntil(() -> hood.atGoal())
+                .andThen(
+                    Commands.parallel(
+                        Commands.runEnd(
+                            () ->
+                                shooter.setVelocityRPM(
+                                    110
+                                        * Units.metersToFeet(
+                                            AllianceFlip.apply(
+                                                    lookahead(
+                                                            new Pose2d(
+                                                                target.get(), new Rotation2d()),
+                                                            currentSpeeds,
+                                                            requestedSpeeds,
+                                                            TOF_SECONDS)
+                                                        .getTranslation()
+                                                        .minus(
+                                                            FieldConstants.Depot.left_far_corner))
+                                                .getX())),
+                            shooter::stop,
+                            shooter),
+                        new WaitCommand(0.1)
+                            .andThen(
+                                new WaitUntilCommand(() -> shooter.atGoal())
+                                    .andThen(
+                                        Commands.runEnd(
+                                            () -> hopper.runHopper(9.0, 5000),
+                                            hopper::stop,
+                                            hopper)))))),
+        () -> target.get().equals(FieldConstants.Hub.hub_center_2d));
   }
 }
