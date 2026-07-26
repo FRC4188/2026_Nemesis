@@ -32,6 +32,9 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Random;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -194,6 +197,7 @@ public class RobotContainer {
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
                     || pilot.rightTrigger().getAsBoolean()
+                    || pilot.rightBumper().getAsBoolean()
                     || pilot.y().getAsBoolean()
                     || pilot.b().getAsBoolean()));
 
@@ -233,10 +237,26 @@ public class RobotContainer {
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
             () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
-            () -> FieldConstants.Hub.hub_center_2d,
-            () -> pilot.rightBumper().getAsBoolean()));
+            () -> ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
+                            && drive.getPose().getX()
+                                <= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX())
+                        || (DriverStation.getAlliance().get() == DriverStation.Alliance.Red
+                            && drive.getPose().getX()
+                                >=
+    AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX()))
+                ? AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                : drive
+                        .getPose()
+                        .getTranslation()
+                        .nearest(
+                            List.of(
+                                AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
+                                AllianceFlip.flipY(
+                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner)))),
+            () -> pilot.rightBumper().getAsBoolean(), () -> pilot.rightTrigger().getAsBoolean()));
 
     pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
+
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
