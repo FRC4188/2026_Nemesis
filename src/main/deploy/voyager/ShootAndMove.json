@@ -1,0 +1,40 @@
+{
+  "waypoints": [
+    {
+      "x": 3.488620992024737,
+      "y": 2.3369841118776518,
+      "angle": 0.9900000000000091,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.525710218724194,
+      "y": 2.1865141799769456,
+      "angle": 48.319999999999936,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.4198567643824607,
+      "y": 1.1896516345047052,
+      "angle": 50.64999999999998,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.1520138098243744,
+      "y": 0.6818165829583134,
+      "angle": 67.70000000000005,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "ShootOnTheMove",
+      "position": 0.13
+    }
+  ],
+  "constraint_zones": []
+}

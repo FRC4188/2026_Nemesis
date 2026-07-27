@@ -1,0 +1,21 @@
+{
+  "autos": [
+    {
+      "id": "path55e9037e841b41eca5d48eb7b9fc1b7b",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "Swipe"
+        },
+        {
+          "type": "path",
+          "name": "ShootAndMove"
+        },
+        {
+          "type": "path",
+          "name": "SecondSwipe"
+        }
+      ]
+    }
+  ]
+}

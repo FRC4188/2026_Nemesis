@@ -33,8 +33,10 @@ public class SOTM { // Experimental Class for Offseason
   private static final Wrist wrist = Wrist.getInstance();
   private static final Intake intake = Intake.getInstance();
 
-  private static final double TOF_SECONDS = 1.218;
+  public static final double TOF_SECONDS = 1.218;
   private static final double minimumAcceleration = 1;
+
+  public static boolean autonLocked = false;
 
   public static Pose2d lookahead(
       Pose2d target,
@@ -171,13 +173,18 @@ public class SOTM { // Experimental Class for Offseason
         .alongWith(
             Commands.either(
                 dynamicShoot(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        new ChassisSpeeds(
-                            xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
-                            ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL * 0.17,
-                            0),
-                        AllianceFlip.apply(drive.getRotation())),
-                    drive.getChassisSpeeds(),
+                    () ->
+                        ChassisSpeeds.fromFieldRelativeSpeeds(
+                            new ChassisSpeeds(
+                                xSupplier.getAsDouble()
+                                    * Constants.DriveConstants.DRIVE_MAXVEL
+                                    * 0.17,
+                                ySupplier.getAsDouble()
+                                    * Constants.DriveConstants.DRIVE_MAXVEL
+                                    * 0.17,
+                                0),
+                            AllianceFlip.apply(drive.getRotation())),
+                    () -> drive.getChassisSpeeds(),
                     target),
                 ScoringCommands.shoot(() -> 0.0),
                 () -> dynamicLock.getAsBoolean() || !staticLock.getAsBoolean()));
@@ -186,9 +193,12 @@ public class SOTM { // Experimental Class for Offseason
   public static boolean initialShots = true;
 
   public static Command dynamicShoot(
-      ChassisSpeeds requestedSpeeds, ChassisSpeeds currentSpeeds, Supplier<Translation2d> target) {
+      Supplier<ChassisSpeeds> requestedSpeeds,
+      Supplier<ChassisSpeeds> currentSpeeds,
+      Supplier<Translation2d> target) {
     return Commands.either(
         Commands.parallel(
+            Commands.startEnd(() -> autonLocked = true, () -> autonLocked = false),
             Commands.runEnd(
                 () ->
                     hood.setAngle(
@@ -205,8 +215,8 @@ public class SOTM { // Experimental Class for Offseason
                                 AllianceFlip.apply(
                                         lookahead(
                                                 new Pose2d(target.get(), new Rotation2d()),
-                                                currentSpeeds,
-                                                requestedSpeeds,
+                                                currentSpeeds.get(),
+                                                requestedSpeeds.get(),
                                                 TOF_SECONDS)
                                             .getTranslation())
                                     .minus(drive.getPose().getTranslation())
@@ -233,32 +243,33 @@ public class SOTM { // Experimental Class for Offseason
             Commands.waitUntil(() -> hood.atGoal())
                 .andThen(
                     Commands.parallel(
-                        Commands.runEnd(
-                            () ->
-                                shooter.setVelocityRPM(
-                                    110
-                                        * Units.metersToFeet(
-                                            AllianceFlip.apply(
-                                                    lookahead(
-                                                            new Pose2d(
-                                                                target.get(), new Rotation2d()),
-                                                            currentSpeeds,
-                                                            requestedSpeeds,
-                                                            TOF_SECONDS)
-                                                        .getTranslation()
-                                                        .minus(
-                                                            FieldConstants.Depot.left_far_corner))
-                                                .getX())),
-                            shooter::stop,
-                            shooter),
-                        new WaitCommand(0.1)
-                            .andThen(
-                                new WaitUntilCommand(() -> shooter.atGoal())
-                                    .andThen(
-                                        Commands.runEnd(
-                                            () -> hopper.runHopper(9.0, 5000),
-                                            hopper::stop,
-                                            hopper)))))),
+                            Commands.runEnd(
+                                () ->
+                                    shooter.setVelocityRPM(
+                                        110
+                                            * Units.metersToFeet(
+                                                AllianceFlip.apply(
+                                                        lookahead(
+                                                                new Pose2d(
+                                                                    target.get(), new Rotation2d()),
+                                                                currentSpeeds.get(),
+                                                                requestedSpeeds.get(),
+                                                                TOF_SECONDS)
+                                                            .getTranslation()
+                                                            .minus(
+                                                                FieldConstants.Depot
+                                                                    .left_far_corner))
+                                                    .getX())),
+                                shooter::stop,
+                                shooter),
+                            new WaitCommand(0.1)
+                                .andThen(
+                                    new WaitUntilCommand(() -> shooter.atGoal())
+                                        .andThen(
+                                            Commands.runEnd(
+                                                () -> hopper.runHopper(9.0, 5000),
+                                                hopper::stop,
+                                                hopper)))))),
         () -> target.get().equals(FieldConstants.Hub.hub_center_2d));
   }
 }
