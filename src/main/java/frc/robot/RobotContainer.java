@@ -138,6 +138,7 @@ public class RobotContainer {
     VoyagerLib.setModuleOrientationConsumer(drive::setModuleOrientations);
     VoyagerLib.setPIDControllers(
         new PIDController(5, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(2, 0, 0));
+    System.out.println(Drive.DRIVE_BASE_RADIUS);
 
     VoyagerLib.addEvent(
         "ShootOnTheMove",

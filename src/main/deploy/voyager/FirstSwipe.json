@@ -1,8 +1,8 @@
 {
-  "max_translational_velocity": 4.5,
+  "max_translational_velocity": 2.25,
   "max_translational_acceleration": 10,
-  "max_rotational_velocity": 720,
-  "max_rotational_acceleration": 1500,
+  "max_rotational_velocity": 330,
+  "max_rotational_acceleration": 1145.9,
   "end_translation_tolerance_meters": 0.03,
   "end_rotation_tolerance_deg": 2,
   "waypoints": [

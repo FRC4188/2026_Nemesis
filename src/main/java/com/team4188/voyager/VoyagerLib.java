@@ -340,8 +340,8 @@ public final class VoyagerLib {
                 rotationControllerFactory.get(),
                 crossTrackControllerFactory.get())
             .withShouldFlip(VoyagerLib::shouldFlipPath)
-            // .withTRatioBasedTranslationHandoffs(true)
-            ;
+        // .withTRatioBasedTranslationHandoffs(true)
+        ;
 
     if (resetPoseIfFirstPath && !context.hasBuiltPath()) {
       builder.withPoseReset(resetPoseConsumer);
