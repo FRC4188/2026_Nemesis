@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
@@ -126,8 +127,8 @@ public class RobotContainer {
         },
         true);
     VoyagerLib.setDefaultGlobalConstraints(
-        Constants.DriveConstants.DRIVE_MAXVEL / 2, // maxVelocityMetersPerSec
-        Constants.DriveConstants.DRIVE_MAXACC, // maxAccelerationMetersPerSec2
+        4.5 / 3, // maxVelocityMetersPerSec
+        10.0, // maxAccelerationMetersPerSec2
         Math.toDegrees(Constants.DriveConstants.ANGLE_MAXVEL), // maxVelocityDegPerSec
         Math.toDegrees(Constants.DriveConstants.ANGLE_MAXACC), // maxAccelerationDegPerSec2
         0.03, // endTranslationToleranceMeters
@@ -136,22 +137,23 @@ public class RobotContainer {
         );
     VoyagerLib.setModuleOrientationConsumer(drive::setModuleOrientations);
     VoyagerLib.setPIDControllers(
-        new PIDController(
-            Constants.DriveConstants.DRIVE_PID.getP(),
-            Constants.DriveConstants.DRIVE_PID.getI(),
-            Constants.DriveConstants.DRIVE_PID.getD()),
-        new PIDController(
-            Constants.DriveConstants.ANGLE_PID.getP(),
-            Constants.DriveConstants.ANGLE_PID.getI(),
-            Constants.DriveConstants.ANGLE_PID.getD()),
-        new PIDController(2, 0, 0));
+        new PIDController(5, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(2, 0, 0));
 
     VoyagerLib.addEvent(
         "ShootOnTheMove",
         SOTM.dynamicShoot(
-            () -> new ChassisSpeeds(0, 0, 0),
-            drive::getChassisSpeeds,
-            () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)));
+                () -> new ChassisSpeeds(0, 0, 0),
+                drive::getChassisSpeeds,
+                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+
+    VoyagerLib.addEvent(
+        "EndSOTM",
+        Commands.runOnce(() -> SOTM.autonLocked = false)
+            .andThen(hood.idle())
+            .andThen(shooter.idle())
+            .andThen(hopper.idle())
+            .andThen(intake.idle()));
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 

@@ -1,0 +1,78 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 10,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 4.440409781882713,
+      "y": 0.6099796681231764,
+      "angle": 89.13,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.732792522761566,
+      "y": 0.6105076333275462,
+      "angle": 90.31999999999994,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 8.321582084403738,
+      "y": 1.582649847743023,
+      "angle": 104.25999999999999,
+      "handoff": 0.4,
+      "profiled": true
+    },
+    {
+      "x": 7.7683593477198105,
+      "y": 3.5928778485231128,
+      "angle": 106.86000000000001,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.903425923588636,
+      "y": 3.5425558315146994,
+      "angle": 55.110000000000014,
+      "handoff": 0.15,
+      "profiled": true
+    },
+    {
+      "x": 5.778172274166679,
+      "y": 2.376620160827455,
+      "angle": -2.590000000000032,
+      "handoff": 0.15,
+      "profiled": true
+    },
+    {
+      "x": 3.3507994030923696,
+      "y": 2.355662303242393,
+      "angle": -2.080000000000041,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.378241446086316,
+      "y": 0.9035537031931379,
+      "angle": 64.27999999999997,
+      "handoff": 0.25,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "ShootOnTheMove",
+      "position": 5.94
+    },
+    {
+      "name": "EndSOTM",
+      "position": 7
+    }
+  ],
+  "constraint_zones": []
+}

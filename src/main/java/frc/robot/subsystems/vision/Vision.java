@@ -30,22 +30,12 @@ public class Vision extends SubsystemBase {
     if (instance == null) {
       instance =
           switch (Constants.Robot.currentMode) {
-            case REAL ->
-                new Vision(
-                    Drive.getInstance()::accept,
-                    new VisionIOPhoton(
-                        VisConstants.frontPho,
-                        VisConstants.robotToCameraFront),
-                    new VisionIOPhoton(
-                        VisConstants.leftPho,
-                        VisConstants.robotToCameraLeft),
-                    new VisionIOPhoton(
-                        VisConstants.rightPho,
-                        VisConstants.robotToCameraRight));
-            case SIM, REPLAY ->
-                new Vision(
-                    Drive.getInstance()::accept,
-                    new VisionIO() {});
+            case REAL -> new Vision(
+                Drive.getInstance()::accept,
+                new VisionIOPhoton(VisConstants.frontPho, VisConstants.robotToCameraFront),
+                new VisionIOPhoton(VisConstants.leftPho, VisConstants.robotToCameraLeft),
+                new VisionIOPhoton(VisConstants.rightPho, VisConstants.robotToCameraRight));
+            case SIM, REPLAY -> new Vision(Drive.getInstance()::accept, new VisionIO() {});
           };
     }
 
@@ -72,8 +62,7 @@ public class Vision extends SubsystemBase {
    * multiple tags. It waits 0.5 seconds after losing multi-tag observations
    * before allowing single-tag fallback again.
    */
-  private final Debouncer multiTagDebouncer =
-      new Debouncer(0.5, DebounceType.kFalling);
+  private final Debouncer multiTagDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
@@ -88,9 +77,7 @@ public class Vision extends SubsystemBase {
       inputs[cameraIndex] = new VisionIOInputsAutoLogged();
 
       disconnectedAlerts[cameraIndex] =
-          new Alert(
-              "Vision camera " + cameraIndex + " is disconnected.",
-              AlertType.kWarning);
+          new Alert("Vision camera " + cameraIndex + " is disconnected.", AlertType.kWarning);
     }
   }
 
@@ -111,8 +98,7 @@ public class Vision extends SubsystemBase {
    */
   public Rotation2d getTargetX(int cameraIndex) {
     if (cameraIndex < 0 || cameraIndex >= inputs.length) {
-      throw new IndexOutOfBoundsException(
-          "Invalid vision camera index: " + cameraIndex);
+      throw new IndexOutOfBoundsException("Invalid vision camera index: " + cameraIndex);
     }
 
     return inputs[cameraIndex].latestTargetObservation.tx();
@@ -133,75 +119,52 @@ public class Vision extends SubsystemBase {
 
     int firstEnabledCameraIndex = frontEnable ? 0 : 1;
 
-    boolean rawMultiTagAvailable =
-        hasMultiTagObservation(firstEnabledCameraIndex);
+    boolean rawMultiTagAvailable = hasMultiTagObservation(firstEnabledCameraIndex);
 
     /*
      * Rising transitions are immediate. Falling transitions are delayed by
      * the debouncer so a momentary loss of one tag does not immediately cause
      * the pose estimator to trust a single-tag measurement.
      */
-    usingMultiTagOnly =
-        multiTagDebouncer.calculate(rawMultiTagAvailable);
+    usingMultiTagOnly = multiTagDebouncer.calculate(rawMultiTagAvailable);
 
-    Logger.recordOutput(
-        "Vision/Raw Multi Tag Available",
-        rawMultiTagAvailable);
-    Logger.recordOutput(
-        "Vision/Using Single Tag Fallback",
-        !usingMultiTagOnly);
+    Logger.recordOutput("Vision/Raw Multi Tag Available", rawMultiTagAvailable);
+    Logger.recordOutput("Vision/Using Single Tag Fallback", !usingMultiTagOnly);
 
     List<Pose3d> allTagPoses = new LinkedList<>();
     List<Pose3d> allRobotPoses = new LinkedList<>();
     List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
     List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
-    for (int cameraIndex = firstEnabledCameraIndex;
-        cameraIndex < io.length;
-        cameraIndex++) {
+    for (int cameraIndex = firstEnabledCameraIndex; cameraIndex < io.length; cameraIndex++) {
       processCamera(
-          cameraIndex,
-          allTagPoses,
-          allRobotPoses,
-          allRobotPosesAccepted,
-          allRobotPosesRejected);
+          cameraIndex, allTagPoses, allRobotPoses, allRobotPosesAccepted, allRobotPosesRejected);
     }
 
+    Logger.recordOutput("Vision/Summary/TagPoses", allTagPoses.toArray(Pose3d[]::new));
+    Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(Pose3d[]::new));
     Logger.recordOutput(
-        "Vision/Summary/TagPoses",
-        allTagPoses.toArray(Pose3d[]::new));
+        "Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(Pose3d[]::new));
     Logger.recordOutput(
-        "Vision/Summary/RobotPoses",
-        allRobotPoses.toArray(Pose3d[]::new));
-    Logger.recordOutput(
-        "Vision/Summary/RobotPosesAccepted",
-        allRobotPosesAccepted.toArray(Pose3d[]::new));
-    Logger.recordOutput(
-        "Vision/Summary/RobotPosesRejected",
-        allRobotPosesRejected.toArray(Pose3d[]::new));
+        "Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(Pose3d[]::new));
   }
 
   private void updateInputsAndAlerts() {
     for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
       io[cameraIndex].updateInputs(inputs[cameraIndex]);
 
-      Logger.processInputs(
-          "Vision/Camera" + cameraIndex,
-          inputs[cameraIndex]);
+      Logger.processInputs("Vision/Camera" + cameraIndex, inputs[cameraIndex]);
 
       /*
        * Update every alert even when vision fusion or the front camera is
        * disabled. This prevents a disabled camera's alert from becoming stale.
        */
-      disconnectedAlerts[cameraIndex].set(
-          !inputs[cameraIndex].frontConnected);
+      disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].frontConnected);
     }
   }
 
   private boolean hasMultiTagObservation(int firstEnabledCameraIndex) {
-    for (int cameraIndex = firstEnabledCameraIndex;
-        cameraIndex < inputs.length;
-        cameraIndex++) {
+    for (int cameraIndex = firstEnabledCameraIndex; cameraIndex < inputs.length; cameraIndex++) {
       for (var observation : inputs[cameraIndex].poseObservations) {
         if (observation.tagCount() > 1) {
           return true;
@@ -248,13 +211,10 @@ public class Vision extends SubsystemBase {
       robotPosesAccepted.add(estimatedPose);
 
       double standardDeviationFactor =
-          Math.pow(observation.averageTagDistance(), 2.0)
-              / observation.tagCount();
+          Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
 
-      double linearStdDev =
-          linearStdDevBaseline * standardDeviationFactor;
-      double angularStdDev =
-          angularStdDevBaseline * standardDeviationFactor;
+      double linearStdDev = linearStdDevBaseline * standardDeviationFactor;
+      double angularStdDev = angularStdDevBaseline * standardDeviationFactor;
 
       if (observation.type() == PoseObservationType.MEGATAG_2) {
         linearStdDev *= linearStdDevMegatag2Factor;
@@ -266,8 +226,7 @@ public class Vision extends SubsystemBase {
         angularStdDev *= cameraStdDevFactors[cameraIndex];
       }
 
-      if (!isValidStandardDeviation(linearStdDev)
-          || !isValidStandardDeviation(angularStdDev)) {
+      if (!isValidStandardDeviation(linearStdDev) || !isValidStandardDeviation(angularStdDev)) {
         /*
          * Do not send malformed or overconfident covariance values to the pose
          * estimator. Move the observation from accepted to rejected logging.
@@ -280,26 +239,17 @@ public class Vision extends SubsystemBase {
       consumer.accept(
           estimatedPose.toPose2d(),
           observation.timestamp(),
-          VecBuilder.fill(
-              linearStdDev,
-              linearStdDev,
-              angularStdDev));
+          VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
     }
 
     String cameraLogKey = "Vision/Camera" + cameraIndex;
 
+    Logger.recordOutput(cameraLogKey + "/TagPoses", tagPoses.toArray(Pose3d[]::new));
+    Logger.recordOutput(cameraLogKey + "/RobotPoses", robotPoses.toArray(Pose3d[]::new));
     Logger.recordOutput(
-        cameraLogKey + "/TagPoses",
-        tagPoses.toArray(Pose3d[]::new));
+        cameraLogKey + "/RobotPosesAccepted", robotPosesAccepted.toArray(Pose3d[]::new));
     Logger.recordOutput(
-        cameraLogKey + "/RobotPoses",
-        robotPoses.toArray(Pose3d[]::new));
-    Logger.recordOutput(
-        cameraLogKey + "/RobotPosesAccepted",
-        robotPosesAccepted.toArray(Pose3d[]::new));
-    Logger.recordOutput(
-        cameraLogKey + "/RobotPosesRejected",
-        robotPosesRejected.toArray(Pose3d[]::new));
+        cameraLogKey + "/RobotPosesRejected", robotPosesRejected.toArray(Pose3d[]::new));
 
     allTagPoses.addAll(tagPoses);
     allRobotPoses.addAll(robotPoses);
@@ -330,9 +280,7 @@ public class Vision extends SubsystemBase {
      * PhotonVision provides a valid, sufficiently low ambiguity value.
      */
     if (tagCount == 1
-        && (!Double.isFinite(ambiguity)
-            || ambiguity < 0.0
-            || ambiguity > maxAmbiguity)) {
+        && (!Double.isFinite(ambiguity) || ambiguity < 0.0 || ambiguity > maxAmbiguity)) {
       return true;
     }
 
@@ -368,8 +316,7 @@ public class Vision extends SubsystemBase {
   }
 
   private boolean isValidStandardDeviation(double standardDeviation) {
-    return Double.isFinite(standardDeviation)
-        && standardDeviation > 0.0;
+    return Double.isFinite(standardDeviation) && standardDeviation > 0.0;
   }
 
   private void clearSummaryLogs() {
@@ -377,12 +324,8 @@ public class Vision extends SubsystemBase {
 
     Logger.recordOutput("Vision/Summary/TagPoses", emptyPoses);
     Logger.recordOutput("Vision/Summary/RobotPoses", emptyPoses);
-    Logger.recordOutput(
-        "Vision/Summary/RobotPosesAccepted",
-        emptyPoses);
-    Logger.recordOutput(
-        "Vision/Summary/RobotPosesRejected",
-        emptyPoses);
+    Logger.recordOutput("Vision/Summary/RobotPosesAccepted", emptyPoses);
+    Logger.recordOutput("Vision/Summary/RobotPosesRejected", emptyPoses);
   }
 
   @FunctionalInterface

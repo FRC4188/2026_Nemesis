@@ -243,33 +243,32 @@ public class SOTM { // Experimental Class for Offseason
             Commands.waitUntil(() -> hood.atGoal())
                 .andThen(
                     Commands.parallel(
-                            Commands.runEnd(
-                                () ->
-                                    shooter.setVelocityRPM(
-                                        110
-                                            * Units.metersToFeet(
-                                                AllianceFlip.apply(
-                                                        lookahead(
-                                                                new Pose2d(
-                                                                    target.get(), new Rotation2d()),
-                                                                currentSpeeds.get(),
-                                                                requestedSpeeds.get(),
-                                                                TOF_SECONDS)
-                                                            .getTranslation()
-                                                            .minus(
-                                                                FieldConstants.Depot
-                                                                    .left_far_corner))
-                                                    .getX())),
-                                shooter::stop,
-                                shooter),
-                            new WaitCommand(0.1)
-                                .andThen(
-                                    new WaitUntilCommand(() -> shooter.atGoal())
-                                        .andThen(
-                                            Commands.runEnd(
-                                                () -> hopper.runHopper(9.0, 5000),
-                                                hopper::stop,
-                                                hopper)))))),
+                        Commands.runEnd(
+                            () ->
+                                shooter.setVelocityRPM(
+                                    110
+                                        * Units.metersToFeet(
+                                            AllianceFlip.apply(
+                                                    lookahead(
+                                                            new Pose2d(
+                                                                target.get(), new Rotation2d()),
+                                                            currentSpeeds.get(),
+                                                            requestedSpeeds.get(),
+                                                            TOF_SECONDS)
+                                                        .getTranslation()
+                                                        .minus(
+                                                            FieldConstants.Depot.left_far_corner))
+                                                .getX())),
+                            shooter::stop,
+                            shooter),
+                        new WaitCommand(0.1)
+                            .andThen(
+                                new WaitUntilCommand(() -> shooter.atGoal())
+                                    .andThen(
+                                        Commands.runEnd(
+                                            () -> hopper.runHopper(9.0, 5000),
+                                            hopper::stop,
+                                            hopper)))))),
         () -> target.get().equals(FieldConstants.Hub.hub_center_2d));
   }
 }
