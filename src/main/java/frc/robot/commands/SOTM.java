@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -82,7 +83,15 @@ public class SOTM { // Experimental Class for Offseason
 
     // }
 
-    return target.plus(new Transform2d(-displaceX, -displaceY, new Rotation2d()));
+    return target.plus(
+        new Transform2d(
+            DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
+                ? -displaceX
+                : displaceX,
+            DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
+                ? -displaceY
+                : displaceY,
+            new Rotation2d()));
   }
 
   public static Command dynamicDrive(
@@ -114,13 +123,12 @@ public class SOTM { // Experimental Class for Offseason
                     (dynamicLock.getAsBoolean())
                         ? angleController.calculate(
                             drive.getRotation().getRadians(),
-                            AllianceFlip.apply(
-                                    lookahead(
-                                            new Pose2d(target.get(), new Rotation2d()),
-                                            currentSpeeds,
-                                            requestedSpeeds,
-                                            TOF_SECONDS)
-                                        .getTranslation())
+                            lookahead(
+                                    new Pose2d(target.get(), new Rotation2d()),
+                                    currentSpeeds,
+                                    requestedSpeeds,
+                                    TOF_SECONDS)
+                                .getTranslation()
                                 .minus(drive.getPose().getTranslation())
                                 .getAngle()
                                 .minus(Constants.DriveConstants.local_offset)
@@ -212,13 +220,12 @@ public class SOTM { // Experimental Class for Offseason
                 () ->
                     shooter.setVelocityRPM(
                         ScoringCommands.RPMRegress(
-                                AllianceFlip.apply(
-                                        lookahead(
-                                                new Pose2d(target.get(), new Rotation2d()),
-                                                currentSpeeds.get(),
-                                                requestedSpeeds.get(),
-                                                TOF_SECONDS)
-                                            .getTranslation())
+                                lookahead(
+                                        new Pose2d(target.get(), new Rotation2d()),
+                                        currentSpeeds.get(),
+                                        requestedSpeeds.get(),
+                                        TOF_SECONDS)
+                                    .getTranslation()
                                     .minus(drive.getPose().getTranslation())
                                     .getNorm())
                             + ((initialShots) ? 200 : 0)),

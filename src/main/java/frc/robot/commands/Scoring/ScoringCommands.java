@@ -82,15 +82,16 @@ public class ScoringCommands {
                     .andThen(
                         new WaitUntilCommand(
                                 () ->
-                                    shooter.atGoal()
-                                        && hood.atGoal()
-                                        && drive.getRotation().getDegrees()
-                                                - AllianceFlip.apply(
-                                                        FieldConstants.Hub.hub_center_2d)
-                                                    .minus(drive.getPose().getTranslation())
-                                                    .getAngle()
-                                                    .getDegrees()
-                                            < 5)
+                                    // shooter.atGoal()
+                                    //     && hood.atGoal()
+                                    //     && drive.getRotation().getDegrees()
+                                    //             - AllianceFlip.apply(
+                                    //                     FieldConstants.Hub.hub_center_2d)
+                                    //                 .minus(drive.getPose().getTranslation())
+                                    //                 .getAngle()
+                                    //                 .getDegrees()
+                                    //         < 5)
+                                    true)
                             .andThen(
                                 Commands.parallel(
                                     Commands.runEnd(

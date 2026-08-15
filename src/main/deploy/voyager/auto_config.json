@@ -19,6 +19,10 @@
         {
           "type": "path",
           "name": "TestPath"
+        },
+        {
+          "type": "path",
+          "name": "SwipeAgain"
         }
       ]
     }

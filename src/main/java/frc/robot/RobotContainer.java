@@ -192,10 +192,13 @@ public class RobotContainer {
                     || pilot.b().getAsBoolean()));
 
     driveInput.whileTrue(
-        SOTM.dynamicDrive(
+        DriveCommands.joystickCombined(
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
+            //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
+            // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
+            //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
                             && drive.getPose().getX()
@@ -204,6 +207,8 @@ public class RobotContainer {
                             && drive.getPose().getX()
                                 >= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX()))
                     ? AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()
                     : drive
                         .getPose()
                         .getTranslation()
@@ -211,11 +216,12 @@ public class RobotContainer {
                             List.of(
                                 AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
                                 AllianceFlip.flipY(
-                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner)))),
-            () -> pilot.rightBumper().getAsBoolean(),
+                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner))))
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle(),
             () -> pilot.rightTrigger().getAsBoolean()));
 
-    // pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
+    pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
 
     pilot
         .y()

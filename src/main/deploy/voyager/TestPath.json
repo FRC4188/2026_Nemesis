@@ -17,7 +17,7 @@
       "x": 6.997089984762184,
       "y": 0.6579098050168296,
       "angle": 0,
-      "handoff": 0.5,
+      "handoff": 0.2,
       "profiled": true
     },
     {
@@ -54,9 +54,30 @@
       "angle": 38.76999999999998,
       "handoff": 0.2,
       "profiled": true
+    },
+    {
+      "x": 3.0525330812854445,
+      "y": 0.8707575757575758,
+      "angle": 51.700000000000045,
+      "handoff": 0.2,
+      "profiled": true
     }
   ],
-  "rotation_targets": [],
-  "events": [],
+  "rotation_targets": [
+    {
+      "angle": 0,
+      "position": 5.7
+    }
+  ],
+  "events": [
+    {
+      "name": "ShootOnTheMove",
+      "position": 5.83
+    },
+    {
+      "name": "EndSOTM",
+      "position": 7
+    }
+  ],
   "constraint_zones": []
 }
