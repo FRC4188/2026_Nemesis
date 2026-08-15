@@ -16,7 +16,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
-import java.util.List;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -80,18 +79,7 @@ public class ScoringCommands {
                     shooter),
                 new WaitCommand(0.1)
                     .andThen(
-                        new WaitUntilCommand(
-                                () ->
-                                    // shooter.atGoal()
-                                    //     && hood.atGoal()
-                                    //     && drive.getRotation().getDegrees()
-                                    //             - AllianceFlip.apply(
-                                    //                     FieldConstants.Hub.hub_center_2d)
-                                    //                 .minus(drive.getPose().getTranslation())
-                                    //                 .getAngle()
-                                    //                 .getDegrees()
-                                    //         < 5)
-                                    true)
+                        new WaitUntilCommand(() -> shooter.atGoal())
                             .andThen(
                                 Commands.parallel(
                                     Commands.runEnd(
@@ -105,28 +93,7 @@ public class ScoringCommands {
                                                         () -> initialShots = true))))))),
             Commands.parallel(
                 passAim(),
-                Commands.waitUntil(
-                        () ->
-                            hood.atGoal()
-                                && drive.getRotation().getDegrees()
-                                        - AllianceFlip.apply(
-                                                drive
-                                                    .getPose()
-                                                    .getTranslation()
-                                                    .nearest(
-                                                        List.of(
-                                                            AllianceFlip.apply(
-                                                                FieldConstants.Depot
-                                                                    .left_far_corner),
-                                                            AllianceFlip.flipY(
-                                                                AllianceFlip.apply(
-                                                                    FieldConstants.Depot
-                                                                        .left_far_corner)))))
-                                            .minus(drive.getPose().getTranslation())
-                                            .getAngle()
-                                            .getDegrees()
-                                    < 5)
-                    .andThen(passShoot())),
+                Commands.waitUntil(() -> hood.getAngle() > hood.maxAngle()).andThen(passShoot())),
             () ->
                 ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
                         && drive.getPose().getX()

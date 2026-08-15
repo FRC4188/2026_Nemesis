@@ -329,7 +329,7 @@ public class RobotContainer {
     // Rotation2d.kCW_90deg));
   }
 
-  char autoWinner = ' '; // this is so stupid
+  char autoWinner = ' '; // this is so stupid xd
 
   public void preperiodic() {
 

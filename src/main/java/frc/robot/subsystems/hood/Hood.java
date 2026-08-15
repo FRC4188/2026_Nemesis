@@ -59,6 +59,10 @@ public class Hood extends SubsystemBase {
     offset.set(offset.get() - 1);
   }
 
+  public double maxAngle() {
+    return 37 - offset.get() * -1;
+  }
+
   public void setAngle(Rotation2d angle) {
     setpoint = angle.getDegrees() + offset.getAsDouble();
     io.setPosition(
