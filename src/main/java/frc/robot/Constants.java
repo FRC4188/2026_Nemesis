@@ -179,7 +179,9 @@ public final class Constants {
             .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
 
-    public static final double fuelStatorCurrent = kStallCurrent; // placeholder
+    public static final double fuelStatorCurrent = 32.0; // rough estimate but tested
+
+    public static final double bumperStatorCurrent = 40.0; // placeholder
   }
 
   public static class HoodConstants {

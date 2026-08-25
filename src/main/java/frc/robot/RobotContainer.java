@@ -219,7 +219,7 @@ public class RobotContainer {
                                     AllianceFlip.apply(FieldConstants.Depot.left_far_corner))))
                         .minus(drive.getPose().getTranslation())
                         .getAngle(),
-            () -> pilot.rightTrigger().getAsBoolean()));
+            () -> pilot.rightBumper().getAsBoolean()));
 
     pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
 
@@ -250,6 +250,8 @@ public class RobotContainer {
     copilot.x().onTrue(ScoringCommands.downNoStall());
     copilot.a().onTrue(ScoringCommands.goodStow());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
+
+    copilot.b().whileTrue(ScoringCommands.testIntake2());
 
     copilot
         .getLeftTButton()

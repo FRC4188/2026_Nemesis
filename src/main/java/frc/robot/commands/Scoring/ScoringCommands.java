@@ -43,13 +43,30 @@ public class ScoringCommands {
     return Commands.parallel(
         Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
         Commands.sequence(
-                Commands.runEnd(() -> wrist.runWristVolts(5), wrist::stop, wrist)
+                Commands.runEnd(() -> wrist.runWristVolts(-5), wrist::stop, wrist)
                     .until(
                         () ->
                             wrist.getStatorCurrent() > Constants.WristConstants.fuelStatorCurrent),
                 Commands.waitSeconds(0.12))
             .repeatedly()
             .until(() -> wrist.getAngle() > 90));
+  }
+
+  public static Command testIntake() {
+    return Commands.runEnd(() -> wrist.runWristVolts(2.5), wrist::stop, wrist);
+  }
+
+  public static Command testIntake2() {
+    return Commands.repeatingSequence(
+            Commands.runEnd(() -> wrist.runWristVolts(2.5), wrist::stop, wrist)
+                .until(() -> wrist.getStatorCurrent() > Constants.WristConstants.fuelStatorCurrent)
+                .andThen(Commands.waitSeconds(0.2)))
+        .onlyWhile(() -> wrist.getAngle() < 110)
+        .finallyDo(
+            () -> {
+              wrist.stop();
+              intake.stop();
+            });
   }
 
   public static boolean initialShots = true;
