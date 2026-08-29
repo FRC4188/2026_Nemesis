@@ -65,6 +65,22 @@ public class Shooter extends SubsystemBase {
         < Constants.ShooterConstants.kTolerance;
   }
 
+  /**
+   * 
+   * @return Flywheel (left) velocity in RPM
+   */
+  public double getVelocity() {
+    return inputs.leftVelocityRPM;
+  }
+
+  /**
+   * 
+   * @return Flywheel (left) acceleration in RPM per minute
+   */
+  public double getAcceleration() {
+    return inputs.leftAccelerationRPMPM;
+  }
+
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);

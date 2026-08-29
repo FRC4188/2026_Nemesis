@@ -221,6 +221,9 @@ public final class Constants {
     public static final double kMaxRPM = 5000.0;
     public static final double kGearRatio = 1.0;
 
+    public static final double kFuelAccelerationDipThreshold = -5; //single fuel
+    public static final double kAccelerationTolerance = 0.2;
+
     public static final double kStatorCurrent = 60.0;
     public static final double kSupplyCurrent = 50.0;
     public static final double kPeakForwardTC = 60.0;

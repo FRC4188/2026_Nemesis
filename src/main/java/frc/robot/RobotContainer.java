@@ -35,6 +35,7 @@ import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
+import frc.robot.util.BPSCalculator;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.Random;
@@ -57,6 +58,8 @@ public class RobotContainer {
   private final Wrist wrist;
   private final Vision vis;
   private final SimulationVisualizer simvis;
+
+  private final BPSCalculator bpsCalc;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
@@ -84,6 +87,7 @@ public class RobotContainer {
     vis = Vision.getInstance();
     hood = Hood.getInstance();
     shooter = Shooter.getInstance();
+    bpsCalc = new BPSCalculator(shooter);
     hopper = Hopper.getInstance();
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
@@ -265,6 +269,7 @@ public class RobotContainer {
         .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
+
   }
 
   /**
@@ -331,7 +336,6 @@ public class RobotContainer {
     // Rotation2d.kCW_90deg));
   }
 
-  char autoWinner = ' '; // this is so stupid xd
 
   public void preperiodic() {
 
@@ -351,7 +355,11 @@ public class RobotContainer {
     // autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
   }
 
+    char autoWinner = ' '; // this is so stupid xd
+
   public void periodic() {
+
+    bpsCalc.periodic();
 
     // shooter.setVelocityRPM(shooterRPMset.getAsDouble());
 
