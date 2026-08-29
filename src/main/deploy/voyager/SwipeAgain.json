@@ -1,0 +1,120 @@
+{
+  "max_translational_velocity": 2.25,
+  "max_translational_acceleration": 10,
+  "max_rotational_velocity": 330,
+  "max_rotational_acceleration": 1145.9,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 3.1679017013232516,
+      "y": 0.8241098484848486,
+      "angle": 67.75,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.9023440453686202,
+      "y": 0.5908712121212122,
+      "angle": 90.48000000000002,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.741379962192816,
+      "y": 0.6064204545454546,
+      "angle": 90.48000000000002,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.713497164461248,
+      "y": 1.8503598484848487,
+      "angle": 71.92000000000007,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.8723062381852555,
+      "y": 2.8144128787878793,
+      "angle": 45.52999999999997,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.171134215500945,
+      "y": 3.685170454545455,
+      "angle": 9.799999999999955,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.96780718336484,
+      "y": 3.4830303030303034,
+      "angle": -28.55000000000001,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.37553875236295,
+      "y": 2.907708333333334,
+      "angle": -90.17000000000002,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.2387523629489605,
+      "y": 2.3323863636363638,
+      "angle": -103.35000000000002,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.3836862003780723,
+      "y": 2.5034280303030307,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.5468052930056717,
+      "y": 2.62782196969697,
+      "angle": 36.879999999999995,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 1.6010207939508514,
+      "y": 1.1350946969696971,
+      "angle": 51.200000000000045,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [
+    {
+      "angle": 0,
+      "position": 8.41
+    }
+  ],
+  "events": [
+    {
+      "name": "ShootOnTheMove",
+      "position": 9.08
+    },
+    {
+      "name": "EndSOTM",
+      "position": 11
+    }
+  ],
+  "constraint_zones": [
+    {
+      "max_translational_velocity": 0.3825,
+      "max_translational_acceleration": 5,
+      "max_rotational_velocity": 330,
+      "max_rotational_acceleration": 1145.9,
+      "start_position": 9.62,
+      "end_position": 11
+    }
+  ]
+}

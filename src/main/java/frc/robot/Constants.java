@@ -93,7 +93,8 @@ public final class Constants {
   }
 
   public static class DriveConstants {
-    public static final double DRIVE_MAXVEL = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    public static final double
+        DRIVE_MAXVEL = /* TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); */ 4.5;
     public static final double DRIVE_MAXACC = 10.0;
     public static final ProfiledPIDController DRIVE_PID =
         new ProfiledPIDController(
@@ -177,6 +178,10 @@ public final class Constants {
             .withKS(0.0)
             .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
+
+    public static final double fuelStatorCurrent = 32.0; // rough estimate but tested
+
+    public static final double bumperStatorCurrent = 40.0; // placeholder
   }
 
   public static class HoodConstants {
@@ -215,6 +220,9 @@ public final class Constants {
     public static final double kTolerance = 25.0;
     public static final double kMaxRPM = 5000.0;
     public static final double kGearRatio = 1.0;
+
+    public static final double kFuelAccelerationDipThreshold = -5; //single fuel
+    public static final double kAccelerationTolerance = 0.2;
 
     public static final double kStatorCurrent = 60.0;
     public static final double kSupplyCurrent = 50.0;

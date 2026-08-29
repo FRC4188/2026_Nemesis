@@ -1,0 +1,34 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 10,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 6.505618449619838,
+      "y": 2.614056452269195,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 9.744214285714285,
+      "y": 3.1633521525065103,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 8.769833632332938,
+      "y": 5.9686805571962855,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [],
+  "constraint_zones": []
+}

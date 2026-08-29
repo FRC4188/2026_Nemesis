@@ -7,24 +7,24 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.path.PathConstraints;
+import com.team4188.voyager.VoyagerLib;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.commands.Scoring.AutoCommands;
-import frc.robot.commands.Scoring.AutoCommands.Start;
+import frc.robot.commands.SOTM;
 import frc.robot.commands.Scoring.ScoringCommands;
-import frc.robot.commands.Scoring.pseudo;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
@@ -35,6 +35,7 @@ import frc.robot.subsystems.simulation.SimulationVisualizer;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
+import frc.robot.util.BPSCalculator;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.Random;
@@ -58,15 +59,17 @@ public class RobotContainer {
   private final Vision vis;
   private final SimulationVisualizer simvis;
 
+  private final BPSCalculator bpsCalc;
+
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
   private final CSP_Controller copilot = new CSP_Controller(Constants.Controller.kCopilotPort);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
-  private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
-  private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
-  private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
+  // private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
+  // private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
+  // private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
 
   // private final CSPPilot csppilot =
   //     new CSPPilot(
@@ -84,6 +87,7 @@ public class RobotContainer {
     vis = Vision.getInstance();
     hood = Hood.getInstance();
     shooter = Shooter.getInstance();
+    bpsCalc = new BPSCalculator(shooter);
     hopper = Hopper.getInstance();
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
@@ -93,81 +97,70 @@ public class RobotContainer {
             () -> Units.degreesToRadians(wrist.getAngle()),
             () -> Units.degreesToRadians(hood.getAngle()));
 
-    // Set up auto routines
-    // PathBuilder.configure(drive); // Add all subsystems as parameters later
-    PathBuilder.configureField(FieldConstants.field_width, FieldConstants.field_length);
-    PathBuilder.configureDrive(
-        true,
-        2,
-        Constants.DriveConstants.ANGLE_TOL,
+    VoyagerLib.configure(
+        drive,
         drive::getPose,
         drive::setPose,
         drive::getChassisSpeeds,
-        drive::stop,
-        drive::runVelocity,
-        Constants.DriveConstants.DRIVE_PID,
-        Constants.DriveConstants.ANGLE_PID,
-        Constants.DriveConstants.PP_CONFIG,
-        new PathConstraints(
-            4.5,
-            7.6,
-            Constants.DriveConstants.ANGLE_MAXVEL * 0.8,
-            Constants.DriveConstants.ANGLE_MAXACC * 0.8),
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        drive);
-    // PBExperimental.configure(drive);
+        (ChassisSpeeds commanded) -> {
+          double omega;
+          if (SOTM.autonLocked) {
+            omega =
+                Constants.DriveConstants.ANGLE_PID.calculate(
+                    drive.getRotation().getRadians(),
+                    AllianceFlip.apply(
+                            SOTM.lookahead(
+                                    new Pose2d(FieldConstants.Hub.hub_center_2d, new Rotation2d()),
+                                    drive.getChassisSpeeds(),
+                                    commanded,
+                                    SOTM.TOF_SECONDS)
+                                .getTranslation())
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()
+                        .minus(Constants.DriveConstants.local_offset)
+                        .getRadians());
+          } else {
+            omega = commanded.omegaRadiansPerSecond;
+          }
 
-    // These 4 choosers are subbing for PB's dashboard fyi
+          drive.runVelocity(
+              new ChassisSpeeds(
+                  commanded.vxMetersPerSecond * ((SOTM.autonLocked) ? 0.17 : 1.0),
+                  commanded.vyMetersPerSecond * ((SOTM.autonLocked) ? 0.17 : 1.0),
+                  omega));
+        },
+        true);
+    VoyagerLib.setDefaultGlobalConstraints(
+        4.5 / 3, // maxVelocityMetersPerSec
+        10.0, // maxAccelerationMetersPerSec2
+        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXVEL), // maxVelocityDegPerSec
+        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXACC), // maxAccelerationDegPerSec2
+        0.03, // endTranslationToleranceMeters
+        2.0, // endRotationToleranceDeg
+        0.2 // intermediateHandoffRadiusMeters
+        );
+    VoyagerLib.setModuleOrientationConsumer(drive::setModuleOrientations);
+    VoyagerLib.setPIDControllers(
+        new PIDController(5, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(2, 0, 0));
+    System.out.println(Drive.DRIVE_BASE_RADIUS);
+
+    VoyagerLib.addEvent(
+        "ShootOnTheMove",
+        SOTM.dynamicShoot(
+                () -> new ChassisSpeeds(0, 0, 0),
+                drive::getChassisSpeeds,
+                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+
+    VoyagerLib.addEvent(
+        "EndSOTM",
+        Commands.runOnce(() -> SOTM.autonLocked = false)
+            .andThen(hood.idle())
+            .andThen(shooter.idle())
+            .andThen(hopper.idle())
+            .andThen(intake.idle()));
+
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
-    startChooser = new LoggedDashboardChooser<>("Start Choices");
-    startChooser.addOption("Left Trench", AutoCommands.Start.LEFT);
-    startChooser.addDefaultOption("Right Trench", AutoCommands.Start.RIGHT);
-    swipeChooser = new LoggedDashboardChooser<>("Swipe Choices");
-    swipeChooser.addDefaultOption("Center Swipe", AutoCommands.Swipe.CENTER);
-    swipeChooser.addOption("Close Swipe", AutoCommands.Swipe.CLOSE);
-    cycleChooser = new LoggedDashboardChooser<>("Cycle Choices");
-    cycleChooser.addDefaultOption("2", AutoCommands.Cycle.DOUBLE);
-    cycleChooser.addOption("None", AutoCommands.Cycle.NONE);
-    cycleChooser.addOption("1.5", AutoCommands.Cycle.NZ);
-
-    // autoChooser.addOption(
-    //     "PsuedoBoard Delayed",
-    //     Commands.defer(
-    //         () ->
-    //             AutoCommands.pseudoBoard(
-    //                 startChooser.get(), swipeChooser.get(), cycleChooser.get()),
-    //         Set.of(shooter, hopper, wrist, intake, hood)));
-
-    autoChooser.addOption(
-        "FORWARD Right Disruptor",
-        AutoCommands.rightDisrupt(drive, intake, hopper, shooter, wrist, hood));
-
-    autoChooser.addOption(
-        "FORWARD Left Disruptor",
-        AutoCommands.leftDisrupt(drive, intake, hopper, shooter, wrist, hood));
-
-    // autoChooser.addOption("BACKWARD Full Depot", AutoCommands.fullDepot());
-
-    autoChooser.addOption("Nothing", Commands.none());
-
-    autoChooser.addOption("Right Follower", AutoCommands.follower(Start.RIGHT));
-
-    autoChooser.addOption("Left Follower", AutoCommands.follower(Start.LEFT));
-
-    autoChooser.addOption("Left Double Bump", AutoCommands.doubleSwipeBothBump(Start.LEFT));
-
-    autoChooser.addOption("Right Double Bump", AutoCommands.doubleSwipeBothBump(Start.RIGHT));
-
-    autoChooser.addOption("PSEUDO TESTING", pseudo.pseudoBoard());
-
-    autoChooser.addOption(
-        "1323 match",
-        Commands.sequence(
-            Commands.runOnce(
-                () ->
-                    drive.setPose(AllianceFlip.apply(new Pose2d(3.547, 4.008, Rotation2d.kZero)))),
-            Commands.parallel(ScoringCommands.staticAim(), ScoringCommands.staticShoot())
-                .withTimeout(6.0)));
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -197,9 +190,10 @@ public class RobotContainer {
             () ->
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
+                    || pilot.rightTrigger().getAsBoolean()
                     || pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.x().getAsBoolean()));
+                    || pilot.y().getAsBoolean()
+                    || pilot.b().getAsBoolean()));
 
     driveInput.whileFalse(
       Commands.run(
@@ -216,65 +210,33 @@ public class RobotContainer {
             () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
             //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
-                (pilot.x().getAsBoolean())
-                    ? (drive.getPose().getTranslation().getY() > FieldConstants.field_center.getY())
-                        ? Rotation2d.kCW_90deg
-                        : Rotation2d.kCCW_90deg
-                    : (pilot.a().getAsBoolean()
-                        ? drive
-                            .getPose()
-                            .getTranslation()
-                            .nearest(
-                                List.of(
-                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
-                                    AllianceFlip.apply(
-                                        new Translation2d(
-                                            FieldConstants.Depot.left_far_corner.getX(),
-                                            FieldConstants.field_width
-                                                - FieldConstants.Depot.left_far_corner.getY()))))
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()
-                        : AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle()),
-            () ->
-                pilot.rightBumper().getAsBoolean()
-                    || pilot.a().getAsBoolean()
-                    || pilot.x().getAsBoolean()));
+                ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
+                            && drive.getPose().getX()
+                                <= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX())
+                        || (DriverStation.getAlliance().get() == DriverStation.Alliance.Red
+                            && drive.getPose().getX()
+                                >= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX()))
+                    ? AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle()
+                    : drive
+                        .getPose()
+                        .getTranslation()
+                        .nearest(
+                            List.of(
+                                AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
+                                AllianceFlip.flipY(
+                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner))))
+                        .minus(drive.getPose().getTranslation())
+                        .getAngle(),
+            () -> pilot.rightBumper().getAsBoolean()));
 
-    pilot.rightBumper().whileTrue(ScoringCommands.staticAim());
+    pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
 
-    pilot.a().whileTrue(ScoringCommands.passAim());
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(ScoringCommands.manualAim(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
-
-    pilot
-        .getRightTButton()
-        .whileTrue(
-            Commands.either(
-                ScoringCommands.passShoot(),
-                Commands.either(
-                    // ScoringCommands.dataShoot(),
-                    ScoringCommands.staticShoot(),
-                    ScoringCommands.manualShoot(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12),
-                    () -> pilot.rightBumper().getAsBoolean()),
-                () -> pilot.a().getAsBoolean()));
-
-    // automataic up
-    // pilot
-    //     .getRightTButton()
-    //     .whileTrue(
-    //         new WaitCommand(0.1)
-    //             .andThen(
-    //                 new WaitUntilCommand(() -> shooter.atGoal())
-    //                     .andThen(
-    //                         Commands.either(
-    //                             ScoringCommands.slowUp(Size.HALF),
-    //                             ScoringCommands.slowUp(Size.FULL),
-    //                             () -> copilot.leftBumper().getAsBoolean()))))
-    //     .onFalse(ScoringCommands.downNoStall());
+        .whileTrue(ScoringCommands.shoot(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
 
     pilot
         .getLeftTButton()
@@ -299,6 +261,8 @@ public class RobotContainer {
     copilot.a().onTrue(ScoringCommands.goodStow());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
+    copilot.b().whileTrue(ScoringCommands.testIntake2());
+
     copilot
         .getLeftTButton()
         .toggleOnTrue(
@@ -311,6 +275,7 @@ public class RobotContainer {
         .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
+
   }
 
   /**
@@ -319,7 +284,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return VoyagerLib.runSelectedAuto();
   }
 
   // maybe making this easier for different positions in sim?!
@@ -377,26 +342,30 @@ public class RobotContainer {
     // Rotation2d.kCW_90deg));
   }
 
-  char autoWinner = ' '; // this is so stupid
 
   public void preperiodic() {
 
-    if (startChooser.get() != AutoCommands.curStart
-        || cycleChooser.get() != AutoCommands.curCycle
-        || swipeChooser.get() != AutoCommands.curSwipe) {
-      //   AutoCommands.constructedAuto =
-      //       AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(), cycleChooser.get());
-      AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
-      AutoCommands.curStart = startChooser.get();
-      AutoCommands.curCycle = cycleChooser.get();
-      AutoCommands.curSwipe = swipeChooser.get();
-    }
+    // if (startChooser.get() != AutoCommands.curStart
+    //     || cycleChooser.get() != AutoCommands.curCycle
+    //     || swipeChooser.get() != AutoCommands.curSwipe) {
+    //   //   AutoCommands.constructedAuto =
+    //   //       AutoCommands.pseudoBoard(startChooser.get(), swipeChooser.get(),
+    // cycleChooser.get());
+    //   AutoCommands.custom = AutoCommands.newAuto(startChooser.get(), cycleChooser.get());
+    //   AutoCommands.curStart = startChooser.get();
+    //   AutoCommands.curCycle = cycleChooser.get();
+    //   AutoCommands.curSwipe = swipeChooser.get();
+    // }
 
     // autoChooser.addDefaultOption("PseudoBoard", AutoCommands.constructedAuto);
-    autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
+    // autoChooser.addDefaultOption("NewBoard", AutoCommands.custom);
   }
 
+    char autoWinner = ' '; // this is so stupid xd
+
   public void periodic() {
+
+    bpsCalc.periodic();
 
     // shooter.setVelocityRPM(shooterRPMset.getAsDouble());
 

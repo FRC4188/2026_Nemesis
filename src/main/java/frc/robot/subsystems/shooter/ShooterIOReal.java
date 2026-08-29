@@ -16,6 +16,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -36,6 +37,8 @@ public class ShooterIOReal implements ShooterIO {
   private final StatusSignal<Current> rightCurrentAmps;
   private final StatusSignal<AngularVelocity> leftVelocity;
   private final StatusSignal<AngularVelocity> rightVelocity;
+  private final StatusSignal<AngularAcceleration> leftAcceleration;
+  private final StatusSignal<AngularAcceleration> rightAcceleration;
   private final StatusSignal<Temperature> leftTempC;
   private final StatusSignal<Temperature> rightTempC;
 
@@ -45,6 +48,8 @@ public class ShooterIOReal implements ShooterIO {
   private final StatusSignal<Current> left3CurrentAmps;
   private final StatusSignal<AngularVelocity> left2Velocity;
   private final StatusSignal<AngularVelocity> left3Velocity;
+  private final StatusSignal<AngularAcceleration> left2Acceleration;
+  private final StatusSignal<AngularAcceleration> left3Acceleration;
   private final StatusSignal<Temperature> left2TempC;
   private final StatusSignal<Temperature> left3TempC;
 
@@ -100,6 +105,8 @@ public class ShooterIOReal implements ShooterIO {
     rightCurrentAmps = rightFollow.getStatorCurrent();
     leftVelocity = leftLeader.getVelocity();
     rightVelocity = rightFollow.getVelocity();
+    leftAcceleration = leftLeader.getAcceleration();
+    rightAcceleration = rightFollow.getAcceleration();
     leftTempC = leftLeader.getDeviceTemp();
     rightTempC = rightFollow.getDeviceTemp();
     left2AppliedVolts = left2Follow.getMotorVoltage();
@@ -108,6 +115,8 @@ public class ShooterIOReal implements ShooterIO {
     left3CurrentAmps = left3Follow.getStatorCurrent();
     left2Velocity = left2Follow.getVelocity();
     left3Velocity = left3Follow.getVelocity();
+    left2Acceleration = left2Follow.getAcceleration();
+    left3Acceleration = left3Follow.getAcceleration();
     left2TempC = left2Follow.getDeviceTemp();
     left3TempC = left3Follow.getDeviceTemp();
 
@@ -121,6 +130,8 @@ public class ShooterIOReal implements ShooterIO {
         rightTempC,
         leftVelocity,
         rightVelocity,
+        leftAcceleration,
+        rightAcceleration,
         left2AppliedVolts,
         left2CurrentAmps,
         left3AppliedVolts,
@@ -128,7 +139,10 @@ public class ShooterIOReal implements ShooterIO {
         left2TempC,
         left3TempC,
         left2Velocity,
-        left3Velocity);
+        left3Velocity,
+        left2Acceleration,
+        left3Acceleration
+        );
 
     BaseStatusSignal.setUpdateFrequencyForAll(5.0, leftTempC, rightTempC, left2TempC, left3TempC);
 
@@ -142,25 +156,25 @@ public class ShooterIOReal implements ShooterIO {
   public void updateInputs(ShooterIOInputs inputs) {
     inputs.leftConnected =
         leftDebouncer.calculate(
-            BaseStatusSignal.refreshAll(leftAppliedVolts, leftCurrentAmps, leftVelocity, leftTempC)
+            BaseStatusSignal.refreshAll(leftAppliedVolts, leftCurrentAmps, leftVelocity, leftAcceleration, leftTempC)
                 .isOK());
 
     inputs.rightConnected =
         rightDebouncer.calculate(
             BaseStatusSignal.refreshAll(
-                    rightAppliedVolts, rightCurrentAmps, rightVelocity, rightTempC)
+                    rightAppliedVolts, rightCurrentAmps, rightVelocity, rightAcceleration, rightTempC)
                 .isOK());
 
     inputs.left2Connected =
         left2Debouncer.calculate(
             BaseStatusSignal.refreshAll(
-                    left2AppliedVolts, left2CurrentAmps, left2Velocity, left2TempC)
+                    left2AppliedVolts, left2CurrentAmps, left2Velocity, left2Acceleration, left2TempC)
                 .isOK());
 
     inputs.left3Connected =
         left3Debouncer.calculate(
             BaseStatusSignal.refreshAll(
-                    left3AppliedVolts, left3CurrentAmps, left3Velocity, left3TempC)
+                    left3AppliedVolts, left3CurrentAmps, left3Velocity, left3Acceleration, left3TempC)
                 .isOK());
 
     inputs.leftAppliedVolts = leftAppliedVolts.getValueAsDouble();
@@ -171,6 +185,8 @@ public class ShooterIOReal implements ShooterIO {
     inputs.rightTempC = rightTempC.getValueAsDouble();
     inputs.leftVelocityRPM = leftVelocity.getValueAsDouble() * 60.0;
     inputs.rightVelocityRPM = rightVelocity.getValueAsDouble() * 60.0;
+    inputs.leftAccelerationRPMPM = leftAcceleration.getValueAsDouble() * 60.0;
+    inputs.rightAccelerationRPMPM = rightAcceleration.getValueAsDouble() * 60.0;
 
     inputs.left2AppliedVolts = left2AppliedVolts.getValueAsDouble();
     inputs.left3AppliedVolts = left3AppliedVolts.getValueAsDouble();
@@ -180,6 +196,8 @@ public class ShooterIOReal implements ShooterIO {
     inputs.left3TempC = left3TempC.getValueAsDouble();
     inputs.left2VelocityRPM = left2Velocity.getValueAsDouble() * 60.0;
     inputs.left3VelocityRPM = left3Velocity.getValueAsDouble() * 60.0;
+    inputs.left2AccelerationRPMPM = left2Acceleration.getValueAsDouble() * 60.0;
+    inputs.left3AccelerationRPMPM = left3Acceleration.getValueAsDouble() * 60.0;
   }
 
   @Override

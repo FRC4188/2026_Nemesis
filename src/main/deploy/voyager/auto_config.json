@@ -1,0 +1,30 @@
+{
+  "autos": [
+    {
+      "id": "path19853b8ca3df45558a301ea9c56e990a",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "FirstSwipe"
+        },
+        {
+          "type": "path",
+          "name": "SecondSwipe"
+        }
+      ]
+    },
+    {
+      "id": "path811705bf95944548849bf676b76f2026",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "TestPath"
+        },
+        {
+          "type": "path",
+          "name": "SwipeAgain"
+        }
+      ]
+    }
+  ]
+}
