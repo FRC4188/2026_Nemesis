@@ -253,8 +253,6 @@ public class RobotContainer {
     copilot.x().onTrue(ScoringCommands.goodStow());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
-
-
     copilot.b().whileTrue(ScoringCommands.lowerIntakeTorque());
 
     copilot

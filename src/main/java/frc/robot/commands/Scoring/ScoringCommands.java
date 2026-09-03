@@ -42,26 +42,24 @@ public class ScoringCommands {
   }
 
   public static Command wristCompress() {
-    return Commands.runOnce(wrist::zero, wrist)
-        .andThen(
-            Commands.parallel(
-                Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
-                Commands.repeatingSequence(
-                        Commands.runEnd(() -> wrist.runWristVolts(1.9), wrist::stop, wrist)
-                            .until(
-                                () ->
-                                    wrist.getStatorCurrent()
-                                        > Constants.WristConstants.fuelStatorCurrent)
-                            .andThen(
-                                Commands.either(
-                                    Commands.runEnd(
-                                            () -> wrist.runWristVolts(-2), wrist::stop, wrist)
-                                        .withTimeout(0.6),
-                                    Commands.waitSeconds(0.3),
-                                    () -> wrist.getAngle() > 90)))
-                    .onlyWhile(() -> wrist.getAngle() < 110)));
+    return Commands.parallel(
+        Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
+        Commands.repeatingSequence(
+                Commands.runEnd(() -> wrist.runWristVolts(1.55), wrist::stop, wrist)
+                    .until(
+                        () -> wrist.getStatorCurrent() > Constants.WristConstants.fuelStatorCurrent)
+                    .andThen(
+                        Commands.either(
+                            Commands.runEnd(() -> wrist.runWristVolts(-2), wrist::stop, wrist)
+                                .withTimeout(0.6),
+                            Commands.waitSeconds(0.3),
+                            () -> wrist.getAngle() > 90)))
+            .onlyWhile(() -> wrist.getAngle() < 110));
   }
 
+  // yea this doesn't actually work. explanation later
+  // akhil here : explanation is it doesnt work
+  @Deprecated
   public static Command lowerIntakeTorque() {
     return Commands.runEnd(() -> wrist.runWristVolts(-4.5), wrist::stop, wrist)
         .until(() -> wrist.getStatorCurrent() > Constants.WristConstants.bumperStatorCurrent)
@@ -69,8 +67,7 @@ public class ScoringCommands {
   }
 
   public static Command intake() {
-    return Commands.either(
-            forceDown(), lowerIntakeTorque(), () -> wrist.getAngle() > 100)
+    return Commands.either(forceDown(), lowerIntakeTorque(), () -> wrist.getAngle() > 100)
         .alongWith(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake))
         .finallyDo(
             () -> {
@@ -87,22 +84,20 @@ public class ScoringCommands {
 
   public static Command shooterIntake() {
     return Commands.parallel(
-        Commands.runEnd(() -> shooter.setVelocityRPM(-800), shooter::stop, shooter),
-        Commands.runEnd(() -> hopper.runHopper(0, -2000), hopper::stop, hopper)
-    ).withTimeout(0.5).finallyDo(() -> {
-      shooter.stop();
-      hopper.stop();
-    });
+            Commands.runEnd(() -> shooter.setVelocityRPM(-800), shooter::stop, shooter),
+            Commands.runEnd(() -> hopper.runHopper(0, -2000), hopper::stop, hopper))
+        .withTimeout(0.5)
+        .finallyDo(
+            () -> {
+              shooter.stop();
+              hopper.stop();
+            });
   }
 
   public static Command toggleWristCompress(Trigger intaking) {
     return Commands.repeatingSequence(
-        Commands.waitUntil(intaking.negate()),
-        wristCompress()
-            .until(intaking)
-            .asProxy()
-    );
-}
+        Commands.waitUntil(intaking.negate()), wristCompress().until(intaking).asProxy());
+  }
 
   public static boolean initialShots = true;
 
@@ -110,23 +105,24 @@ public class ScoringCommands {
    * FOR DEBUGGING 9/2/2026
    * Work on tuning volts and fuel stator current for wrist compress
    * Find the bumper stator current for force down and lower intake torque, setting volts low for both
-   * Find the time it takes for hood to start to go up, and for the first ball to get to the shooter, 
+   * Find the time it takes for hood to start to go up, and for the first ball to get to the shooter,
    * record time and tell me between interviews
-   * 
+   * 1.07 seconds
+   *
    * IF EVERYTHING IS DONE: then do me a favor:
-   * Do several recordings of the robot shooting from the robot shooting from different distances, 
-   * and in the same way as data shoot, record the distance from the hub before you shoot, and then 
+   * Do several recordings of the robot shooting from the robot shooting from different distances,
+   * and in the same way as data shoot, record the distance from the hub before you shoot, and then
    * the time of flight for each ball. i need a 240 fps slow mo camera to do this, Ansh if you could
    * "borrow" Ishaan's phone for a bit. (17 pros have a 240 fps slow mo camera). after you figure out
-   * time of flight for a SINGULAR ball, record the distance from the hub and the time of flight in Desmos, 
+   * time of flight for a SINGULAR ball, record the distance from the hub and the time of flight in Desmos,
    * and then do this for several distances (0.5, 0.25, 0.75, 1, 1.5, etc.) i need roughly 25-35 different distances
    * for better results (go big or go home). Find the best fit line for the data and send it to me on slack.
-   * 
+   *
    * measure from the first frame the ball leaves the shooter, to the frame it hits the top of the hub.
-   * for better accuracy, count the number of frames instead of the seconds it shows on the bottom of the video, 
+   * for better accuracy, count the number of frames instead of the seconds it shows on the bottom of the video,
    * and then divide by 240 to get the time in seconds.
-   * 
-   * 
+   *
+   *
    * DELETE AFTER YOU ARE DONE WITH THIS, I WILL NOT BE ABLE TO HELP YOU WITH THIS, I WILL BE IN INTERVIEWS
    */
 
@@ -136,19 +132,35 @@ public class ScoringCommands {
             Commands.parallel( // static shooting
                 staticAim(), // aim at hub
                 lowSpinShooter() // spin up shooter
-                    .until(() -> hood.atGoal() && Constants.DriveConstants.ANGLE_PID.atGoal()) // wait until hood and drive are at goal
+                    .until(
+                        () ->
+                            hood.atGoal()
+                                && Constants.DriveConstants.ANGLE_PID
+                                    .atGoal()) // wait until hood and drive are at goal
                     .andThen( // then shoot
                         Commands.parallel(
                             staticShoot(), // shoot
-                            Commands.waitUntil(() -> shooter.atGoal()).andThen(Commands.waitSeconds(0.1), toggleWristCompress(intaking)) // wait until shooter is at goal and then toggle wrist compress
+                            Commands.waitUntil(() -> shooter.atGoal())
+                                .andThen(
+                                    Commands.waitSeconds(0.1),
+                                    toggleWristCompress(
+                                        intaking)) // wait until shooter is at goal and then toggle
+                            // wrist compress
                             ))),
             Commands.parallel( // pass shooting
                 passAim(), // aim at hub
-                lowSpinShooter().until(() -> hood.getAngle() > hood.maxAngle()).andThen( // wait until hood is at max angle
-                Commands.parallel( // then shoot
-                passShoot(), // shoot
-                Commands.waitUntil(() -> shooter.atGoal()).andThen(Commands.waitSeconds(0.1), toggleWristCompress(intaking)) // wait until shooter is at goal and then toggle wrist compress
-                ))),
+                lowSpinShooter()
+                    .until(() -> hood.getAngle() > hood.maxAngle())
+                    .andThen( // wait until hood is at max angle
+                        Commands.parallel( // then shoot
+                            passShoot(), // shoot
+                            Commands.waitUntil(() -> shooter.atGoal())
+                                .andThen(
+                                    Commands.waitSeconds(0.1),
+                                    toggleWristCompress(
+                                        intaking)) // wait until shooter is at goal and then toggle
+                            // wrist compress
+                            ))),
             () ->
                 ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
                         && drive.getPose().getX()
@@ -162,9 +174,8 @@ public class ScoringCommands {
                 .andThen(
                     Commands.parallel(
                         manualShoot(() -> distance.getAsDouble()),
-                        Commands.waitUntil(() -> shooter.atGoal()).andThen(Commands.waitSeconds(0.1), toggleWristCompress(intaking))
-                    )
-                )),
+                        Commands.waitUntil(() -> shooter.atGoal())
+                            .andThen(Commands.waitSeconds(0.1), toggleWristCompress(intaking))))),
         () -> distance.getAsDouble() == 0);
   }
 

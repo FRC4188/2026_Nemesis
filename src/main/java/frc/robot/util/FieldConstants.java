@@ -337,27 +337,27 @@ public final class FieldConstants { // going off of an onshape cad of field
 
   public static class AllianceZone {
     public static boolean inBlueAllianceZone(Pose2d pose) {
-        return pose.getX() <= FieldConstants.Hub.left_far_corner.getX();
+      return pose.getX() <= FieldConstants.Hub.left_far_corner.getX();
     }
 
     public static boolean inRedAllianceZone(Pose2d pose) {
-        return pose.getX() >= AllianceFlip.flipX(FieldConstants.Hub.left_far_corner).getX();
+      return pose.getX() >= AllianceFlip.flipX(FieldConstants.Hub.left_far_corner).getX();
     }
 
     public static boolean inOwnAllianceZone(Pose2d pose, DriverStation.Alliance alliance) {
-        if (alliance == DriverStation.Alliance.Blue) {
-            return inBlueAllianceZone(pose);
-        } else {
-            return inRedAllianceZone(pose);
-        }
+      if (alliance == DriverStation.Alliance.Blue) {
+        return inBlueAllianceZone(pose);
+      } else {
+        return inRedAllianceZone(pose);
+      }
     }
 
     public static boolean inOpposingAllianceZone(Pose2d pose, DriverStation.Alliance alliance) {
-        if (alliance == DriverStation.Alliance.Blue) {
-            return inRedAllianceZone(pose);
-        } else {
-            return inBlueAllianceZone(pose);
-        }
+      if (alliance == DriverStation.Alliance.Blue) {
+        return inRedAllianceZone(pose);
+      } else {
+        return inBlueAllianceZone(pose);
+      }
     }
   }
 }
