@@ -33,7 +33,7 @@ public class Hood extends SubsystemBase {
   @AutoLogOutput(key = "Hood/Setpoint Degrees")
   private double setpoint = 0.0;
 
-  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline", 2.0);
+  private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline", 0.0);
 
   public Hood(HoodIO io) {
     this.io = io;
@@ -84,7 +84,8 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(getAngle() - setpoint) < Constants.HoodConstants.kTolerance.getDegrees();
+    return Math.abs(getAngle() - setpoint - offset.getAsDouble())
+        < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
   @AutoLogOutput(key = "Hood/Angle Degrees")

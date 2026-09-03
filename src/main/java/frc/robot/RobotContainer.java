@@ -186,7 +186,7 @@ public class RobotContainer {
             () ->
                 (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
                     || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
-                    || pilot.rightTrigger().getAsBoolean()
+                    || pilot.getRightTButton().getAsBoolean()
                     || pilot.rightBumper().getAsBoolean()
                     || pilot.y().getAsBoolean()
                     || pilot.b().getAsBoolean()));
@@ -219,14 +219,16 @@ public class RobotContainer {
                                     AllianceFlip.apply(FieldConstants.Depot.left_far_corner))))
                         .minus(drive.getPose().getTranslation())
                         .getAngle(),
-            () -> pilot.rightBumper().getAsBoolean()));
+            () -> pilot.getRightTButton().getAsBoolean()));
 
-    pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0));
+    pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0, pilot.getLeftTButton()));
 
     pilot
         .y()
         .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(ScoringCommands.shoot(() -> (pilot.b().getAsBoolean()) ? 3.5 : 12));
+        .whileTrue(
+            ScoringCommands.shoot(
+                () -> (pilot.b().getAsBoolean()) ? 3.5 : 12, pilot.getLeftTButton()));
 
     pilot
         .getLeftTButton()
@@ -247,11 +249,13 @@ public class RobotContainer {
                 wrist::stop,
                 wrist));
 
-    copilot.x().onTrue(ScoringCommands.downNoStall());
-    copilot.a().onTrue(ScoringCommands.goodStow());
+    copilot.a().onTrue(ScoringCommands.downNoStall());
+    copilot.x().onTrue(ScoringCommands.goodStow());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
 
-    copilot.b().whileTrue(ScoringCommands.testIntake2());
+
+
+    copilot.b().whileTrue(ScoringCommands.lowerIntakeTorque());
 
     copilot
         .getLeftTButton()
@@ -265,6 +269,8 @@ public class RobotContainer {
         .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
+
+    copilot.povLeft().onTrue(ScoringCommands.shooterIntake());
   }
 
   /**

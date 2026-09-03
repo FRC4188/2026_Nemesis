@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -194,7 +195,7 @@ public class SOTM { // Experimental Class for Offseason
                             AllianceFlip.apply(drive.getRotation())),
                     () -> drive.getChassisSpeeds(),
                     target),
-                ScoringCommands.shoot(() -> 0.0),
+                ScoringCommands.shoot(() -> 0.0, new Trigger(() -> false)),
                 () -> dynamicLock.getAsBoolean() || !staticLock.getAsBoolean()));
   }
 

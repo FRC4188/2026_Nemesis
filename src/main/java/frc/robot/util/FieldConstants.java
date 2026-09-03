@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import java.util.List;
 
@@ -332,5 +333,31 @@ public final class FieldConstants { // going off of an onshape cad of field
     public static final Translation2d right_far_corner_bot_side_offset =
         new Translation2d(
             Units.inchesToMeters(27) + Constants.Robot.B_CROSS / 2, Units.inchesToMeters(213.84));
+  }
+
+  public static class AllianceZone {
+    public static boolean inBlueAllianceZone(Pose2d pose) {
+        return pose.getX() <= FieldConstants.Hub.left_far_corner.getX();
+    }
+
+    public static boolean inRedAllianceZone(Pose2d pose) {
+        return pose.getX() >= AllianceFlip.flipX(FieldConstants.Hub.left_far_corner).getX();
+    }
+
+    public static boolean inOwnAllianceZone(Pose2d pose, DriverStation.Alliance alliance) {
+        if (alliance == DriverStation.Alliance.Blue) {
+            return inBlueAllianceZone(pose);
+        } else {
+            return inRedAllianceZone(pose);
+        }
+    }
+
+    public static boolean inOpposingAllianceZone(Pose2d pose, DriverStation.Alliance alliance) {
+        if (alliance == DriverStation.Alliance.Blue) {
+            return inRedAllianceZone(pose);
+        } else {
+            return inBlueAllianceZone(pose);
+        }
+    }
   }
 }
