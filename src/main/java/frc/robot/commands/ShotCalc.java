@@ -1,29 +1,46 @@
-import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.hood.Hood;
-import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.wrist.Wrist;
+package frc.robot.commands;
 
-public class ShotCalc {
-    private static final Shooter shooter = Shooter.getInstance();
-    private static final Hopper hopper = Hopper.getInstance();
-    private static final Drive drive = Drive.getInstance();
-    private static final Hood hood = Hood.getInstance();
-    private static final Wrist wrist = Wrist.getInstance();
-    private static final Intake intake = Intake.getInstance();
+import edu.wpi.first.math.geometry.Rotation2d;
+
+public final class ShotCalc {
+
+  /** Maximum shooter speed used by the calculator. */
+  public static final double kMaxRPM = 5000.0;
+
+  /** Reference velocity for the ballistic model, in m/s. */
+  private static final double kReferenceVelocityMPS = 6.435;
+
+  /** Reference horizontal distance, in meters. */
+  private static final double kReferenceDistanceMeters = 1.7716;
+
+  /** Air density, in kg/m^3. */
+  private static final double kAirDensity = 0.0023769;
+
+  /** Ball drag coefficient. */
+  private static final double kDragCoefficient = 0.47;
+
+  /** Ball cross-sectional area, in m^2. */
+  private static final double kBallArea = 0.0295;
+
+  /** Mass of the ball, in kg. */
+  private static final double kBallMass = 0.0147;
 
 
-    public static final double kMPSAt5000RPM = 0.0; // Placeholder value, replace with actual value
+  public static double factorEstimatedDrag(double velocityMPS) {
+    final double dragFactor = (kAirDensity * kDragCoefficient * kBallArea) / (2.0 * kBallMass);
 
-    public static final double kApexHeight = Units.inchesToMeters(100); // 100-120 inches is best range (decide after testing MPS)
+    return velocityMPS / (1.0 - dragFactor);
+  }
 
-    public static double factorEstimatedDrag(double velocity) {
-        return velocity / (1 + (0.0023769 * 0.47 * 0.0295) / (2 * 0.0147));
-    }
+  public static double velocityMPSToRPM(double velocityMPS) {
+    return 0.0; // Placeholder for actual conversion logic
+  }
 
-    
+  public static double getShotMPS(double distanceMeters) {
+    return Math.sqrt(Math.pow(6.434946806, 2) + Math.pow(distanceMeters / 1.03702895, 2));
+  }
 
-    
+  public static Rotation2d getShotAngle(double distanceMeters) {
+    return Rotation2d.fromDegrees(90 - Math.toDegrees(Math.atan(6.434946806 * 1.03702895 / distanceMeters)));
+  }
 }

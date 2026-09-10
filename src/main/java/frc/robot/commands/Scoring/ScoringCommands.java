@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.commands.ShotCalc;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -183,7 +184,7 @@ public class ScoringCommands {
     return Commands.runEnd(
         () ->
             hood.setAngle(
-                inclineHueristic(
+                ShotCalc.calculateShotAngle(
                     AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                         .minus(drive.getPose().getTranslation())
                         .getNorm())),
@@ -196,7 +197,7 @@ public class ScoringCommands {
             Commands.runEnd(
                 () ->
                     shooter.setVelocityRPM(
-                        RPMRegress(
+                        ShotCalc.getShotRPM(
                                 AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
                                     .minus(drive.getPose().getTranslation())
                                     .getNorm())
@@ -270,7 +271,7 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    110 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
+                    100 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)

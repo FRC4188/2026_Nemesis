@@ -265,8 +265,6 @@ public class RobotContainer {
         .getRightTButton()
         .toggleOnTrue(
             Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
-
-    copilot.povLeft().onTrue(ScoringCommands.shooterIntake());
   }
 
   /**
