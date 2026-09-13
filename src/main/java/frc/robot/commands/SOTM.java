@@ -192,7 +192,7 @@ public class SOTM { // Experimental Class for Offseason
           || futureRequiredHoodAngle > Constants.HoodConstants.Max_A.getRadians()) {
         continue;
       }
-      
+
       final double requiredHoodVelocity =
           Math.abs(futureRequiredHoodAngle - requiredHoodAngle) / SOTM_LOOKAHEAD_SECONDS;
 

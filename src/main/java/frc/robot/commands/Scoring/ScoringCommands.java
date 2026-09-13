@@ -279,21 +279,21 @@ public class ScoringCommands {
                         Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper))));
   }
 
-//   public static Command slowUp(AutoCommands.Size size) {
-//     return Commands.either(
-//         Commands.sequence(
-//                 new WaitCommand(
-//                     switch (size) {
-//                       case PRE -> 0.5;
-//                       case HALF -> 1.5;
-//                       case FULL -> 4.0;
-//                     }),
-//                 Commands.runEnd(() -> wrist.runWristVolts(4), wrist::stop, wrist)
-//                     .until(() -> wrist.getAngle() > 90))
-//             .alongWith(Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)),
-//         Commands.none(),
-//         () -> wrist.shakeEnable);
-//   }
+  //   public static Command slowUp(AutoCommands.Size size) {
+  //     return Commands.either(
+  //         Commands.sequence(
+  //                 new WaitCommand(
+  //                     switch (size) {
+  //                       case PRE -> 0.5;
+  //                       case HALF -> 1.5;
+  //                       case FULL -> 4.0;
+  //                     }),
+  //                 Commands.runEnd(() -> wrist.runWristVolts(4), wrist::stop, wrist)
+  //                     .until(() -> wrist.getAngle() > 90))
+  //             .alongWith(Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake)),
+  //         Commands.none(),
+  //         () -> wrist.shakeEnable);
+  //   }
 
   public static Command downNoStall() {
     return Commands.runEnd(() -> wrist.runWristVolts(-4), wrist::stop, wrist)

@@ -88,7 +88,8 @@ public class DriveCommands {
               Translation2d robotToTarget =
                   goalSupplier.get().minus(drive.getPose().getTranslation());
 
-              double maxVelocity = SOTM.getSOTMMaxVelocityExtended(fieldRelativeVelocity, robotToTarget);
+              double maxVelocity =
+                  SOTM.getSOTMMaxVelocityExtended(fieldRelativeVelocity, robotToTarget);
 
               ChassisSpeeds speeds =
                   new ChassisSpeeds(

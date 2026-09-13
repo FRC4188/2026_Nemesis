@@ -53,7 +53,8 @@
 //                           AllianceFlip.apply(
 //                               switch (start) {
 //                                 case LEFT -> new Pose2d(
-//                                     FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
+//                                     FieldConstants.Trench.left_trench_center,
+// Rotation2d.kCW_90deg);
 //                                 case RIGHT -> new Pose2d(
 //                                     FieldConstants.Trench.right_trench_center,
 //                                     Rotation2d.kCCW_90deg);
@@ -67,7 +68,8 @@
 //                             case LEFT -> new Pose2d(
 //                                 FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
 //                             case RIGHT -> new Pose2d(
-//                                 FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
+//                                 FieldConstants.Trench.right_trench_center,
+// Rotation2d.kCCW_90deg);
 //                           })
 //                       .withCurve(0.4),
 //                   new PathBuilder.Target(
@@ -231,8 +233,10 @@
 //                   .withRotationLead(0.5),
 //               new PathBuilder.Target(
 //                       (start == Start.RIGHT)
-//                           ? new Pose2d(FieldConstants.Trench.right_trench_center, Rotation2d.kZero)
-//                           : new Pose2d(FieldConstants.Trench.left_trench_center, Rotation2d.kZero))
+//                           ? new Pose2d(FieldConstants.Trench.right_trench_center,
+// Rotation2d.kZero)
+//                           : new Pose2d(FieldConstants.Trench.left_trench_center,
+// Rotation2d.kZero))
 //                   .withRotationLead(0.5)
 //                   .withCurve(0)));
 //     }
@@ -247,9 +251,11 @@
 //                         AllianceFlip.apply(
 //                             switch (start) {
 //                               case LEFT -> new Pose2d(
-//                                   FieldConstants.Trench.left_trench_center, Rotation2d.kCW_90deg);
+//                                   FieldConstants.Trench.left_trench_center,
+// Rotation2d.kCW_90deg);
 //                               case RIGHT -> new Pose2d(
-//                                   FieldConstants.Trench.right_trench_center, Rotation2d.kCCW_90deg);
+//                                   FieldConstants.Trench.right_trench_center,
+// Rotation2d.kCCW_90deg);
 //                             }))),
 //             Commands.none(),
 //             () -> Robot.isSimulation()),
@@ -280,7 +286,8 @@
 //                           case LEFT -> new Pose2d(
 //                               switch (swipe) {
 //                                 case CENTER -> FieldConstants.Trench.left_trench_intermediate;
-//                                 case CLOSE -> FieldConstants.Trench.intake_left_trench_intermediate;
+//                                 case CLOSE ->
+// FieldConstants.Trench.intake_left_trench_intermediate;
 //                               },
 //                               Rotation2d.kCW_90deg);
 //                           case RIGHT -> new Pose2d(
@@ -378,9 +385,11 @@
 //                 new PathBuilder.Target(
 //                     new Pose2d(
 //                         switch (start) {
-//                           case RIGHT -> FieldConstants.Trench.right_trench_neutral_preentrance.plus(
+//                           case RIGHT ->
+// FieldConstants.Trench.right_trench_neutral_preentrance.plus(
 //                               new Translation2d(0.5, -0.16));
-//                           case LEFT -> FieldConstants.Trench.left_trench_neutral_preentrance.plus(
+//                           case LEFT ->
+// FieldConstants.Trench.left_trench_neutral_preentrance.plus(
 //                               new Translation2d(0.5, 0.16));
 //                         },
 //                         switch (start) {
@@ -390,7 +399,8 @@
 //                 new PathBuilder.Target(
 //                     new Pose2d(
 //                         switch (start) {
-//                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_entrance.plus(
+//                           case RIGHT ->
+// FieldConstants.Trench.right_trench_alliance_entrance.plus(
 //                               new Translation2d(-0.3, -0.18));
 //                           case LEFT -> FieldConstants.Trench.left_trench_alliance_entrance.plus(
 //                               new Translation2d(-0.3, 0.18));
@@ -408,7 +418,8 @@
 //                           case RIGHT -> FieldConstants.Trench.right_trench_alliance_preentrance
 //                                   .getY()
 //                               + 0.15;
-//                           case LEFT -> FieldConstants.Trench.left_trench_alliance_preentrance.getY()
+//                           case LEFT ->
+// FieldConstants.Trench.left_trench_alliance_preentrance.getY()
 //                               - 0.15;
 //                         },
 //                         switch (start) {
@@ -446,7 +457,8 @@
 //                         .withRotationSpread(2.5)
 //                         .withRotationLead(1)
 //                         .withCommand(
-//                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+//                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop,
+// intake)));
 //                   // .alongWith(ScoringCommands.forceDown());
 
 //                 case LEFT -> PathBuilder.path(
@@ -467,7 +479,8 @@
 //                         .withRotationSpread(2.5)
 //                         .withRotationLead(1)
 //                         .withCommand(
-//                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop, intake)));
+//                             Commands.runEnd(() -> intake.intakeVolts(8.5), intake::stop,
+// intake)));
 //                   // .alongWith(ScoringCommands.downNoStall());
 //               },
 //               Commands.none());
@@ -477,7 +490,8 @@
 //                   PathBuilder.path(
 //                           PathBuilder.mirror(
 //                               () -> (start == Start.LEFT),
-//                               new PathBuilder.Target(new Pose2d(1.981, 0.5, Rotation2d.kCCW_90deg))
+//                               new PathBuilder.Target(new Pose2d(1.981, 0.5,
+// Rotation2d.kCCW_90deg))
 //                                   .withCurve(0.6),
 //                               new PathBuilder.Target(
 //                                       new Pose2d(
@@ -498,21 +512,27 @@
 //                                       .withStartingSpeed(5)
 //                                       .withStartingRotation(Rotation2d.kCCW_90deg)
 //                                       .withOverrideRotations(
-//                                           new RotationTarget(0.97, Rotation2d.fromDegrees(87.075)),
+//                                           new RotationTarget(0.97,
+// Rotation2d.fromDegrees(87.075)),
 //                                           new RotationTarget(0.60, Rotation2d.kCCW_90deg),
-//                                           new RotationTarget(2.00, Rotation2d.fromDegrees(110.726)),
-//                                           new RotationTarget(3.00, Rotation2d.fromDegrees(-95.856)),
-//                                           new RotationTarget(3.34, Rotation2d.fromDegrees(-85.402)))
+//                                           new RotationTarget(2.00,
+// Rotation2d.fromDegrees(110.726)),
+//                                           new RotationTarget(3.00,
+// Rotation2d.fromDegrees(-95.856)),
+//                                           new RotationTarget(3.34,
+// Rotation2d.fromDegrees(-85.402)))
 //                                       .withHeading(Rotation2d.fromDegrees(61.763))
 //                                       .withControlDistances(0, 0.250),
 //                                   new PathBuilder.Target(
 //                                           new Pose2d(7.355, 1.523 - 0.18, Rotation2d.kZero))
 //                                       .withHeading(Rotation2d.fromDegrees(66.360))
 //                                       .withControlDistances(1.517, 0.476),
-//                                   new PathBuilder.Target(new Pose2d(7.614, 3.051, Rotation2d.kZero))
+//                                   new PathBuilder.Target(new Pose2d(7.614, 3.051,
+// Rotation2d.kZero))
 //                                       .withHeading(Rotation2d.fromDegrees(120.689))
 //                                       .withControlDistances(0.288, 1.250),
-//                                   new PathBuilder.Target(new Pose2d(5.968, 3.051, Rotation2d.kZero))
+//                                   new PathBuilder.Target(new Pose2d(5.968, 3.051,
+// Rotation2d.kZero))
 //                                       .withHeading(Rotation2d.fromDegrees(-104.349))
 //                                       .withControlDistances(0.955, 0.310),
 //                                   new PathBuilder.Target(
@@ -527,7 +547,8 @@
 //                   PathBuilder.path(
 //                       PathBuilder.mirror(
 //                           () -> (start == Start.LEFT),
-//                           new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608, Rotation2d.kZero))
+//                           new PathBuilder.Target(new Pose2d(5.968 + 0.2, 0.608,
+// Rotation2d.kZero))
 //                               .withStartingSpeed(2),
 //                           new PathBuilder.Target(
 //                               new Pose2d(

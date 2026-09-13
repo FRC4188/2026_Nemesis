@@ -60,9 +60,12 @@ public class Hood extends SubsystemBase {
   }
 
   public void setAngle(Rotation2d angle) {
-    setpoint = MathUtil.clamp(angle.getDegrees() + offset.getAsDouble(), Constants.HoodConstants.Min_A.getDegrees(), Constants.HoodConstants.Max_A.getDegrees());
-    io.setPosition(
-        Rotation2d.fromDegrees(setpoint));
+    setpoint =
+        MathUtil.clamp(
+            angle.getDegrees() + offset.getAsDouble(),
+            Constants.HoodConstants.Min_A.getDegrees(),
+            Constants.HoodConstants.Max_A.getDegrees());
+    io.setPosition(Rotation2d.fromDegrees(setpoint));
   }
 
   public void stow() {
