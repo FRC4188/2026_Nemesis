@@ -81,10 +81,25 @@ public class DriveCommands {
                 }
               }
 
+              Translation2d fieldRelativeVelocity =
+                  new Translation2d(xSupplier.getAsDouble(), ySupplier.getAsDouble())
+                      .times(Constants.DriveConstants.DRIVE_MAXVEL);
+
+              Translation2d robotToTarget =
+                  goalSupplier.get().minus(drive.getPose().getTranslation());
+
+              double maxVelocity = SOTM.getSOTMMaxVelocityExtended(fieldRelativeVelocity, robotToTarget);
+
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
-                      xSupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
-                      ySupplier.getAsDouble() * Constants.DriveConstants.DRIVE_MAXVEL,
+                      xSupplier.getAsDouble()
+                          * (lock.getAsBoolean()
+                              ? maxVelocity
+                              : Constants.DriveConstants.DRIVE_MAXVEL),
+                      ySupplier.getAsDouble()
+                          * (lock.getAsBoolean()
+                              ? maxVelocity
+                              : Constants.DriveConstants.DRIVE_MAXVEL),
                       omega);
 
               drive.runVelocity(
