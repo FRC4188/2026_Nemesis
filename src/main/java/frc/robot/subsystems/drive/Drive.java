@@ -318,6 +318,13 @@ public class Drive extends SubsystemBase implements VisionConsumer {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Translational Speed")
+  public double getTranslationalSpeed() {
+    return Math.sqrt(
+        Math.pow(getChassisSpeeds().vxMetersPerSecond, 2)
+            + Math.pow(getChassisSpeeds().vyMetersPerSecond, 2));
+  }
+
   /** Returns the position of each module in radians. */
   public double[] getWheelRadiusCharacterizationPositions() {
     double[] values = new double[4];

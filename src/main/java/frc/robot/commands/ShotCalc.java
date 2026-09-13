@@ -7,12 +7,6 @@ public final class ShotCalc {
   /** Maximum shooter speed used by the calculator. */
   public static final double kMaxRPM = 5000.0;
 
-  /** Reference velocity for the ballistic model, in m/s. */
-  private static final double kReferenceVelocityMPS = 6.435;
-
-  /** Reference horizontal distance, in meters. */
-  private static final double kReferenceDistanceMeters = 1.7716;
-
   /** Air density, in kg/m^3. */
   private static final double kAirDensity = 0.0023769;
 
@@ -25,15 +19,18 @@ public final class ShotCalc {
   /** Mass of the ball, in kg. */
   private static final double kBallMass = 0.0147;
 
-
+  // theoretical to actual (more to less)
   public static double factorEstimatedDrag(double velocityMPS) {
     final double dragFactor = (kAirDensity * kDragCoefficient * kBallArea) / (2.0 * kBallMass);
 
     return velocityMPS / (1.0 - dragFactor);
   }
 
-  public static double velocityMPSToRPM(double velocityMPS) {
-    return 0.0; // Placeholder for actual conversion logic
+  // actual to theoretical (less to more)
+  public static double inverseFactorEstimatedDrag(double velocityMPS) {
+    final double dragFactor = (kAirDensity * kDragCoefficient * kBallArea) / (2.0 * kBallMass);
+
+    return velocityMPS * (1.0 - dragFactor);
   }
 
   public static double getShotMPS(double distanceMeters) {
@@ -41,6 +38,15 @@ public final class ShotCalc {
   }
 
   public static Rotation2d getShotAngle(double distanceMeters) {
-    return Rotation2d.fromDegrees(90 - Math.toDegrees(Math.atan(6.434946806 * 1.03702895 / distanceMeters)));
+    return Rotation2d.fromDegrees(
+        90 - Math.toDegrees(Math.atan(6.434946806 * 1.03702895 / distanceMeters)));
+  }
+
+  public static double velocityMPSToRPM(double mps) {
+    return 302.1148 * mps - 181.26888;
+  }
+
+  public static double getShotRPM(double distanceMeters) {
+    return velocityMPSToRPM(inverseFactorEstimatedDrag(getShotMPS(distanceMeters)));
   }
 }

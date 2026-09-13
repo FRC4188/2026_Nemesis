@@ -12,18 +12,15 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.commands.SOTM;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -64,20 +61,6 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
-  // private final LoggedDashboardChooser<AutoCommands.Start> startChooser;
-  // private final LoggedDashboardChooser<AutoCommands.Swipe> swipeChooser;
-  // private final LoggedDashboardChooser<AutoCommands.Cycle> cycleChooser;
-
-  // private final CSPPilot csppilot =
-  //     new CSPPilot(
-  //         new CSPPilot.CSPProfile(
-  //                 new CSPPilot.CSPConstraints()
-  //                     .withVelocity(Constants.DriveConstants.DRIVE_MAXVEL)
-  //                     .withAcceleration(Constants.DriveConstants.DRIVE_MAXACC * 1.3)
-  //                     .withJerk(10))
-  //             .withErrorXY(edu.wpi.first.units.Units.Centimeters.of(2))
-  //             .withErrorTheta(edu.wpi.first.units.Units.Degrees.of(0.5))
-  //             .withBeelineRadius(edu.wpi.first.units.Units.Centimeters.of(5)));
 
   public RobotContainer() {
     drive = Drive.getInstance();
@@ -94,38 +77,7 @@ public class RobotContainer {
             () -> Units.degreesToRadians(hood.getAngle()));
 
     VoyagerLib.configure(
-        drive,
-        drive::getPose,
-        drive::setPose,
-        drive::getChassisSpeeds,
-        (ChassisSpeeds commanded) -> {
-          double omega;
-          if (SOTM.autonLocked) {
-            omega =
-                Constants.DriveConstants.ANGLE_PID.calculate(
-                    drive.getRotation().getRadians(),
-                    AllianceFlip.apply(
-                            SOTM.lookahead(
-                                    new Pose2d(FieldConstants.Hub.hub_center_2d, new Rotation2d()),
-                                    drive.getChassisSpeeds(),
-                                    commanded,
-                                    SOTM.TOF_SECONDS)
-                                .getTranslation())
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()
-                        .minus(Constants.DriveConstants.local_offset)
-                        .getRadians());
-          } else {
-            omega = commanded.omegaRadiansPerSecond;
-          }
-
-          drive.runVelocity(
-              new ChassisSpeeds(
-                  commanded.vxMetersPerSecond * ((SOTM.autonLocked) ? 0.17 : 1.0),
-                  commanded.vyMetersPerSecond * ((SOTM.autonLocked) ? 0.17 : 1.0),
-                  omega));
-        },
-        true);
+        drive, drive::getPose, drive::setPose, drive::getChassisSpeeds, drive::runVelocity, true);
     VoyagerLib.setDefaultGlobalConstraints(
         4.5 / 3, // maxVelocityMetersPerSec
         10.0, // maxAccelerationMetersPerSec2
@@ -139,22 +91,6 @@ public class RobotContainer {
     VoyagerLib.setPIDControllers(
         new PIDController(5, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(2, 0, 0));
     System.out.println(Drive.DRIVE_BASE_RADIUS);
-
-    VoyagerLib.addEvent(
-        "ShootOnTheMove",
-        SOTM.dynamicShoot(
-                () -> new ChassisSpeeds(0, 0, 0),
-                drive::getChassisSpeeds,
-                () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d))
-            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
-
-    VoyagerLib.addEvent(
-        "EndSOTM",
-        Commands.runOnce(() -> SOTM.autonLocked = false)
-            .andThen(hood.idle())
-            .andThen(shooter.idle())
-            .andThen(hopper.idle())
-            .andThen(intake.idle()));
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 
@@ -207,8 +143,6 @@ public class RobotContainer {
                             && drive.getPose().getX()
                                 >= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX()))
                     ? AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle()
                     : drive
                         .getPose()
                         .getTranslation()
@@ -216,9 +150,7 @@ public class RobotContainer {
                             List.of(
                                 AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
                                 AllianceFlip.flipY(
-                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner))))
-                        .minus(drive.getPose().getTranslation())
-                        .getAngle(),
+                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner)))),
             () -> pilot.getRightTButton().getAsBoolean()));
 
     pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0, pilot.getLeftTButton()));
@@ -358,7 +290,12 @@ public class RobotContainer {
     // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
     // Logger.recordOutput(
     //     "Drive/Setpoint", Constants.DriveConstants.ANGLE_PID.getSetpoint().position);
-    Logger.recordOutput("Drive/At Goal?", Constants.DriveConstants.ANGLE_PID.atGoal());
+    Logger.recordOutput(
+        "Drive/At Goal?",
+        (Constants.DriveConstants.ANGLE_PID.atGoal() || drive.getTranslationalSpeed() > 1e-9));
+
+    Logger.recordOutput("Shooter/Regression RPM", ScoringCommands.getRegressionRPM());
+    Logger.recordOutput("Shooter/Regression Degrees", ScoringCommands.getRegressionAngle());
 
     Logger.recordOutput(
         "Drive/Distance From Hub",

@@ -10,12 +10,14 @@ package frc.robot.commands.drive;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
+import frc.robot.commands.SOTM;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlip;
 import java.text.DecimalFormat;
@@ -40,7 +42,7 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier,
-      Supplier<Rotation2d> rotSupplier,
+      Supplier<Translation2d> goalSupplier,
       BooleanSupplier lock) {
 
     ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
@@ -58,8 +60,10 @@ public class DriveCommands {
                 omega =
                     angleController.calculate(
                         drive.getRotation().getRadians(),
-                        rotSupplier
-                            .get()
+                        SOTM.lookahead(
+                                goalSupplier.get(), drive.getChassisSpeeds(), SOTM.TOF_SECONDS)
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle()
                             .minus(Constants.DriveConstants.local_offset)
                             .getRadians());
                 // + angleController.getSetpoint().velocity * Constants.DriveConstants.ANGLE_FF;
