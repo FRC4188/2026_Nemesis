@@ -219,4 +219,19 @@ public class ShooterIOReal implements ShooterIO {
     }
     leftLeader.setControl(velocityTorqueCurrentFOC.withVelocity(RPM / 60.0));
   }
+  @Override
+  public double getAcceleration(){
+    return (leftAngularAcceleration.getValueAsDouble()
+                + left2AngularAcceleration.getValueAsDouble()
+                + left3AngularAcceleration.getValueAsDouble()
+                - rightAngularAcceleration.getValueAsDouble())
+            / 4;
+  }
+  @Override
+  public double getSpeeds(){
+    return ( leftVelocity.getValueAsDouble()+
+    rightVelocity.getValueAsDouble()+
+    left2Velocity.getValueAsDouble()+
+    left3Velocity.getValueAsDouble() ) * 60 / 4;
+  }
 }

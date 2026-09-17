@@ -65,6 +65,14 @@ public class Shooter extends SubsystemBase {
         < Constants.ShooterConstants.kTolerance;
   }
 
+  public double getAverageAcceleration(){
+    return io.getAcceleration();
+  }
+  
+  public double getSpeeds(){
+    return io.getSpeeds();
+  }
+
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
