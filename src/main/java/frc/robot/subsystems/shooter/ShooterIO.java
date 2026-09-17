@@ -28,6 +28,8 @@ public interface ShooterIO {
     public double left3AppliedVolts = 0.0;
     public double left3CurrentAmps = 0.0;
     public double left3VelocityRPM = 0.0;
+
+    public double averageAcceleration = 0.0;
   }
 
   public default void updateInputs(ShooterIOInputs inputs) {}
