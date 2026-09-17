@@ -13,14 +13,21 @@ public class ShotCalculator {
     private int fuelShot = 0;
 
     private int cyclesSinceLastCount = 0;
+
+    private double cyclePeak = 0.0;
     
     public ShotCalculator(){
         
     }
     public void periodic(){
-        shotType shotType = shotDesignator(shooter.getAverageAcceleration(), shooter.getSpeeds());
+        if(shooter.getAverageAcceleration()>cyclePeak){
+            cyclePeak = shooter.getAverageAcceleration();
+        }
+
+        shotType shotType = shotDesignator(cyclePeak, shooter.getSpeeds());
         cyclesSinceLastCount++;
-        if(cyclesSinceLastCount>50){
+        
+        if(cyclesSinceLastCount>10){
             switch (shotType) {
                 case ONE:
                     fuelShot++;
@@ -32,6 +39,7 @@ public class ShotCalculator {
                     break;
             }
             cyclesSinceLastCount = 0;
+            cyclePeak = 0;
         }
     }
 
@@ -45,12 +53,16 @@ public class ShotCalculator {
     }
     
     public shotType shotDesignator(double acceleration, double flywheelspeed){
-        if(nominal<singleShot && acceleration<doubleShot){
-            return shotType.ONE;
-        }else if(doubleShot<acceleration){
-            return shotType.TWO;
-        }else{
-            return shotType.NONE;
+        if(flywheelspeed>shooter.getSpeeds()){
+            if(nominal<singleShot && acceleration<doubleShot){
+                return shotType.ONE;
+            }else if(doubleShot<acceleration){
+                return shotType.TWO;
+            }else{
+                return shotType.NONE;
         }
+        }
+        return shotType.NONE;
+        
     }
 }
