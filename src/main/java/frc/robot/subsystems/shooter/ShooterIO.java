@@ -42,11 +42,11 @@ public interface ShooterIO {
 
   public default void setVelocity(double RPM) {}
 
-  public default double getAcceleration(){
+  public default double getAcceleration() {
     return 0;
   }
-  
-  public default double getSpeeds(){
+
+  public default double getSpeeds() {
     return 0;
   }
 }

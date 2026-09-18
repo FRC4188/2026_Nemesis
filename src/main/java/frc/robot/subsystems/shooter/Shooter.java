@@ -65,11 +65,11 @@ public class Shooter extends SubsystemBase {
         < Constants.ShooterConstants.kTolerance;
   }
 
-  public double getAverageAcceleration(){
+  public double getAverageAcceleration() {
     return io.getAcceleration();
   }
-  
-  public double getSpeeds(){
+
+  public double getSpeeds() {
     return io.getSpeeds();
   }
 
