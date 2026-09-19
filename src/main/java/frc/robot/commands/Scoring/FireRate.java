@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
-public class ShotCalculator {
+public class FireRate {
   // please ignore this bs
   private double nominal = frc.robot.Constants.ShooterConstants.idleAcceleration;
   private double singleShot = frc.robot.Constants.ShooterConstants.singleShotAcceleration;
@@ -21,7 +21,7 @@ public class ShotCalculator {
 
   private List<Integer> previousShots = new ArrayList<>();
 
-  public ShotCalculator(Shooter shooter) {
+  public FireRate(Shooter shooter) {
     this.shooter = shooter;
   }
 
@@ -62,6 +62,7 @@ public class ShotCalculator {
     }
     Logger.recordOutput("Shooter/isFiring?", isFiring());
     Logger.recordOutput("Shooter/FuelCount", fuelShot);
+    Logger.recordOutput("Fire rate", getRate());
   }
 
   public int getFuelCount() {
@@ -72,6 +73,18 @@ public class ShotCalculator {
     NONE,
     ONE,
     TWO
+  }
+  public double getRate(){
+    //Average of past 2 seconds. Do not increase lsit size w/out increasing possible size
+    if(previousShots.size()>=10){
+      int base = previousShots.get(0);
+      int sum = 0;
+      for(int i = 0; i>9; i++){
+          sum+=previousShots.get(i)-base;
+      }
+      return sum/9;
+    }
+    return 0;
   }
   // TODO: WIP
   public shotType shotDesignator(double acceleration) {
