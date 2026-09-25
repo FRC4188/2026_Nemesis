@@ -10,8 +10,6 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.commands.SOTM;
-import frc.robot.commands.ShotCalc;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -20,6 +18,8 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.SOTM;
+import frc.robot.util.ShotCalc;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -44,32 +44,65 @@ public class ScoringCommands {
   }
 
   public static Command wristCompress() {
-    return Commands.parallel(
-        Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
-        Commands.repeatingSequence(
-                Commands.runEnd(() -> wrist.runWristVolts(1.55), wrist::stop, wrist)
-                    .until(
-                        () -> wrist.getStatorCurrent() > Constants.WristConstants.fuelStatorCurrent)
-                    .andThen(
-                        Commands.either(
-                            Commands.runEnd(() -> wrist.runWristVolts(-2), wrist::stop, wrist)
-                                .withTimeout(0.6),
-                            Commands.waitSeconds(0.3),
-                            () -> wrist.getAngle() > 90)))
-            .onlyWhile(() -> wrist.getAngle() < 110));
+    return Commands.sequence(
+        new WaitCommand(1.5), // wait
+        Commands.parallel(
+            Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
+            Commands.repeatingSequence(
+                    Commands.runEnd(() -> wrist.runWristVolts(1.15), wrist::stop, wrist)
+                        .until(
+                            () ->
+                                wrist.getStatorCurrent()
+                                    > Constants.WristConstants.fuelStatorCurrent)
+                        .andThen(
+                            Commands.either(
+                                Commands.runEnd(() -> wrist.runWristVolts(-2), wrist::stop, wrist)
+                                    .withTimeout(0.6),
+                                Commands.runEnd(
+                                    () -> wrist.runWristVolts(-0.5), wrist::stop, wrist),
+                                () -> wrist.getAngle() > 90)))
+                .onlyWhile(() -> wrist.getAngle() < 110)));
   }
+
+  public static Command wrist1678() {
+    return Commands.sequence(
+        new WaitCommand(1.5), // wait
+        Commands.parallel(
+            Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake),
+            Commands.repeatingSequence(
+                    Commands.runEnd(() -> wrist.runWristVolts(1.15), wrist::stop, wrist)
+                        .until(
+                            () ->
+                                wrist.getStatorCurrent()
+                                    > Constants.WristConstants.fuelStatorCurrent)
+                        .andThen(
+                            lowerIntakeCoast()))
+                .onlyWhile(() -> wrist.getAngle() < 110)));
+  }
+
+
 
   // yea this doesn't actually work. explanation later
   // akhil here : explanation is it doesnt work
-  @Deprecated
+
   public static Command lowerIntakeTorque() {
     return Commands.runEnd(() -> wrist.runWristVolts(-4.5), wrist::stop, wrist)
         .until(() -> wrist.getStatorCurrent() > Constants.WristConstants.bumperStatorCurrent)
         .alongWith(Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake));
   }
 
+  // FOR TESTING
+  public static Command lowerIntakeCoast() {
+    return Commands.sequence(
+        Commands.runEnd(() -> wrist.runWristVolts(-5), wrist::stop).withTimeout(0.1),
+        Commands.runEnd(() -> wrist.setCoast(), wrist::stop, wrist)
+            .until(() -> wrist.getVelocityDegPerSec() < 0.1)
+            .alongWith(Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake))
+            .finallyDo(wrist::zero));
+  }
+
   public static Command intake() {
-    return Commands.either(forceDown(), lowerIntakeTorque(), () -> wrist.getAngle() > 100)
+    return Commands.either(forceDown(), lowerIntakeCoast(), () -> wrist.getAngle() > 85)
         .alongWith(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake))
         .finallyDo(
             () -> {
@@ -80,7 +113,7 @@ public class ScoringCommands {
   }
 
   public static Command lowSpinShooter() {
-    return Commands.runEnd(() -> shooter.setVelocityRPM(500), shooter::idle, shooter)
+    return Commands.runEnd(() -> shooter.setVelocityRPM(500), () -> shooter.runTC(0), shooter)
         .withInterruptBehavior(InterruptionBehavior.kCancelSelf);
   }
 
@@ -199,7 +232,7 @@ public class ScoringCommands {
                                         SOTM.TOF_SECONDS)
                                     .minus(drive.getPose().getTranslation())
                                     .getNorm())
-                            + ((initialShots) ? 200 : 0)),
+                            + ((initialShots) ? 300 : 0)),
                 shooter::stop,
                 shooter),
             new WaitCommand(0.1)
@@ -208,7 +241,7 @@ public class ScoringCommands {
                         .andThen(
                             Commands.parallel(
                                 Commands.runEnd(
-                                    () -> hopper.runHopper(9.0, 5000), hopper::stop, hopper),
+                                    () -> hopper.runHopper(7.0, 5000), hopper::stop, hopper),
                                 new WaitCommand(0.1)
                                     .andThen(
                                         new WaitUntilCommand(() -> hopper.indexAtGoal())
@@ -269,10 +302,11 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    100 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())),
+                    100 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX()) - 5),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
+        
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(

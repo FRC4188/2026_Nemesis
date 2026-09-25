@@ -16,6 +16,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -29,6 +30,8 @@ public class WristIOReal implements WristIO {
   private final StatusSignal<Angle> posRots;
   private final StatusSignal<Voltage> appliedVolts;
   private final StatusSignal<Current> currentAmps;
+
+  private final StatusSignal<AngularVelocity> motorVelocity;
 
   private final Debouncer motorConnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
@@ -70,10 +73,13 @@ public class WristIOReal implements WristIO {
     appliedVolts = motor.getMotorVoltage();
     currentAmps = motor.getStatorCurrent();
 
+    motorVelocity = motor.getVelocity();
+
     posRots.setUpdateFrequency(50.0);
     appliedVolts.setUpdateFrequency(5.0);
     tempC.setUpdateFrequency(5.0);
     currentAmps.setUpdateFrequency(5.0);
+    motorVelocity.setUpdateFrequency(50.0);
 
     motor.optimizeBusUtilization();
     motor.setPosition(Constants.WristConstants.Max_A.getRotations());
@@ -81,7 +87,12 @@ public class WristIOReal implements WristIO {
 
   @Override
   public void setVolts(double volts) {
-    motor.setControl(voltageRequest.withOutput(volts));
+    motor.setControl(voltageRequest.withOutput(volts).withOverrideBrakeDurNeutral(false));
+  }
+
+  @Override
+  public void setCoast() {
+    motor.setControl(voltageRequest.withOutput(0.0).withOverrideBrakeDurNeutral(true));
   }
 
   @Override
@@ -104,5 +115,6 @@ public class WristIOReal implements WristIO {
     inputs.currentAmps = currentAmps.getValueAsDouble();
     inputs.tempC = tempC.getValueAsDouble();
     inputs.position = Rotation2d.fromRotations(posRots.getValueAsDouble());
+    inputs.motorVelocity = motorVelocity.getValue();
   }
 }

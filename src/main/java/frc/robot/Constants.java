@@ -100,7 +100,7 @@ public final class Constants {
             5.0, 0.0, 0.4, new TrapezoidProfile.Constraints(DRIVE_MAXVEL, DRIVE_MAXACC));
 
     public static final double ANGLE_FF = 2.0;
-    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(3.0);
+    public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(5.0);
 
     public static final double PATH_CREATION_TOL = Units.inchesToMeters(1);
 
@@ -178,7 +178,7 @@ public final class Constants {
             .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine);
 
-    public static final double fuelStatorCurrent = 22.5; // rough estimate but tested
+    public static final double fuelStatorCurrent = 19; // rough estimate and in tuning, prev 22.5
 
     public static final double bumperStatorCurrent = 15.0; // so this doesn't actually work
   }
@@ -251,8 +251,8 @@ public final class Constants {
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 20.0;
-    public static final double kSupplyCurrent = 20.0;
+    public static final double kStatorCurrent = 40.0;
+    public static final double kSupplyCurrent = 40.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
   }
@@ -268,7 +268,7 @@ public final class Constants {
     public static final Transform3d cameraLeft =
         new Transform3d(
             Units.inchesToMeters(-11.500000),
-            Units.inchesToMeters(11.100000),
+            Units.inchesToMeters(11.2500000),
             Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, Math.PI / 2));
 
@@ -282,7 +282,7 @@ public final class Constants {
     public static final Transform3d cameraRight =
         new Transform3d(
             Units.inchesToMeters(-11.500000),
-            Units.inchesToMeters(-11.100000),
+            Units.inchesToMeters(-11.2500000),
             Units.inchesToMeters(13.889783),
             new Rotation3d(0, 0, -Math.PI / 2));
 

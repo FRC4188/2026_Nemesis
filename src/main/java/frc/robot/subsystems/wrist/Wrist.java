@@ -1,6 +1,7 @@
 package frc.robot.subsystems.wrist;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -65,6 +66,15 @@ public class Wrist extends SubsystemBase {
   public void setAngle(double set) {
     setpoint = set;
     io.setPosition(Rotation2d.fromDegrees(set));
+  }
+
+  public void setCoast() {
+    io.setCoast();
+  }
+
+  @AutoLogOutput(key = "Wrist/Velocity")
+  public double getVelocityDegPerSec() {
+    return inputs.motorVelocity.in(Units.DegreesPerSecond);
   }
 
   public void zero() {

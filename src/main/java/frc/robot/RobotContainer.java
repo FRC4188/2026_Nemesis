@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
@@ -130,11 +131,8 @@ public class RobotContainer {
     driveInput.whileTrue(
         DriveCommands.joystickCombined(
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
-            //  * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
-            // * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
-            //     * (pilot.b().getAsBoolean() ? 0.5 : 1.0),
             () ->
                 ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
                             && drive.getPose().getX()
@@ -166,29 +164,27 @@ public class RobotContainer {
         .getLeftTButton()
         .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake));
 
-    pilot
-        .leftBumper()
-        .whileTrue(
-            Commands.parallel(
-                Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
-                Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));
+    wrist.setDefaultCommand(Commands.runEnd(() -> wrist.runWristVolts(-0.3), wrist::stop, wrist));
+
+    /* pilot
+    .leftBumper()
+    .whileTrue(
+        Commands.parallel(
+            Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
+            Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));*/
 
     copilot
         .y()
         .whileTrue(
             Commands.runEnd(
-                () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
-                wrist::stop,
-                wrist));
+                    () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
+                    wrist::stop,
+                    wrist)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
-    copilot.a().onTrue(ScoringCommands.downNoStall());
+    // copilot.a().onTrue(ScoringCommands.downNoStall());
     copilot.x().onTrue(ScoringCommands.goodStow());
     copilot.rightBumper().onTrue(ScoringCommands.forceDown());
-
-    copilot
-        .getLeftTButton()
-        .toggleOnTrue(
-            Commands.startEnd(() -> wrist.enableShake(false), () -> wrist.enableShake(true)));
 
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
     copilot.povUp().onTrue(Commands.runOnce(hood::addOne));

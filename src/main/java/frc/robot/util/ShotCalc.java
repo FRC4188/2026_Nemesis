@@ -1,6 +1,7 @@
-package frc.robot.commands;
+package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public final class ShotCalc {
 
@@ -17,7 +18,9 @@ public final class ShotCalc {
   private static final double kBallArea = 0.0295;
 
   /** Mass of the ball, in kg. */
-  private static final double kBallMass = 0.0147;
+  private static final double kBallMass = 0.147;
+
+  public static LoggedNetworkNumber CC = new LoggedNetworkNumber("Aim Tuning/CC", 1.0);
 
   // theoretical to actual (more to less)
   public static double factorEstimatedDrag(double velocityMPS) {
@@ -47,6 +50,7 @@ public final class ShotCalc {
   }
 
   public static double getShotRPM(double distanceMeters) {
-    return velocityMPSToRPM(inverseFactorEstimatedDrag(getShotMPS(distanceMeters)));
+    return velocityMPSToRPM(inverseFactorEstimatedDrag(getShotMPS(distanceMeters)))
+        * CC.getAsDouble();
   }
 }
