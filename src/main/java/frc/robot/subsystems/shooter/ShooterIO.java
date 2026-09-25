@@ -28,6 +28,10 @@ public interface ShooterIO {
     public double left3AppliedVolts = 0.0;
     public double left3CurrentAmps = 0.0;
     public double left3VelocityRPM = 0.0;
+
+    public double averageAcceleration = 0.0;
+
+    public int fuelShot = 0;
   }
 
   public default void updateInputs(ShooterIOInputs inputs) {}
@@ -37,4 +41,12 @@ public interface ShooterIO {
   public default void setTorqueCurrent(double amps) {}
 
   public default void setVelocity(double RPM) {}
+
+  public default double getAcceleration() {
+    return 0;
+  }
+
+  public default double getSpeeds() {
+    return 0;
+  }
 }

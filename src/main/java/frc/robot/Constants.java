@@ -229,6 +229,10 @@ public final class Constants {
     public static final InvertedValue kLeftInvertedValue = InvertedValue.Clockwise_Positive;
     public static final InvertedValue kRightInvertedValue = InvertedValue.CounterClockwise_Positive;
 
+    public static final double idleAcceleration = 0.0;
+    public static final double singleShotAcceleration = 0.0;
+    public static final double doubleShotAcceleration = 0.0;
+
     public static final Slot0Configs shooterGains =
         new Slot0Configs().withKP(8).withKS(5).withKV(0.0125);
 
