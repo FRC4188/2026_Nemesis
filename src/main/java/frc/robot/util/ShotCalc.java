@@ -5,20 +5,14 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public final class ShotCalc {
 
-  /** Maximum shooter speed used by the calculator. */
   public static final double kMaxRPM = 5000.0;
-
-  /** Air density, in kg/m^3. */
   private static final double kAirDensity = 0.0023769;
-
-  /** Ball drag coefficient. */
   private static final double kDragCoefficient = 0.47;
-
-  /** Ball cross-sectional area, in m^2. */
   private static final double kBallArea = 0.0295;
+  private static final double kBallMass = 0.0147;
 
-  /** Mass of the ball, in kg. */
-  private static final double kBallMass = 0.147;
+  private static final double kInitialHeight = 0.4287774;
+  private static final double kGravity = 9.80665;
 
   public static LoggedNetworkNumber CC = new LoggedNetworkNumber("Aim Tuning/CC", 1.0);
 
@@ -36,21 +30,34 @@ public final class ShotCalc {
     return velocityMPS * (1.0 - dragFactor);
   }
 
-  public static double getShotMPS(double distanceMeters) {
-    return Math.sqrt(Math.pow(6.434946806, 2) + Math.pow(distanceMeters / 1.03702895, 2));
+  public static double getTimeOfFlight(double apex, double target) {
+    return (Math.sqrt(2 * kGravity * (apex - kInitialHeight))
+            + Math.sqrt(2 * kGravity * (apex - target)))
+        / kGravity;
   }
 
-  public static Rotation2d getShotAngle(double distanceMeters) {
+  public static double getShotMPS(double distanceMeters, double apex, double target) {
+    return Math.sqrt(
+        2 * kGravity * (apex - kInitialHeight)
+            + Math.pow(distanceMeters / getTimeOfFlight(apex, target), 2));
+  }
+
+  public static Rotation2d getShotAngle(double distanceMeters, double apex, double target) {
     return Rotation2d.fromDegrees(
-        90 - Math.toDegrees(Math.atan(6.434946806 * 1.03702895 / distanceMeters)));
+        90
+            - Math.toDegrees(
+                Math.atan(
+                    Math.sqrt(2 * kGravity * (apex - kInitialHeight))
+                        * getTimeOfFlight(apex, target)
+                        / distanceMeters)));
   }
 
   public static double velocityMPSToRPM(double mps) {
     return 302.1148 * mps - 181.26888;
   }
 
-  public static double getShotRPM(double distanceMeters) {
-    return velocityMPSToRPM(inverseFactorEstimatedDrag(getShotMPS(distanceMeters)))
+  public static double getShotRPM(double distanceMeters, double apex, double target) {
+    return velocityMPSToRPM(inverseFactorEstimatedDrag(getShotMPS(distanceMeters, apex, target)))
         * CC.getAsDouble();
   }
 }

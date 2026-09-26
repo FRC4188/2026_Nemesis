@@ -33,6 +33,13 @@ public class ScoringCommands {
 
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
+  public static LoggedNetworkNumber apexHeight =
+      new LoggedNetworkNumber("Aim Tuning/Apex Height Inches", 100);
+  public static LoggedNetworkNumber targetHeight =
+      new LoggedNetworkNumber("Aim Tuning/Target Height Inches", 72);
+  public static LoggedNetworkNumber passHeight =
+      new LoggedNetworkNumber("Aim Tuning/Pass Height Inches", 150);
+
   public static Command dataShoot() {
     return Commands.parallel(
         Commands.runEnd(() -> shooter.setVelocityRPM(_RPM.getAsDouble()), shooter::stop, shooter),
@@ -75,12 +82,9 @@ public class ScoringCommands {
                             () ->
                                 wrist.getStatorCurrent()
                                     > Constants.WristConstants.fuelStatorCurrent)
-                        .andThen(
-                            lowerIntakeCoast()))
+                        .andThen(lowerIntakeCoast()))
                 .onlyWhile(() -> wrist.getAngle() < 110)));
   }
-
-
 
   // yea this doesn't actually work. explanation later
   // akhil here : explanation is it doesnt work
@@ -198,9 +202,12 @@ public class ScoringCommands {
                     SOTM.lookahead(
                             AllianceFlip.apply(FieldConstants.Hub.hub_center_2d),
                             drive.getChassisSpeeds(),
-                            SOTM.TOF_SECONDS)
+                            ShotCalc.getTimeOfFlight(
+                                apexHeight.getAsDouble(), targetHeight.getAsDouble()))
                         .minus(drive.getPose().getTranslation())
-                        .getNorm())),
+                        .getNorm(),
+                    Units.inchesToMeters(apexHeight.getAsDouble()),
+                    Units.inchesToMeters(targetHeight.getAsDouble()))),
         hood::stop,
         hood);
   }
@@ -229,9 +236,12 @@ public class ScoringCommands {
                                 SOTM.lookahead(
                                         AllianceFlip.apply(FieldConstants.Hub.hub_center_2d),
                                         drive.getChassisSpeeds(),
-                                        SOTM.TOF_SECONDS)
+                                        ShotCalc.getTimeOfFlight(
+                                            apexHeight.getAsDouble(), targetHeight.getAsDouble()))
                                     .minus(drive.getPose().getTranslation())
-                                    .getNorm())
+                                    .getNorm(),
+                                Units.inchesToMeters(apexHeight.getAsDouble()),
+                                Units.inchesToMeters(targetHeight.getAsDouble()))
                             + ((initialShots) ? 300 : 0)),
                 shooter::stop,
                 shooter),
@@ -302,17 +312,23 @@ public class ScoringCommands {
         Commands.runEnd(
             () ->
                 shooter.setVelocityRPM(
-                    100 * Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX()) - 5),
+                    ShotCalc.getShotRPM(
+                        Units.metersToFeet(
+                            AllianceFlip.apply(drive.getPose()).getX()
+                                - Units.inchesToMeters(156.61)
+                                + Units.feetToMeters(2)),
+                        Units.inchesToMeters(passHeight.getAsDouble()),
+                        Units.inchesToMeters(0))),
             shooter::stop,
             shooter),
         new WaitCommand(0.1)
-        
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
                         Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper))));
   }
 
+  // Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())
   //   public static Command slowUp(AutoCommands.Size size) {
   //     return Commands.either(
   //         Commands.sequence(

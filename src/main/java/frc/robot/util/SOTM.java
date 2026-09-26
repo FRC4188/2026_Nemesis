@@ -3,12 +3,14 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 
 public class SOTM { // Experimental Class for Offseason
   private static final Drive drive = Drive.getInstance();
-  public static final double TOF_SECONDS = 1.03702895;
+  public static final double TOF_SECONDS =
+      ShotCalc.getTimeOfFlight(Units.inchesToMeters(100), Units.inchesToMeters(72));
 
   private static final double SOTM_LOOKAHEAD_SECONDS = 0.02;
 
@@ -114,9 +116,14 @@ public class SOTM { // Experimental Class for Offseason
       final Translation2d candidateRobotVelocity = velocityDirection.times(candidateVelocity);
 
       // Current shot
-      final double currentShotVelocity = ShotCalc.getShotMPS(robotTargetDistance);
+      final double currentShotVelocity =
+          ShotCalc.getShotMPS(
+              robotTargetDistance, Units.inchesToMeters(100), Units.inchesToMeters(72));
 
-      final double currentShotAngle = ShotCalc.getShotAngle(robotTargetDistance).getRadians();
+      final double currentShotAngle =
+          ShotCalc.getShotAngle(
+                  robotTargetDistance, Units.inchesToMeters(100), Units.inchesToMeters(72))
+              .getRadians();
 
       final Translation2d targetDirection = robotToTarget.div(robotTargetDistance);
 
@@ -157,9 +164,12 @@ public class SOTM { // Experimental Class for Offseason
         continue;
       }
 
-      final double futureShotVelocity = ShotCalc.getShotMPS(futureDistance);
+      final double futureShotVelocity =
+          ShotCalc.getShotMPS(futureDistance, Units.inchesToMeters(100), Units.inchesToMeters(72));
 
-      final double futureShotAngle = ShotCalc.getShotAngle(futureDistance).getRadians();
+      final double futureShotAngle =
+          ShotCalc.getShotAngle(futureDistance, Units.inchesToMeters(100), Units.inchesToMeters(72))
+              .getRadians();
 
       final Translation2d futureTargetDirection = futureRobotToTarget.div(futureDistance);
 
