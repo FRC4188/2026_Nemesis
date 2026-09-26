@@ -216,7 +216,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 25.0;
+    public static final double kTolerance = 5.0;
     public static final double kMaxRPM = 5000.0;
     public static final double kGearRatio = 1.0;
 

@@ -65,6 +65,7 @@ public class Shooter extends SubsystemBase {
         < Constants.ShooterConstants.kTolerance;
   }
 
+  @AutoLogOutput(key = "Shooter/Average Acceleration")
   public double getAverageAcceleration() {
     return io.getAcceleration();
   }

@@ -14,7 +14,7 @@ public final class ShotCalc {
   private static final double kInitialHeight = 0.4287774;
   private static final double kGravity = 9.80665;
 
-  public static LoggedNetworkNumber CC = new LoggedNetworkNumber("Aim Tuning/CC", 1.0);
+  public static LoggedNetworkNumber CC = new LoggedNetworkNumber("Aim Tuning/CC", 1.025);
 
   // theoretical to actual (more to less)
   public static double factorEstimatedDrag(double velocityMPS) {

@@ -79,7 +79,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     Pathfinding.setPathfinder(new LocalADStarAK());
-    RobotController.setBrownoutVoltage(5.75); // anything above 5 is fine but very sad
+    RobotController.setBrownoutVoltage(5.25); // anything above 5 is fine but very sad
   }
 
   /** This function is called periodically during all modes. */

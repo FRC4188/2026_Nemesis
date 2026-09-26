@@ -34,7 +34,8 @@ public class ScoringCommands {
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
   public static LoggedNetworkNumber apexHeight =
-      new LoggedNetworkNumber("Aim Tuning/Apex Height Inches", 100);
+      new LoggedNetworkNumber("Aim Tuning/Apex Height Inches", 102);
+
   public static LoggedNetworkNumber targetHeight =
       new LoggedNetworkNumber("Aim Tuning/Target Height Inches", 72);
   public static LoggedNetworkNumber passHeight =
@@ -242,16 +243,26 @@ public class ScoringCommands {
                                     .getNorm(),
                                 Units.inchesToMeters(apexHeight.getAsDouble()),
                                 Units.inchesToMeters(targetHeight.getAsDouble()))
-                            + ((initialShots) ? 300 : 0)),
+                            + ((initialShots)
+                                ? 200
+                                : (initialShots
+                                        && AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+                                                .getDistance(drive.getPose().getTranslation())
+                                            >= 4)
+                                    ? 300
+                                    : 0)),
                 shooter::stop,
                 shooter),
             new WaitCommand(0.1)
                 .andThen(
                     new WaitUntilCommand(() -> shooter.atGoal())
+                        .andThen(new WaitCommand(0.5))
                         .andThen(
                             Commands.parallel(
                                 Commands.runEnd(
-                                    () -> hopper.runHopper(7.0, 5000), hopper::stop, hopper),
+                                    () -> hopper.runHopper(7.0, 2000),
+                                    hopper::stop,
+                                    hopper), // 5000
                                 new WaitCommand(0.1)
                                     .andThen(
                                         new WaitUntilCommand(() -> hopper.indexAtGoal())
@@ -275,7 +286,7 @@ public class ScoringCommands {
                 () ->
                     shooter.setVelocityRPM(
                         RPMRegress(Units.feetToMeters(distance.getAsDouble()))
-                            + ((initialShots) ? 300 : 0)),
+                            + ((initialShots) ? 300 : 0)), // initial rpm
                 shooter::stop,
                 shooter),
             new WaitCommand(0.1)
