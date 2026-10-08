@@ -72,6 +72,10 @@ public class Wrist extends SubsystemBase {
     io.setCoast();
   }
 
+  public void setCoastVolts(double volts) {
+    io.setCoastVolts(volts);
+  }
+
   @AutoLogOutput(key = "Wrist/Velocity")
   public double getVelocityDegPerSec() {
     return inputs.motorVelocity.in(Units.DegreesPerSecond);

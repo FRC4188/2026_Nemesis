@@ -9,8 +9,8 @@ public class VisConstants {
   public static AprilTagFieldLayout aprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  public static final String leftPho = "left";
   public static final String rightPho = "right";
+  public static final String leftPho = "left";
   public static final String frontPho = "front";
 
   public static final Transform3d robotToCameraLeft = Constants.CameraConstants.cameraLeft;
@@ -21,6 +21,7 @@ public class VisConstants {
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
+
   public static double maxZError = 0.75;
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)

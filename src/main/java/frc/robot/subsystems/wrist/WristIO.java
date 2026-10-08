@@ -25,6 +25,8 @@ public interface WristIO {
 
   default void setCoast() {}
 
+  default void setCoastVolts(double volts) {}
+
   default void setPosition(Rotation2d rotation) {}
 
   default void setZero() {}

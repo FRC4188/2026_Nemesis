@@ -52,6 +52,10 @@ public class Hopper extends SubsystemBase {
     io.setIndexerVolts(0.0);
   }
 
+  public double getIndexerSpeed() {
+    return inputs.indexerRPM;
+  }
+
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hopper", inputs);

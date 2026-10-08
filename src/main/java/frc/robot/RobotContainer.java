@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
@@ -80,18 +81,43 @@ public class RobotContainer {
     VoyagerLib.configure(
         drive, drive::getPose, drive::setPose, drive::getChassisSpeeds, drive::runVelocity, true);
     VoyagerLib.setDefaultGlobalConstraints(
-        4.5 / 3, // maxVelocityMetersPerSec
-        10.0, // maxAccelerationMetersPerSec2
-        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXVEL), // maxVelocityDegPerSec
-        Math.toDegrees(Constants.DriveConstants.ANGLE_MAXACC), // maxAccelerationDegPerSec2
+        4.5, // maxVelocityMetersPerSec
+        12, // maxAccelerationMetersPerSec2
+        720, // maxVelocityDegPerSec
+        1500, // maxAccelerationDegPerSec2
         0.03, // endTranslationToleranceMeters
         2.0, // endRotationToleranceDeg
         0.2 // intermediateHandoffRadiusMeters
         );
     VoyagerLib.setModuleOrientationConsumer(drive::setModuleOrientations);
     VoyagerLib.setPIDControllers(
-        new PIDController(5, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(2, 0, 0));
-    System.out.println(Drive.DRIVE_BASE_RADIUS);
+        new PIDController(5.2, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(1.5, 0, 0));
+
+    VoyagerLib.addEvent("wristdown", ScoringCommands.lowerIntakeCoast());
+
+    VoyagerLib.addEvent("wristbang", ScoringCommands.lowerIntakeBang());
+
+    VoyagerLib.addEvent(
+        "shoot",
+        new ParallelCommandGroup(
+                ScoringCommands.shoot(() -> 0, new Trigger(() -> false)),
+                DriveCommands.joystickCombined(
+                    () -> 0.0,
+                    () -> 0.0,
+                    () -> 0.0,
+                    () -> FieldConstants.Hub.hub_center_2d,
+                    () -> true))
+            .beforeStarting(
+                Commands.runOnce(
+                    () -> {
+                      intake.stop();
+                      wrist.stop();
+                    }))
+            .withTimeout(5.5));
+
+    VoyagerLib.addEvent("intake", Commands.run(() -> intake.intakeVolts(8.75), wrist));
+
+    VoyagerLib.addEvent("stopintake", Commands.run(intake::stop, wrist));
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 
@@ -177,7 +203,7 @@ public class RobotContainer {
         .y()
         .whileTrue(
             Commands.runEnd(
-                    () -> wrist.runWristVolts(3 * -copilot.getLeftY(Scale.LINEAR)),
+                    () -> wrist.runWristVolts(4.5 * -copilot.getLeftY(Scale.LINEAR)),
                     wrist::stop,
                     wrist)
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
@@ -189,6 +215,8 @@ public class RobotContainer {
     copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
     copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
     copilot.povDown().onTrue(Commands.runOnce(hood::subOne));
+
+    copilot.povLeft().onTrue(ScoringCommands.lowerIntakeCoast());
     copilot
         .getRightTButton()
         .toggleOnTrue(
@@ -292,6 +320,7 @@ public class RobotContainer {
 
     Logger.recordOutput("Shooter/Regression RPM", ScoringCommands.getRegressionRPM());
     Logger.recordOutput("Shooter/Regression Degrees", ScoringCommands.getRegressionAngle());
+    Logger.recordOutput("Drive/CurrentSpeed", drive.getTranslationalSpeed());
 
     Logger.recordOutput(
         "Drive/Distance From Hub",

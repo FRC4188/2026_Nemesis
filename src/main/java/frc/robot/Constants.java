@@ -102,8 +102,6 @@ public final class Constants {
     public static final double ANGLE_FF = 2.0;
     public static final Rotation2d ANGLE_TOL = Rotation2d.fromDegrees(5.0);
 
-    public static final double PATH_CREATION_TOL = Units.inchesToMeters(1);
-
     public static final double ANGLE_MAXVEL = DRIVE_MAXVEL / Drive.DRIVE_BASE_RADIUS;
     public static final double ANGLE_MAXACC = 20.0;
 
@@ -216,7 +214,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final double kTolerance = 5.0;
+    public static final double kTolerance = 25.0;
     public static final double kMaxRPM = 5000.0;
     public static final double kGearRatio = 1.0;
 
@@ -244,8 +242,8 @@ public final class Constants {
   }
 
   public static class IndexerConstants {
-    public static final double kStatorCurrent = 50.0;
-    public static final double kSupplyCurrent = 30.0;
+    public static final double kStatorCurrent = 40.0;
+    public static final double kSupplyCurrent = 15.0;
     public static final double kPeakForwardTC = 50.0;
     public static final double kPeakReverseTC = -50.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Brake;
@@ -255,8 +253,8 @@ public final class Constants {
   }
 
   public static class HopperConstants {
-    public static final double kStatorCurrent = 40.0;
-    public static final double kSupplyCurrent = 40.0;
+    public static final double kStatorCurrent = 30.0;
+    public static final double kSupplyCurrent = 20.0;
     public static final NeutralModeValue kNuetralMode = NeutralModeValue.Coast;
     public static final InvertedValue kInvertedValue = InvertedValue.CounterClockwise_Positive;
   }

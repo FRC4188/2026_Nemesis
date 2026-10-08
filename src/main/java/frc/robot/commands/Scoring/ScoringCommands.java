@@ -34,12 +34,12 @@ public class ScoringCommands {
   public static LoggedNetworkNumber _RPM = new LoggedNetworkNumber("Aim Tuning/RPM", 0.0);
 
   public static LoggedNetworkNumber apexHeight =
-      new LoggedNetworkNumber("Aim Tuning/Apex Height Inches", 102);
+      new LoggedNetworkNumber("Aim Tuning/Apex Height Inches", Units.inchesToMeters(102));
 
   public static LoggedNetworkNumber targetHeight =
-      new LoggedNetworkNumber("Aim Tuning/Target Height Inches", 72);
+      new LoggedNetworkNumber("Aim Tuning/Target Height Inches", Units.inchesToMeters(72));
   public static LoggedNetworkNumber passHeight =
-      new LoggedNetworkNumber("Aim Tuning/Pass Height Inches", 150);
+      new LoggedNetworkNumber("Aim Tuning/Pass Height Inches", Units.inchesToMeters(120));
 
   public static Command dataShoot() {
     return Commands.parallel(
@@ -99,11 +99,26 @@ public class ScoringCommands {
   // FOR TESTING
   public static Command lowerIntakeCoast() {
     return Commands.sequence(
-        Commands.runEnd(() -> wrist.runWristVolts(-5), wrist::stop).withTimeout(0.1),
-        Commands.runEnd(() -> wrist.setCoast(), wrist::stop, wrist)
-            .until(() -> wrist.getVelocityDegPerSec() < 0.1)
-            .alongWith(Commands.runEnd(() -> intake.intakeVolts(5.0), intake::stop, intake))
-            .finallyDo(wrist::zero));
+        Commands.runEnd(() -> wrist.runWristVolts(-8), wrist::stop).withTimeout(0.15),
+        Commands.runEnd(() -> wrist.setCoastVolts(-3.5), wrist::stop, wrist)
+            .until(() -> Math.abs(wrist.getVelocityDegPerSec()) < 0.007)
+            .finallyDo(
+                () -> {
+                  wrist.zero();
+                  wrist.stop();
+                }));
+  }
+
+  public static Command lowerIntakeBang() {
+    return Commands.sequence(
+        Commands.runEnd(() -> wrist.runWristVolts(-10), wrist::stop).withTimeout(0.15),
+        Commands.runEnd(() -> wrist.setCoastVolts(-4), wrist::stop, wrist)
+            .until(() -> Math.abs(wrist.getVelocityDegPerSec()) < 0.007)
+            .finallyDo(
+                () -> {
+                  wrist.zero();
+                  wrist.stop();
+                }));
   }
 
   public static Command intake() {
@@ -207,8 +222,8 @@ public class ScoringCommands {
                                 apexHeight.getAsDouble(), targetHeight.getAsDouble()))
                         .minus(drive.getPose().getTranslation())
                         .getNorm(),
-                    Units.inchesToMeters(apexHeight.getAsDouble()),
-                    Units.inchesToMeters(targetHeight.getAsDouble()))),
+                    apexHeight.getAsDouble(),
+                    targetHeight.getAsDouble())),
         hood::stop,
         hood);
   }
@@ -241,8 +256,8 @@ public class ScoringCommands {
                                             apexHeight.getAsDouble(), targetHeight.getAsDouble()))
                                     .minus(drive.getPose().getTranslation())
                                     .getNorm(),
-                                Units.inchesToMeters(apexHeight.getAsDouble()),
-                                Units.inchesToMeters(targetHeight.getAsDouble()))
+                                apexHeight.getAsDouble(),
+                                targetHeight.getAsDouble())
                             + ((initialShots)
                                 ? 200
                                 : (initialShots
@@ -286,7 +301,9 @@ public class ScoringCommands {
                 () ->
                     shooter.setVelocityRPM(
                         RPMRegress(Units.feetToMeters(distance.getAsDouble()))
-                            + ((initialShots) ? 300 : 0)), // initial rpm
+                            + ((initialShots)
+                                ? 300 - hopper.getIndexerSpeed() * 300 / 5000
+                                : 0)), // initial rpm
                 shooter::stop,
                 shooter),
             new WaitCommand(0.1)
@@ -336,7 +353,7 @@ public class ScoringCommands {
             .andThen(
                 new WaitUntilCommand(() -> shooter.atGoal())
                     .andThen(
-                        Commands.runEnd(() -> hopper.runHopper(9.0, 5000), hopper::stop, hopper))));
+                        Commands.runEnd(() -> hopper.runHopper(9.0, 2000), hopper::stop, hopper))));
   }
 
   // Units.metersToFeet(AllianceFlip.apply(drive.getPose()).getX())
@@ -363,7 +380,7 @@ public class ScoringCommands {
 
   public static Command forceDown() {
     return Commands.sequence(
-            Commands.run(() -> wrist.runWristVolts(-6), wrist).withTimeout(0.12),
+            Commands.run(() -> wrist.runWristVolts(-8), wrist).withTimeout(0.12),
             Commands.run(() -> wrist.runWristVolts(8), wrist).withTimeout(0.12),
             Commands.run(() -> wrist.runWristVolts(-8), wrist))
         .until(

@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.lib.BLine.BLineCommands;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -57,6 +59,7 @@ public final class VoyagerLib {
   private static final Map<String, BooleanSupplier> CONDITIONS = new ConcurrentHashMap<>();
   private static final Map<String, Runnable> RUNNABLE_EVENTS = new ConcurrentHashMap<>();
   private static final Map<String, Command> COMMAND_EVENTS = new ConcurrentHashMap<>();
+  private static final Map<String, SustainedEvent> SUSTAINED_EVENTS = new ConcurrentHashMap<>();
   private static final Map<String, Integer> LOOP_REPETITIONS = new ConcurrentHashMap<>();
   private static final Set<String> WARNED_MISSING_CONDITIONS = ConcurrentHashMap.newKeySet();
   private static final Set<String> WARNED_MISSING_EVENTS = ConcurrentHashMap.newKeySet();
@@ -111,8 +114,9 @@ public final class VoyagerLib {
     reflectedModuleOrientationMethod = findModuleOrientationMethod(driveSubsystem);
 
     Path.setDefaultGlobalConstraints(defaultGlobalConstraints);
-    selectedAutoSubscriber =
-        NetworkTableInstance.getDefault().getStringTopic(SELECTED_AUTO_TOPIC).subscribe("");
+    var selectedAutoTopic = NetworkTableInstance.getDefault().getStringTopic(SELECTED_AUTO_TOPIC);
+    selectedAutoTopic.setPersistent(true);
+    selectedAutoSubscriber = selectedAutoTopic.subscribe("");
     reloadAutos(true);
   }
 
@@ -214,6 +218,44 @@ public final class VoyagerLib {
     FollowPath.registerEventTrigger(normalized, command);
   }
 
+  /**
+   * Registers a command that starts at the start event and runs until the end event. The state used
+   * to sustain the command is managed internally by VoyagerLib.
+   */
+  public static void addSustainedEvent(String startCommand, String endCommand, Command runCommand) {
+    String startKey = normalizeKey(startCommand, "sustained event start key");
+    String endKey = normalizeKey(endCommand, "sustained event end key");
+    if (startKey.equals(endKey)) {
+      throw new IllegalArgumentException("Sustained event start and end keys must be different");
+    }
+
+    AtomicBoolean active = new AtomicBoolean(false);
+    Command sustainedCommand =
+        Commands.waitUntil(active::get)
+            .andThen(Objects.requireNonNull(runCommand, "runCommand").until(() -> !active.get()))
+            .finallyDo(interrupted -> active.set(false));
+
+    SustainedEvent previous =
+        SUSTAINED_EVENTS.put(startKey, new SustainedEvent(active, sustainedCommand));
+    if (previous != null) {
+      previous.active().set(false);
+      previous.command().cancel();
+    }
+
+    addEvent(
+        startKey,
+        () -> {
+          active.set(true);
+          CommandScheduler.getInstance().schedule(sustainedCommand);
+        });
+    addEvent(
+        endKey,
+        () -> {
+          active.set(false);
+          sustainedCommand.cancel();
+        });
+  }
+
   public static void addLoopRepetitions(String key, int repetitions) {
     if (repetitions < 0) {
       throw new IllegalArgumentException("Loop repetitions cannot be negative");
@@ -277,13 +319,16 @@ public final class VoyagerLib {
 
     Command sequence = sequence(commands);
     Path firstPath = context.firstPath();
-    if (firstPath == null) {
-      return sequence;
+    Command autoCommand = sequence;
+    if (firstPath != null) {
+      autoCommand =
+          Commands.sequence(
+              Commands.runOnce(
+                  () -> orientModules(firstPath.getInitialModuleDirection(poseSupplier))),
+              sequence);
     }
 
-    return Commands.sequence(
-        Commands.runOnce(() -> orientModules(firstPath.getInitialModuleDirection(poseSupplier))),
-        sequence);
+    return autoCommand.finallyDo(interrupted -> cancelSustainedEvents());
   }
 
   private static Command buildBlock(Object rawBlock, BuildContext context) {
@@ -440,6 +485,13 @@ public final class VoyagerLib {
         WARNED_MISSING_EVENTS,
         "Voyager event '" + normalized + "' has no registered command/runnable");
     return Commands.none();
+  }
+
+  private static void cancelSustainedEvents() {
+    for (SustainedEvent event : SUSTAINED_EVENTS.values()) {
+      event.active().set(false);
+      event.command().cancel();
+    }
   }
 
   private static Command sequence(List<Command> commands) {
@@ -1289,6 +1341,8 @@ public final class VoyagerLib {
   }
 
   private record AutoDefinition(String id, List<Object> blocks) {}
+
+  private record SustainedEvent(AtomicBoolean active, Command command) {}
 
   private static final class BuildContext {
     private final String autoId;

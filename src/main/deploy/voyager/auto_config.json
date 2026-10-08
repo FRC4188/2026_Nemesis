@@ -25,6 +25,65 @@
           "name": "SwipeAgain"
         }
       ]
+    },
+    {
+      "id": "pathe66a28993cba46a9bfdcb7f540bd191c",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "SwipeIn"
+        },
+        {
+          "type": "path",
+          "name": "SwipeOut"
+        },
+        {
+          "type": "event",
+          "name": "aim"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "path4c201a59ada64d808e34d6198efecc5d",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "1stSwipeIn"
+        },
+        {
+          "type": "path",
+          "name": "1stSwipeOut"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeHook"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeOut"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "pathcd2a13e80b4246bbac3ad4e48e03a8e0",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "1stSwipeIn Left"
+        }
+      ]
     }
   ]
 }

@@ -92,7 +92,12 @@ public class WristIOReal implements WristIO {
 
   @Override
   public void setCoast() {
-    motor.setControl(voltageRequest.withOutput(0.0).withOverrideBrakeDurNeutral(true));
+    motor.setControl(voltageRequest.withOutput(0).withOverrideBrakeDurNeutral(true));
+  }
+
+  @Override
+  public void setCoastVolts(double volts) {
+    motor.setControl(voltageRequest.withOutput(volts).withOverrideBrakeDurNeutral(true));
   }
 
   @Override
@@ -107,7 +112,8 @@ public class WristIOReal implements WristIO {
 
   @Override
   public void updateInputs(WristIOInputs inputs) {
-    var motorStatus = BaseStatusSignal.refreshAll(appliedVolts, tempC, posRots, currentAmps);
+    var motorStatus =
+        BaseStatusSignal.refreshAll(appliedVolts, tempC, posRots, currentAmps, motorVelocity);
 
     inputs.connected = motorConnectedDebouncer.calculate(motorStatus.isOK());
 
