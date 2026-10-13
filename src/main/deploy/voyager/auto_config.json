@@ -77,11 +77,31 @@
       ]
     },
     {
-      "id": "pathcd2a13e80b4246bbac3ad4e48e03a8e0",
+      "id": "path0c26358b97f34c06b820b70439dc3c9f",
       "path_sequence": [
         {
           "type": "path",
-          "name": "1stSwipeIn Left"
+          "name": "SwipeIn1"
+        },
+        {
+          "type": "path",
+          "name": "SwipeOut1"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "OutsideHook2"
+        },
+        {
+          "type": "path",
+          "name": "SwipeOut2"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
         }
       ]
     }

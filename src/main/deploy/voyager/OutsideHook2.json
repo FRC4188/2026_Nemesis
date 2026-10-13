@@ -1,0 +1,113 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 12,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 2.728,
+      "y": 0.727,
+      "angle": 54.139999999999986,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.332255434782609,
+      "y": 0.55,
+      "angle": 90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.060679347826087,
+      "y": 0.55,
+      "angle": 90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.3801630434782615,
+      "y": 0.9731198910081744,
+      "angle": 90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.737989130434784,
+      "y": 1.9350544959128066,
+      "angle": 90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.715625000000001,
+      "y": 3.0312125340599456,
+      "angle": 133.69000000000005,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.067065217391305,
+      "y": 3.5457356948228886,
+      "angle": 179.36,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.351413043478261,
+      "y": 3.433882833787468,
+      "angle": -117.44999999999999,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.015951086956522,
+      "y": 2.65091280653951,
+      "angle": -90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.150135869565218,
+      "y": 0.65,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "intake",
+      "position": 2.41
+    }
+  ],
+  "constraint_zones": [
+    {
+      "max_translational_velocity": 1.5,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 0.02,
+      "end_position": 0.85
+    },
+    {
+      "max_translational_velocity": 3,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 0.88,
+      "end_position": 2.6
+    },
+    {
+      "max_translational_velocity": 2,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 2.63,
+      "end_position": 9
+    }
+  ]
+}

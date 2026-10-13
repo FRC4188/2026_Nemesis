@@ -46,7 +46,7 @@
   "events": [
     {
       "name": "stopintake",
-      "position": 2.56
+      "position": 2.52
     }
   ],
   "constraint_zones": [
@@ -55,7 +55,7 @@
       "max_translational_acceleration": 12,
       "max_rotational_velocity": 720,
       "max_rotational_acceleration": 1500,
-      "start_position": 1.01,
+      "start_position": 1.05,
       "end_position": 3.02
     }
   ]

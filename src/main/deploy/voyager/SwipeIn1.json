@@ -7,15 +7,15 @@
   "end_rotation_tolerance_deg": 2,
   "waypoints": [
     {
-      "x": 4.455082644628099,
-      "y": 0.6544202898550724,
+      "x": 4.477446775062882,
+      "y": 0.5873085732338195,
       "angle": 90,
       "handoff": 0.2,
       "profiled": true
     },
     {
-      "x": 5.868243801652891,
-      "y": 0.6544202898550724,
+      "x": 6.0695209755659345,
+      "y": 0.520196856612566,
       "angle": 90,
       "handoff": 0.2,
       "profiled": true
@@ -28,16 +28,16 @@
       "profiled": true
     },
     {
-      "x": 8.167438016528925,
-      "y": 1.1813561076604557,
-      "angle": 100,
+      "x": 7.921432581746315,
+      "y": 1.1813561076604562,
+      "angle": 103.45000000000005,
       "handoff": 0.2,
       "profiled": true
     },
     {
-      "x": 7.744152892561985,
-      "y": 3.442080745341615,
-      "angle": 100,
+      "x": 7.923065936040246,
+      "y": 3.486821889755784,
+      "angle": 103.45000000000005,
       "handoff": 0.2,
       "profiled": true
     }
@@ -46,25 +46,29 @@
   "events": [
     {
       "name": "wristbang",
-      "position": 0.64
+      "position": 0.19
     },
     {
       "name": "intake",
-      "position": 2.44
-    },
-    {
-      "name": "stopintake",
-      "position": 4
+      "position": 1.67
     }
   ],
   "constraint_zones": [
     {
-      "max_translational_velocity": 2,
+      "max_translational_velocity": 1.5,
       "max_translational_acceleration": 12,
       "max_rotational_velocity": 720,
       "max_rotational_acceleration": 1500,
-      "start_position": 2.92,
-      "end_position": 4
+      "start_position": 2.91,
+      "end_position": 3.89
+    },
+    {
+      "max_translational_velocity": 3.75,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 1.98,
+      "end_position": 2.9
     }
   ]
 }
