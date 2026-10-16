@@ -1,56 +1,6 @@
 {
   "autos": [
     {
-      "id": "path19853b8ca3df45558a301ea9c56e990a",
-      "autoname": "",
-      "path_sequence": [
-        {
-          "type": "path",
-          "name": "FirstSwipe"
-        },
-        {
-          "type": "path",
-          "name": "SecondSwipe"
-        }
-      ]
-    },
-    {
-      "id": "path811705bf95944548849bf676b76f2026",
-      "autoname": "",
-      "path_sequence": [
-        {
-          "type": "path",
-          "name": "TestPath"
-        },
-        {
-          "type": "path",
-          "name": "SwipeAgain"
-        }
-      ]
-    },
-    {
-      "id": "pathe66a28993cba46a9bfdcb7f540bd191c",
-      "autoname": "",
-      "path_sequence": [
-        {
-          "type": "path",
-          "name": "SwipeIn"
-        },
-        {
-          "type": "path",
-          "name": "SwipeOut"
-        },
-        {
-          "type": "event",
-          "name": "aim"
-        },
-        {
-          "type": "event",
-          "name": "shoot"
-        }
-      ]
-    },
-    {
       "id": "path4c201a59ada64d808e34d6198efecc5d",
       "autoname": "",
       "path_sequence": [
