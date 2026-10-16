@@ -105,7 +105,7 @@ public class RobotContainer {
                     () -> 0.0,
                     () -> 0.0,
                     () -> 0.0,
-                    () -> FieldConstants.Hub.hub_center_2d,
+                    () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d),
                     () -> true))
             .beforeStarting(
                 Commands.runOnce(
@@ -115,9 +115,9 @@ public class RobotContainer {
                     }))
             .withTimeout(5.5));
 
-    VoyagerLib.addEvent("intake", Commands.run(() -> intake.intakeVolts(8.75), wrist));
+    VoyagerLib.addEvent("intake", Commands.run(() -> intake.intakeVolts(8.75), intake));
 
-    VoyagerLib.addEvent("stopintake", Commands.run(intake::stop, wrist));
+    VoyagerLib.addEvent("stopintake", Commands.run(intake::stop, intake));
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 

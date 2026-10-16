@@ -285,8 +285,52 @@ public final class VoyagerLib {
       return currentAutoCommand;
     }
 
-    currentAutoId = selected.id();
-    currentAutoCommand = buildAutoCommand(selected);
+    return runAutoDefinition(selected);
+  }
+
+  /**
+   * Returns the command for the auto whose {@code autoname} in {@code auto_config.json} matches
+   * {@code name}. The returned command has the same path setup, event handling, and cleanup as
+   * {@link #runSelectedAuto()}.
+   *
+   * @param name auto nickname from the {@code autoname} property
+   * @return command that runs the matching auto, or {@link Commands#none()} when no match exists
+   * @throws IllegalArgumentException if {@code name} is null or blank
+   */
+  public static Command runNamedAuto(String name) {
+    ensureConfigured();
+    reloadAutos(false);
+
+    String requestedName = normalizeKey(name, "auto name");
+    AutoDefinition namedAuto =
+        autoDefinitions.values().stream()
+            .filter(auto -> auto.autoname().equals(requestedName))
+            .findFirst()
+            .orElse(null);
+    if (namedAuto == null) {
+      List<String> availableNames = new ArrayList<>();
+      for (AutoDefinition auto : autoDefinitions.values()) {
+        if (!auto.autoname().isBlank() && !availableNames.contains(auto.autoname())) {
+          availableNames.add(auto.autoname());
+        }
+      }
+      DriverStation.reportWarning(
+          "Voyager auto name '"
+              + requestedName
+              + "' was not found. Available auto names: "
+              + availableNames,
+          false);
+      currentAutoId = requestedName;
+      currentAutoCommand = Commands.none();
+      return currentAutoCommand;
+    }
+
+    return runAutoDefinition(namedAuto);
+  }
+
+  private static Command runAutoDefinition(AutoDefinition auto) {
+    currentAutoId = auto.id();
+    currentAutoCommand = buildAutoCommand(auto);
     return currentAutoCommand;
   }
 
@@ -324,7 +368,19 @@ public final class VoyagerLib {
       autoCommand =
           Commands.sequence(
               Commands.runOnce(
-                  () -> orientModules(firstPath.getInitialModuleDirection(poseSupplier))),
+                  () -> {
+                    if (!firstPath.isValid()) {
+                      return;
+                    }
+
+                    Path startPath = firstPath.copy();
+                    if (shouldFlipPath()) {
+                      startPath.flip();
+                    }
+                    Pose2d startPose = startPath.getStartPose(poseSupplier.get().getRotation());
+                    resetPoseConsumer.accept(startPose);
+                    orientModules(startPath.getInitialModuleDirection(() -> startPose));
+                  }),
               sequence);
     }
 
@@ -1092,12 +1148,13 @@ public final class VoyagerLib {
       List<Object> blocks =
           firstList(auto, "path_sequence", "pathSequence", "sequence", "blocks", "commands")
               .orElse(List.of());
-      parsed.put(id, new AutoDefinition(id, blocks));
+      String autoname = firstString(auto, "autoname").orElse("");
+      parsed.put(id, new AutoDefinition(id, autoname, blocks));
     }
     if (parsed.isEmpty()) {
       throw new IllegalArgumentException("Voyager auto_config.json did not contain any autos");
     }
-    return Map.copyOf(parsed);
+    return Collections.unmodifiableMap(new LinkedHashMap<>(parsed));
   }
 
   private static String firstAutoId() {
@@ -1340,7 +1397,7 @@ public final class VoyagerLib {
     MIN_ROTATION_VELOCITY
   }
 
-  private record AutoDefinition(String id, List<Object> blocks) {}
+  private record AutoDefinition(String id, String autoname, List<Object> blocks) {}
 
   private record SustainedEvent(AtomicBoolean active, Command command) {}
 

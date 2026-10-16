@@ -79,13 +79,12 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
   public boolean atGoal() {
-    return Math.abs(getAngle() - setpoint - offset.getAsDouble())
-        < Constants.HoodConstants.kTolerance.getDegrees();
+    return Math.abs(getAngle() - setpoint) < Constants.HoodConstants.kTolerance.getDegrees();
   }
 
   @AutoLogOutput(key = "Hood/Angle Degrees")
   public double getAngle() {
-    return inputs.position.getDegrees() - offset.getAsDouble();
+    return inputs.position.getDegrees();
   }
 
   public void periodic() {

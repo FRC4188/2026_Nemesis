@@ -1,0 +1,11 @@
+[
+  {
+    "name": "/Voyager/SelectedAuto",
+    "type": "string",
+    "value": "pathdb6a45abbbe74eba86c1833459f45943",
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  }
+]

@@ -46,11 +46,11 @@
   "events": [
     {
       "name": "wristbang",
-      "position": 0.18
+      "position": 0.28
     },
     {
       "name": "intake",
-      "position": 1.59
+      "position": 1.58
     }
   ],
   "constraint_zones": [
