@@ -85,7 +85,7 @@
     },
     {
       "name": "intake",
-      "position": 2.13
+      "position": 2.14
     }
   ],
   "constraint_zones": [
@@ -95,14 +95,14 @@
       "max_rotational_velocity": 720,
       "max_rotational_acceleration": 1500,
       "start_position": 0.94,
-      "end_position": 9
+      "end_position": 8.97
     },
     {
       "max_translational_velocity": 1,
       "max_translational_acceleration": 12,
       "max_rotational_velocity": 720,
       "max_rotational_acceleration": 1500,
-      "start_position": 0,
+      "start_position": 0.14,
       "end_position": 0.88
     }
   ]
