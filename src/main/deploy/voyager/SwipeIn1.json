@@ -1,0 +1,115 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 12,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "x": 4.455082644628099,
+      "y": 7.5555797101449285,
+      "angle": -90,
+========
+      "x": 4.477446775062882,
+      "y": 0.5873085732338195,
+      "angle": 90,
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "x": 5.868243801652891,
+      "y": 7.5555797101449285,
+      "angle": -90,
+========
+      "x": 6.0695209755659345,
+      "y": 0.520196856612566,
+      "angle": 90,
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.2644008264462805,
+      "y": 7.538581780538303,
+      "angle": -90,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "x": 8.167438016528925,
+      "y": 7.028643892339545,
+      "angle": -100,
+========
+      "x": 7.921432581746315,
+      "y": 1.1813561076604562,
+      "angle": 103.45000000000005,
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "x": 7.744152892561985,
+      "y": 4.767919254658386,
+      "angle": -100,
+========
+      "x": 7.923065936040246,
+      "y": 3.486821889755784,
+      "angle": 103.45000000000005,
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "wristbang",
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "position": 0.28
+    },
+    {
+      "name": "intake",
+      "position": 1.58
+========
+      "position": 0.19
+    },
+    {
+      "name": "intake",
+      "position": 1.67
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+    }
+  ],
+  "constraint_zones": [
+    {
+<<<<<<<< HEAD:src/main/deploy/voyager/1stSwipeInLeft.json
+      "max_translational_velocity": 1.25,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 2.94,
+      "end_position": 3.97
+========
+      "max_translational_velocity": 1.5,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 2.91,
+      "end_position": 3.89
+    },
+    {
+      "max_translational_velocity": 3.75,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 1.98,
+      "end_position": 2.9
+>>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d:src/main/deploy/voyager/SwipeIn1.json
+    }
+  ]
+}

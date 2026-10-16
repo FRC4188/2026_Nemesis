@@ -81,6 +81,7 @@
       ]
     },
     {
+<<<<<<< HEAD
       "id": "pathdb6a45abbbe74eba86c1833459f45943",
       "autoname": "",
       "path_sequence": [
@@ -91,6 +92,17 @@
         {
           "type": "path",
           "name": "1stSwipeOutLeft"
+=======
+      "id": "path0c26358b97f34c06b820b70439dc3c9f",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "SwipeIn1"
+        },
+        {
+          "type": "path",
+          "name": "SwipeOut1"
+>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d
         },
         {
           "type": "event",
@@ -98,11 +110,19 @@
         },
         {
           "type": "path",
+<<<<<<< HEAD
           "name": "2ndSwipeHookLefty"
         },
         {
           "type": "path",
           "name": "2ndSwipeOutLeft"
+=======
+          "name": "OutsideHook2"
+        },
+        {
+          "type": "path",
+          "name": "SwipeOut2"
+>>>>>>> 5265a7c4d1a7f7dd5c648920ff9a8b29f0972b4d
         },
         {
           "type": "event",

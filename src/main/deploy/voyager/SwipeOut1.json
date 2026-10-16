@@ -1,0 +1,70 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 12,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 7.923065936040246,
+      "y": 3.486821889755784,
+      "angle": 103.45000000000005,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.7986956521739135,
+      "y": 1.4876430517711172,
+      "angle": 66.26999999999998,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.904130434782609,
+      "y": 0.7270000000000004,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.929701086956522,
+      "y": 0.7493705722070849,
+      "angle": 0,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 2.728423913043478,
+      "y": 0.727,
+      "angle": 56.309999999999945,
+      "handoff": 0.2,
+      "profiled": true
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "stopintake",
+      "position": 2.5
+    }
+  ],
+  "constraint_zones": [
+    {
+      "max_translational_velocity": 3,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 1.14,
+      "end_position": 2.6
+    },
+    {
+      "max_translational_velocity": 3.5,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 2.62,
+      "end_position": 3.7
+    }
+  ]
+}
