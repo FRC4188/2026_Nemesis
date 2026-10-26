@@ -84,7 +84,7 @@ public class Hood extends SubsystemBase {
 
   @AutoLogOutput(key = "Hood/Angle Degrees")
   public double getAngle() {
-    return inputs.position.getDegrees();
+    return inputs.position.getDegrees() + offset.getAsDouble(); // does this work
   }
 
   public void periodic() {

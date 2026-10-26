@@ -1,0 +1,131 @@
+{
+  "max_translational_velocity": 4.5,
+  "max_translational_acceleration": 12,
+  "max_rotational_velocity": 720,
+  "max_rotational_acceleration": 1500,
+  "end_translation_tolerance_meters": 0.03,
+  "end_rotation_tolerance_deg": 2,
+  "waypoints": [
+    {
+      "x": 2.2830041193407635,
+      "y": 1.057166178622677,
+      "angle": 53,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 3.208449734088987,
+      "y": 0.5944067044716883,
+      "angle": 89.59000000000003,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.840504484398421,
+      "y": 0.6103637010224012,
+      "angle": 89.59000000000003,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.49480754009513,
+      "y": 0.7539781309077762,
+      "angle": 68.96000000000004,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.021512723079948,
+      "y": 1.2326953320739569,
+      "angle": 80.28999999999996,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.308972989902942,
+      "y": 1.7273709907198094,
+      "angle": 94.86000000000001,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.277442955638088,
+      "y": 2.5411895022378372,
+      "angle": 108.25999999999999,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 7.229961361995965,
+      "y": 3.1794788603045854,
+      "angle": 140.71000000000004,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 6.783741161878721,
+      "y": 3.674154518950438,
+      "angle": 172.14999999999998,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.954729533971744,
+      "y": 3.7220255086025764,
+      "angle": -87.54000000000002,
+      "handoff": 0.2,
+      "profiled": true
+    },
+    {
+      "x": 5.859400563350946,
+      "y": 2.429488334989409,
+      "angle": 1.8199999999999363,
+      "handoff": 0.2,
+      "profiled": false
+    },
+    {
+      "x": 2.972889300501626,
+      "y": 2.413530607974217,
+      "angle": 49.690000000000055,
+      "handoff": 0.2,
+      "profiled": false
+    }
+  ],
+  "rotation_targets": [],
+  "events": [
+    {
+      "name": "wristdown",
+      "position": 0.21
+    },
+    {
+      "name": "intake",
+      "position": 1.88
+    }
+  ],
+  "constraint_zones": [
+    {
+      "max_translational_velocity": 1,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 0,
+      "end_position": 0.78
+    },
+    {
+      "max_translational_velocity": 2.5,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 2.92,
+      "end_position": 9.01
+    },
+    {
+      "max_translational_velocity": 1.75,
+      "max_translational_acceleration": 12,
+      "max_rotational_velocity": 720,
+      "max_rotational_acceleration": 1500,
+      "start_position": 8.26,
+      "end_position": 9.97
+    }
+  ]
+}

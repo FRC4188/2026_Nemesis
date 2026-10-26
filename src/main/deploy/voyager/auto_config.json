@@ -2,7 +2,7 @@
   "autos": [
     {
       "id": "path4c201a59ada64d808e34d6198efecc5d",
-      "autoname": "",
+      "autoname": "RightAuto",
       "path_sequence": [
         {
           "type": "path",
@@ -32,7 +32,7 @@
     },
     {
       "id": "pathdb6a45abbbe74eba86c1833459f45943",
-      "autoname": "",
+      "autoname": "LeftAuto",
       "path_sequence": [
         {
           "type": "path",
@@ -53,6 +53,102 @@
         {
           "type": "path",
           "name": "2ndSwipeOutLeft"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "pathe8da4d238e8f4d9dbe54667769ca7114",
+      "autoname": "RightBumpAuto",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "Quick1st"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "Quick2nd"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "path984677430f344e18b22386177bef9c7b",
+      "autoname": "LeftBumpAuto",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "Quick1stLeft"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "Quick2ndLeft"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "path6bbdcb0e0f034905884edacad8ddc8bf",
+      "autoname": "RightTrenchBumpAuto",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "1stSwipeInNew"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeHookNew"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeOutNew"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        }
+      ]
+    },
+    {
+      "id": "path7ab4e0272ca74ba88b1b02f3c0372d9a",
+      "autoname": "LeftTrenchBumpAuto",
+      "path_sequence": [
+        {
+          "type": "path",
+          "name": "1stSwipeInNewLeft12"
+        },
+        {
+          "type": "event",
+          "name": "shoot"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeHookLeftNew"
+        },
+        {
+          "type": "path",
+          "name": "2ndSwipeOutLeftNew"
         },
         {
           "type": "event",

@@ -25,6 +25,8 @@ import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
 import frc.robot.commands.Scoring.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.lib.BLine.FollowPath;
+import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
@@ -62,7 +64,9 @@ public class RobotContainer {
   private final CSP_Controller copilot = new CSP_Controller(Constants.Controller.kCopilotPort);
 
   // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<String> autoChooser;
+
+  // private final FollowPath.Builder pathBuilder;
 
   public RobotContainer() {
     drive = Drive.getInstance();
@@ -77,6 +81,17 @@ public class RobotContainer {
             "Models",
             () -> Units.degreesToRadians(wrist.getAngle()),
             () -> Units.degreesToRadians(hood.getAngle()));
+
+    // pathBuilder = new FollowPath.Builder(
+    //     drive,
+    //     drive::getPose,
+    //     drive::getChassisSpeeds,
+    //     drive::runVelocity,
+    //     new PIDController(5.2, 0.0, 0.4),
+    //     new PIDController(5, 0.0, 0.4),
+    //     new PIDController(1.5, 0.0, 0.0)
+    // ).withDefaultShouldFlip()
+    // .withTRatioBasedTranslationHandoffs(true);
 
     VoyagerLib.configure(
         drive, drive::getPose, drive::setPose, drive::getChassisSpeeds, drive::runVelocity, true);
@@ -122,10 +137,12 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 
     // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization());
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization());
+    autoChooser.addOption("Left Auton", "LeftAuto");
+    autoChooser.addOption("Right Auton", "RightAuto");
+    autoChooser.addOption("Left Bump Auton", "LeftBumpAuto");
+    autoChooser.addOption("Right Bump Auton", "RightBumpAuto");
+    autoChooser.addOption("Left Trench Bump Auton", "LeftTrenchBumpAuto");
+    autoChooser.addOption("Right Trench Bump Auton", "RightTrenchBumpAuto");
 
     // Configure the button bindings
     configureButtonBindings();
@@ -229,7 +246,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return VoyagerLib.runSelectedAuto();
+    return VoyagerLib.runNamedAuto(autoChooser.get());
   }
 
   // maybe making this easier for different positions in sim?!
