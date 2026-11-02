@@ -13,6 +13,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -35,13 +36,27 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.superstructure.statemachine.StateMachine;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
+import frc.robot.util.AllianceFlip;
+import frc.robot.util.SOTM;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase implements VisionConsumer {
+  public enum State {
+    IDLE,
+    DRIVER_CONTROL,
+    ASSISTED_AIM,
+    PATH_FOLLOWING,
+    LOCKED,
+    ORIENTING,
+    FIXED_MODULES,
+    CHARACTERIZATION
+  }
+
   private static Drive instance = null;
 
   public static synchronized Drive getInstance() {
@@ -92,6 +107,55 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
+  private final ProfiledPIDController angleController = Constants.DriveConstants.ANGLE_PID;
+  private ChassisSpeeds wantedSpeeds = new ChassisSpeeds();
+  private double characterizationOutput;
+  private Rotation2d wantedModuleAngle = Rotation2d.kZero;
+  private double fixedModuleSpeed;
+  private boolean autonomousAimOverride;
+  private boolean pathActive;
+  private double driverX;
+  private double driverY;
+  private double driverOmega;
+  private Translation2d driverGoal = Translation2d.kZero;
+  private boolean driverAimLock;
+  private final StateMachine<State> stateMachine =
+      new StateMachine<>("Drive", State.IDLE) {
+        @Override
+        protected void onEnter(State state, State previousState) {
+          if (state == State.DRIVER_CONTROL || state == State.ASSISTED_AIM) {
+            angleController.reset(
+                getRotation().getRadians(), getChassisSpeeds().omegaRadiansPerSecond);
+          }
+        }
+
+        @Override
+        protected void runStateMachine() {
+          if (getCurrentState() != getWantedState()) {
+            transitionTo(getWantedState(), "Requested");
+          }
+          if (DriverStation.isDisabled()) {
+            for (Module module : modules) {
+              module.stop();
+            }
+            return;
+          }
+
+          switch (getCurrentState()) {
+            case IDLE -> stopModules();
+            case DRIVER_CONTROL, ASSISTED_AIM -> runDriverControl();
+            case PATH_FOLLOWING -> applyVelocity(wantedSpeeds);
+            case LOCKED -> applyX();
+            case ORIENTING -> applyModuleAngle(wantedModuleAngle, 0.0);
+            case FIXED_MODULES -> applyModuleAngle(wantedModuleAngle, fixedModuleSpeed);
+            case CHARACTERIZATION -> {
+              for (Module module : modules) {
+                module.runCharacterization(characterizationOutput);
+              }
+            }
+          }
+        }
+      };
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -202,6 +266,8 @@ public class Drive extends SubsystemBase implements VisionConsumer {
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
     }
 
+    stateMachine.periodic();
+
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.Robot.currentMode != Mode.SIM);
 
@@ -215,6 +281,14 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    wantedSpeeds = speeds;
+    pathActive = true;
+    if (!autonomousAimOverride) {
+      stateMachine.requestState(State.PATH_FOLLOWING);
+    }
+  }
+
+  private void applyVelocity(ChassisSpeeds speeds) {
     // if (speeds.omegaRadiansPerSecond != 0.0) {
     //   Constants.DriveConstants.CORRECTION_PID.reset(getRotation().getDegrees());
     // } else if (speeds.vxMetersPerSecond != 0.0 || speeds.vyMetersPerSecond != 0.0) {
@@ -243,29 +317,28 @@ public class Drive extends SubsystemBase implements VisionConsumer {
   }
 
   public void setModuleOrientations(Rotation2d angle) {
-    for (int i = 0; i < modules.length; i++) {
-      modules[i].runSetpoint(new SwerveModuleState(0.0, angle));
-    }
+    wantedModuleAngle = angle;
+    stateMachine.requestState(State.ORIENTING);
   }
 
   public void setModuleStates(double speed, Rotation2d angle) {
-    for (int i = 0; i < modules.length; i++) {
-      modules[i].runSetpoint(new SwerveModuleState(speed, angle));
-    }
+    wantedModuleAngle = angle;
+    fixedModuleSpeed = speed;
+    stateMachine.requestState(State.FIXED_MODULES);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(output);
-    }
+    characterizationOutput = output;
+    stateMachine.requestState(State.CHARACTERIZATION);
   }
 
   /** Stops the drive. */
   public void stop() {
-    runVelocity(new ChassisSpeeds());
-    for (Module module : modules) {
-      module.stop();
+    wantedSpeeds = new ChassisSpeeds();
+    pathActive = false;
+    if (!autonomousAimOverride) {
+      stateMachine.requestState(State.IDLE);
     }
   }
 
@@ -274,11 +347,111 @@ public class Drive extends SubsystemBase implements VisionConsumer {
    * return to their normal orientations the next time a nonzero velocity is requested.
    */
   public void stopWithX() {
-    for (int i = 0; i < modules.length; i++) {
-      modules[i].runSetpoint(new SwerveModuleState(0.0, getModuleTranslations()[i].getAngle()));
+    pathActive = false;
+    if (!autonomousAimOverride) {
+      stateMachine.requestState(State.LOCKED);
     }
     // kinematics.resetHeadings(headings);
     // stop();
+  }
+
+  public void requestDriverControl(
+      double x, double y, double omega, Translation2d goal, boolean aimLock) {
+    driverX = x;
+    driverY = y;
+    driverOmega = omega;
+    driverGoal = goal;
+    driverAimLock = aimLock;
+    stateMachine.requestState(State.DRIVER_CONTROL);
+  }
+
+  public void stopDriverControl() {
+    if (stateMachine.getWantedState() == State.DRIVER_CONTROL) {
+      stopWithX();
+      acceptVision(true);
+    }
+  }
+
+  /** Holds the robot facing a target while an autonomous shot event is active. */
+  public void requestAutonomousAim(Translation2d goal, boolean enabled) {
+    if (enabled) {
+      autonomousAimOverride = true;
+      driverX = 0.0;
+      driverY = 0.0;
+      driverOmega = 0.0;
+      driverGoal = goal;
+      driverAimLock = true;
+      stateMachine.requestState(State.ASSISTED_AIM);
+    } else if (autonomousAimOverride) {
+      autonomousAimOverride = false;
+      stateMachine.requestState(pathActive ? State.PATH_FOLLOWING : State.LOCKED);
+    }
+  }
+
+  private void runDriverControl() {
+    double omega;
+    if (!driverAimLock) {
+      omega = driverOmega * Constants.DriveConstants.ANGLE_MAXVEL;
+      acceptVision(true);
+    } else {
+      omega =
+          angleController.calculate(
+              getRotation().getRadians(),
+              SOTM.lookahead(driverGoal, getChassisSpeeds(), SOTM.TOF_SECONDS)
+                  .minus(getPose().getTranslation())
+                  .getAngle()
+                  .minus(Constants.DriveConstants.local_offset)
+                  .getRadians());
+
+      if (angleController.atGoal()) {
+        if (driverX == 0.0 && driverY == 0.0) {
+          applyX();
+          acceptVision(false);
+          return;
+        }
+        omega = 0.0;
+        acceptVision(false);
+      } else {
+        acceptVision(true);
+      }
+    }
+
+    Translation2d fieldRelativeVelocity =
+        new Translation2d(driverX, driverY).times(Constants.DriveConstants.DRIVE_MAXVEL);
+    Translation2d robotToTarget = driverGoal.minus(getPose().getTranslation());
+    double maxVelocity = SOTM.getSOTMMaxVelocityExtended(fieldRelativeVelocity, robotToTarget);
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            driverX * (driverAimLock ? maxVelocity : Constants.DriveConstants.DRIVE_MAXVEL),
+            driverY * (driverAimLock ? maxVelocity : Constants.DriveConstants.DRIVE_MAXVEL),
+            omega);
+    applyVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, AllianceFlip.apply(getRotation())));
+  }
+
+  private void stopModules() {
+    for (Module module : modules) {
+      module.stop();
+    }
+  }
+
+  private void applyX() {
+    for (int i = 0; i < modules.length; i++) {
+      modules[i].runSetpoint(new SwerveModuleState(0.0, getModuleTranslations()[i].getAngle()));
+    }
+  }
+
+  private void applyModuleAngle(Rotation2d angle, double speed) {
+    for (Module module : modules) {
+      module.runSetpoint(new SwerveModuleState(speed, angle));
+    }
+  }
+
+  public State getWantedState() {
+    return stateMachine.getWantedState();
+  }
+
+  public State getCurrentState() {
+    return stateMachine.getCurrentState();
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

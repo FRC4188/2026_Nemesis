@@ -1,8 +1,9 @@
 package frc.robot.util;
 
 import frc.robot.Constants;
-import frc.robot.commands.Scoring.ScoringCommands;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.superstructure.Superstructure;
 import java.util.ArrayList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
@@ -13,6 +14,7 @@ public class FireRate {
   private final double doubleShot = Constants.ShooterConstants.doubleShotAcceleration;
 
   private final Shooter shooter;
+  private final Drive drive = Drive.getInstance();
 
   private int fuelShot = 0;
   private int cyclesSinceLastCount = 0;
@@ -109,7 +111,10 @@ public class FireRate {
   }
 
   public ShotType shotDesignator(double acceleration, double rpm) {
-    double targetRPM = ScoringCommands.getRegressionRPM();
+    double distance =
+        AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
+            .getDistance(drive.getPose().getTranslation());
+    double targetRPM = Superstructure.regressionRPM(distance);
 
     boolean isAtSpeed = targetRPM > 0 && Math.abs(rpm - targetRPM) <= 0.10 * targetRPM;
 

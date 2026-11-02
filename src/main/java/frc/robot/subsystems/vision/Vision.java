@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.superstructure.statemachine.StateMachine;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,11 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
+  public enum State {
+    ENABLED,
+    DISABLED
+  }
+
   private static Vision instance;
 
   public static synchronized Vision getInstance() {
@@ -44,6 +50,17 @@ public class Vision extends SubsystemBase {
 
   @AutoLogOutput(key = "Vision/Vision Enabled?")
   private boolean updateVision = true;
+
+  private final StateMachine<State> stateMachine =
+      new StateMachine<>("Vision", State.ENABLED) {
+        @Override
+        protected void runStateMachine() {
+          if (getCurrentState() != getWantedState()) {
+            transitionTo(getWantedState(), "Requested");
+          }
+          updateVision = getCurrentState() == State.ENABLED;
+        }
+      };
 
   @AutoLogOutput(key = "Vision/Enable Front?")
   private boolean frontEnable = true;
@@ -82,7 +99,19 @@ public class Vision extends SubsystemBase {
   }
 
   public void enableVision(boolean enable) {
-    updateVision = enable;
+    stateMachine.requestState(enable ? State.ENABLED : State.DISABLED);
+  }
+
+  public boolean isVisionEnabled() {
+    return stateMachine.getWantedState() == State.ENABLED;
+  }
+
+  public State getWantedState() {
+    return stateMachine.getWantedState();
+  }
+
+  public State getCurrentState() {
+    return stateMachine.getCurrentState();
   }
 
   public void enableFront(boolean enable) {
@@ -106,6 +135,7 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    stateMachine.periodic();
     updateInputsAndAlerts();
 
     Logger.recordOutput("Vision/VRM Is Good", vrm.get());

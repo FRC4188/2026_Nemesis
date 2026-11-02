@@ -134,7 +134,7 @@ public final class Constants {
 
     public static final CSPPilot PILOT = new CSPPilot(PROFILE);
 
-    public static final RobotConfig PP_CONFIG =
+    public static final RobotConfig PP_CONFIG = 
         new RobotConfig(
             Robot.ROBOT_MASS_KG,
             Robot.ROBOT_MOI,

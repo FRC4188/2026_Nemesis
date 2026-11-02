@@ -15,24 +15,18 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathbuilder.*;
 // import frc.robot.CSPLib.csppathing.PathBuilder;
 import frc.robot.CSPLib.inputs.CSP_Controller;
 import frc.robot.CSPLib.inputs.CSP_Controller.Scale;
-import frc.robot.commands.Scoring.ScoringCommands;
-import frc.robot.commands.drive.DriveCommands;
-import frc.robot.lib.BLine.FollowPath;
-import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.simulation.SimulationVisualizer;
+import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.util.AllianceFlip;
@@ -42,12 +36,7 @@ import java.util.Random;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and button mappings) should be declared here.
- */
+/** Wires controllers and autonomous events to the finite state machine and robot subsystems. */
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
@@ -58,10 +47,21 @@ public class RobotContainer {
   private final Wrist wrist;
   private final Vision vis;
   private final SimulationVisualizer simvis;
+  private final Superstructure superstructure;
 
   // Controller
   private final CSP_Controller pilot = new CSP_Controller(Constants.Controller.kPilotPort);
   private final CSP_Controller copilot = new CSP_Controller(Constants.Controller.kCopilotPort);
+
+  private boolean previousStart;
+  private boolean previousPovUp;
+  private boolean previousPovDown;
+  private boolean previousPovLeft;
+  private boolean previousPovRight;
+  private boolean previousCopilotX;
+  private boolean previousCopilotRightBumper;
+  private boolean previousVisionToggle;
+  private boolean previousManualWrist;
 
   // Dashboard inputs
   private final LoggedDashboardChooser<String> autoChooser;
@@ -76,6 +76,8 @@ public class RobotContainer {
     hopper = Hopper.getInstance();
     intake = Intake.getInstance();
     wrist = Wrist.getInstance();
+    superstructure = new Superstructure(drive, hood, shooter, hopper, intake, wrist, vis);
+    wrist.requestHold();
     simvis =
         new SimulationVisualizer(
             "Models",
@@ -108,31 +110,28 @@ public class RobotContainer {
     VoyagerLib.setPIDControllers(
         new PIDController(5.2, 0, 0.4), new PIDController(5, 0, 0.4), new PIDController(1.5, 0, 0));
 
-    VoyagerLib.addEvent("wristdown", ScoringCommands.lowerIntakeCoast());
+    VoyagerLib.addEvent(
+        "wristdown",
+        Commands.runOnce(() -> wrist.requestLowerIntake(false))
+            .andThen(Commands.waitUntil(wrist::isLowerIntakeComplete)));
 
-    VoyagerLib.addEvent("wristbang", ScoringCommands.lowerIntakeBang());
+    VoyagerLib.addEvent(
+        "wristbang",
+        Commands.runOnce(() -> wrist.requestLowerIntake(true))
+            .andThen(Commands.waitUntil(wrist::isLowerIntakeComplete)));
 
     VoyagerLib.addEvent(
         "shoot",
-        new ParallelCommandGroup(
-                ScoringCommands.shoot(() -> 0, new Trigger(() -> false)),
-                DriveCommands.joystickCombined(
-                    () -> 0.0,
-                    () -> 0.0,
-                    () -> 0.0,
-                    () -> AllianceFlip.apply(FieldConstants.Hub.hub_center_2d),
-                    () -> true))
-            .beforeStarting(
-                Commands.runOnce(
-                    () -> {
-                      intake.stop();
-                      wrist.stop();
-                    }))
+        Commands.startEnd(
+                () -> superstructure.setAutoShoot(true), () -> superstructure.setAutoShoot(false))
             .withTimeout(5.5));
 
-    VoyagerLib.addEvent("intake", Commands.run(() -> intake.intakeVolts(8.75), intake));
+    VoyagerLib.addEvent(
+        "intake",
+        Commands.startEnd(
+            () -> superstructure.setAutoIntake(true), () -> superstructure.setAutoIntake(false)));
 
-    VoyagerLib.addEvent("stopintake", Commands.run(intake::stop, intake));
+    VoyagerLib.addEvent("stopintake", Commands.runOnce(() -> superstructure.setAutoIntake(false)));
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 
@@ -143,101 +142,6 @@ public class RobotContainer {
     autoChooser.addOption("Right Bump Auton", "RightBumpAuto");
     autoChooser.addOption("Left Trench Bump Auton", "LeftTrenchBumpAuto");
     autoChooser.addOption("Right Trench Bump Auton", "RightTrenchBumpAuto");
-
-    // Configure the button bindings
-    configureButtonBindings();
-  }
-
-  private void configureButtonBindings() {
-    pilot
-        .start()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(
-                                drive.getPose().getTranslation(),
-                                AllianceFlip.apply(Rotation2d.kZero))),
-                    drive)
-                .ignoringDisable(true));
-
-    Trigger driveInput =
-        new Trigger(
-            () ->
-                (pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
-                    || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
-                    || pilot.getRightTButton().getAsBoolean()
-                    || pilot.rightBumper().getAsBoolean()
-                    || pilot.y().getAsBoolean()
-                    || pilot.b().getAsBoolean()));
-
-    driveInput.whileTrue(
-        DriveCommands.joystickCombined(
-            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
-            () -> -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
-            () -> -pilot.getCorrectedRight(Scale.WILL).getX(),
-            () ->
-                ((DriverStation.getAlliance().get() == DriverStation.Alliance.Blue
-                            && drive.getPose().getX()
-                                <= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX())
-                        || (DriverStation.getAlliance().get() == DriverStation.Alliance.Red
-                            && drive.getPose().getX()
-                                >= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX()))
-                    ? AllianceFlip.apply(FieldConstants.Hub.hub_center_2d)
-                    : drive
-                        .getPose()
-                        .getTranslation()
-                        .nearest(
-                            List.of(
-                                AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
-                                AllianceFlip.flipY(
-                                    AllianceFlip.apply(FieldConstants.Depot.left_far_corner)))),
-            () -> pilot.getRightTButton().getAsBoolean()));
-
-    pilot.getRightTButton().whileTrue(ScoringCommands.shoot(() -> 0, pilot.getLeftTButton()));
-
-    pilot
-        .y()
-        .or(() -> pilot.b().getAsBoolean())
-        .whileTrue(
-            ScoringCommands.shoot(
-                () -> (pilot.b().getAsBoolean()) ? 3.5 : 12, pilot.getLeftTButton()));
-
-    pilot
-        .getLeftTButton()
-        .whileTrue(Commands.runEnd(() -> intake.intakeVolts(8.75), intake::stop, intake));
-
-    wrist.setDefaultCommand(Commands.runEnd(() -> wrist.runWristVolts(-0.3), wrist::stop, wrist));
-
-    /* pilot
-    .leftBumper()
-    .whileTrue(
-        Commands.parallel(
-            Commands.runEnd(() -> hopper.runHopper(-6.0, 0), hopper::stop, hopper),
-            Commands.runEnd(() -> intake.ejectVolts(6.0), intake::stop, intake)));*/
-
-    copilot
-        .y()
-        .whileTrue(
-            Commands.runEnd(
-                    () -> wrist.runWristVolts(4.5 * -copilot.getLeftY(Scale.LINEAR)),
-                    wrist::stop,
-                    wrist)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-
-    // copilot.a().onTrue(ScoringCommands.downNoStall());
-    copilot.x().onTrue(ScoringCommands.goodStow());
-    copilot.rightBumper().onTrue(ScoringCommands.forceDown());
-
-    copilot.povRight().onTrue(Commands.runOnce(wrist::zero));
-    copilot.povUp().onTrue(Commands.runOnce(hood::addOne));
-    copilot.povDown().onTrue(Commands.runOnce(hood::subOne));
-
-    copilot.povLeft().onTrue(ScoringCommands.lowerIntakeCoast());
-    copilot
-        .getRightTButton()
-        .toggleOnTrue(
-            Commands.startEnd(() -> vis.enableVision(false), () -> vis.enableVision(true)));
   }
 
   /**
@@ -246,7 +150,12 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
+    superstructure.setAutonomous(true);
     return VoyagerLib.runNamedAuto(autoChooser.get());
+  }
+
+  public void setAutonomous(boolean enabled) {
+    superstructure.setAutonomous(enabled);
   }
 
   // maybe making this easier for different positions in sim?!
@@ -326,6 +235,8 @@ public class RobotContainer {
 
   public void periodic() {
 
+    updateStateMachineInputs();
+
     // shooter.setVelocityRPM(shooterRPMset.getAsDouble());
 
     // Logger.recordOutput("Drive/Angle", drive.getPose().getRotation().getDegrees());
@@ -335,8 +246,8 @@ public class RobotContainer {
         "Drive/At Goal?",
         (Constants.DriveConstants.ANGLE_PID.atGoal() || drive.getTranslationalSpeed() > 1e-9));
 
-    Logger.recordOutput("Shooter/Regression RPM", ScoringCommands.getRegressionRPM());
-    Logger.recordOutput("Shooter/Regression Degrees", ScoringCommands.getRegressionAngle());
+    Logger.recordOutput("Shooter/Regression RPM", superstructure.getRegressionRPM());
+    Logger.recordOutput("Shooter/Regression Degrees", superstructure.getRegressionAngleDegrees());
     Logger.recordOutput("Drive/CurrentSpeed", drive.getTranslationalSpeed());
 
     Logger.recordOutput(
@@ -415,6 +326,101 @@ public class RobotContainer {
     }
     Logger.recordOutput("Is Our Shift?", hubState);
     Logger.recordOutput("Time Left In Shift", Math.floor(timeLeftInShift));
+  }
+
+  private void updateStateMachineInputs() {
+    boolean start = pilot.start().getAsBoolean();
+    if (start && !previousStart) {
+      drive.setPose(
+          new Pose2d(drive.getPose().getTranslation(), AllianceFlip.apply(Rotation2d.kZero)));
+    }
+    previousStart = start;
+
+    boolean driverEnabled =
+        pilot.getCorrectedLeft(Scale.LINEAR).getNorm() != 0.0
+            || pilot.getCorrectedRight(Scale.LINEAR).getX() != 0.0
+            || pilot.getRightTButton().getAsBoolean()
+            || pilot.rightBumper().getAsBoolean()
+            || pilot.y().getAsBoolean()
+            || pilot.b().getAsBoolean();
+    boolean scoring =
+        pilot.getRightTButton().getAsBoolean()
+            || pilot.y().getAsBoolean()
+            || pilot.b().getAsBoolean();
+    double distanceFeet = pilot.b().getAsBoolean() ? 3.5 : pilot.y().getAsBoolean() ? 12.0 : 0.0;
+
+    Translation2d target = driverGoal();
+    superstructure.updateTeleopInputs(
+        driverEnabled,
+        -pilot.getCorrectedLeft(Scale.SQUARED).getY(),
+        -pilot.getCorrectedLeft(Scale.SQUARED).getX(),
+        -pilot.getCorrectedRight(Scale.WILL).getX(),
+        target,
+        pilot.getRightTButton().getAsBoolean(),
+        pilot.getLeftTButton().getAsBoolean(),
+        scoring,
+        distanceFeet,
+        pilot.getLeftTButton().getAsBoolean(),
+        copilot.y().getAsBoolean());
+
+    boolean manualWrist = copilot.y().getAsBoolean();
+    if (manualWrist) {
+      wrist.runWristVolts(4.5 * -copilot.getLeftY(Scale.LINEAR));
+    } else if (previousManualWrist) {
+      wrist.requestHold();
+    }
+    previousManualWrist = manualWrist;
+
+    boolean copilotX = copilot.x().getAsBoolean();
+    if (copilotX && !previousCopilotX) wrist.stow();
+    previousCopilotX = copilotX;
+
+    boolean forceLower = copilot.rightBumper().getAsBoolean();
+    if (forceLower && !previousCopilotRightBumper) wrist.requestForceLower();
+    previousCopilotRightBumper = forceLower;
+
+    boolean povLeft = copilot.povLeft().getAsBoolean();
+    if (povLeft && !previousPovLeft) wrist.requestLowerIntake(false);
+    previousPovLeft = povLeft;
+
+    boolean povRight = copilot.povRight().getAsBoolean();
+    if (povRight && !previousPovRight) wrist.zero();
+    previousPovRight = povRight;
+
+    boolean povUp = copilot.povUp().getAsBoolean();
+    if (povUp && !previousPovUp) hood.addOne();
+    previousPovUp = povUp;
+
+    boolean povDown = copilot.povDown().getAsBoolean();
+    if (povDown && !previousPovDown) hood.subOne();
+    previousPovDown = povDown;
+
+    boolean visionToggle = copilot.getRightTButton().getAsBoolean();
+    if (visionToggle && !previousVisionToggle) {
+      superstructure.setVisionEnabled(!superstructure.isVisionEnabled());
+    }
+    previousVisionToggle = visionToggle;
+  }
+
+  private Translation2d driverGoal() {
+    boolean hubSide =
+        (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+                    == DriverStation.Alliance.Blue
+                && drive.getPose().getX()
+                    <= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX())
+            || (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+                    == DriverStation.Alliance.Red
+                && drive.getPose().getX()
+                    >= AllianceFlip.apply(FieldConstants.Hub.left_far_corner).getX());
+
+    if (hubSide) return AllianceFlip.apply(FieldConstants.Hub.hub_center_2d);
+    return drive
+        .getPose()
+        .getTranslation()
+        .nearest(
+            List.of(
+                AllianceFlip.apply(FieldConstants.Depot.left_far_corner),
+                AllianceFlip.flipY(AllianceFlip.apply(FieldConstants.Depot.left_far_corner))));
   }
 
   // so weird

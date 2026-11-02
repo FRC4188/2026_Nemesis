@@ -6,11 +6,19 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.superstructure.statemachine.StateMachine;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Hood extends SubsystemBase {
+  public enum State {
+    IDLE,
+    POSITION,
+    VOLTAGE,
+    ZEROING
+  }
+
   private static Hood instance = null;
 
   public static synchronized Hood getInstance() {
@@ -34,6 +42,25 @@ public class Hood extends SubsystemBase {
   private double setpoint = 0.0;
 
   private LoggedNetworkNumber offset = new LoggedNetworkNumber("Hood/Offset Degrees Incline", 0.0);
+  private double wantedVoltage;
+  private final StateMachine<State> stateMachine =
+      new StateMachine<>("Hood", State.IDLE) {
+        @Override
+        protected void runStateMachine() {
+          if (getCurrentState() != getWantedState()) {
+            transitionTo(getWantedState(), "Requested");
+          }
+          switch (getCurrentState()) {
+            case IDLE -> io.setVolts(0.0);
+            case POSITION -> io.setPosition(Rotation2d.fromDegrees(setpoint));
+            case VOLTAGE -> io.setVolts(wantedVoltage);
+            case ZEROING -> {
+              io.setZero();
+              requestState(State.IDLE);
+            }
+          }
+        }
+      };
 
   public Hood(HoodIO io) {
     this.io = io;
@@ -43,12 +70,13 @@ public class Hood extends SubsystemBase {
   }
 
   public void runHoodVolts(double volts) {
+    wantedVoltage = volts;
     setpoint = 0.0;
-    io.setVolts(volts);
+    stateMachine.requestState(State.VOLTAGE);
   }
 
   public void stop() {
-    io.setVolts(0.0);
+    stateMachine.requestState(State.IDLE);
   }
 
   public void addOne() {
@@ -65,7 +93,7 @@ public class Hood extends SubsystemBase {
             angle.getDegrees() + offset.getAsDouble(),
             Constants.HoodConstants.Min_A.getDegrees(),
             Constants.HoodConstants.Max_A.getDegrees());
-    io.setPosition(Rotation2d.fromDegrees(setpoint));
+    stateMachine.requestState(State.POSITION);
   }
 
   public void stow() {
@@ -74,7 +102,7 @@ public class Hood extends SubsystemBase {
   }
 
   public void zero() {
-    io.setZero();
+    stateMachine.requestState(State.ZEROING);
   }
 
   @AutoLogOutput(key = "Hood/At Setpoint?")
@@ -90,7 +118,16 @@ public class Hood extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
+    stateMachine.periodic();
 
     hoodDisconnectedAlert.set(!inputs.motorConnected);
+  }
+
+  public State getWantedState() {
+    return stateMachine.getWantedState();
+  }
+
+  public State getCurrentState() {
+    return stateMachine.getCurrentState();
   }
 }

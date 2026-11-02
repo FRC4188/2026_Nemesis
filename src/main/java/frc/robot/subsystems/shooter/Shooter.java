@@ -5,10 +5,17 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.superstructure.statemachine.StateMachine;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
+
+  public enum State {
+    IDLE,
+    VELOCITY,
+    TORQUE_CURRENT
+  }
 
   private static Shooter instance = null;
 
@@ -35,6 +42,22 @@ public class Shooter extends SubsystemBase {
   @AutoLogOutput(key = "Shooter/Setpoint RPM")
   private double setRPM = 0.0;
 
+  private double wantedTorqueCurrent;
+  private final StateMachine<State> stateMachine =
+      new StateMachine<>("Shooter", State.IDLE) {
+        @Override
+        protected void runStateMachine() {
+          if (getCurrentState() != getWantedState()) {
+            transitionTo(getWantedState(), "Requested");
+          }
+          switch (getCurrentState()) {
+            case IDLE -> io.setTorqueCurrent(0.0);
+            case VELOCITY -> io.setVelocity(setRPM);
+            case TORQUE_CURRENT -> io.setTorqueCurrent(wantedTorqueCurrent);
+          }
+        }
+      };
+
   public Shooter(ShooterIO io) {
     this.io = io;
     inputs = new ShooterIOInputsAutoLogged();
@@ -47,21 +70,22 @@ public class Shooter extends SubsystemBase {
 
   public void setVelocityRPM(double RPM) {
     setRPM = MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM);
-    io.setVelocity(MathUtil.clamp(RPM, 0, Constants.ShooterConstants.kMaxRPM));
+    stateMachine.requestState(State.VELOCITY);
   }
 
   public void runTC(double amps) {
     setRPM = 0;
-    io.setTorqueCurrent(amps);
+    wantedTorqueCurrent = amps;
+    stateMachine.requestState(State.TORQUE_CURRENT);
   }
 
   public void stop() {
     setRPM = 0;
-    io.setTorqueCurrent(0.0);
+    stateMachine.requestState(State.IDLE);
   }
 
   public boolean atGoal() {
-    return setRPM - ((inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0)
+    return Math.abs(setRPM - ((inputs.leftVelocityRPM + inputs.rightVelocityRPM) / 2.0))
         < Constants.ShooterConstants.kTolerance;
   }
 
@@ -77,10 +101,19 @@ public class Shooter extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
+    stateMachine.periodic();
 
     leftDisconnectedAlert.set(!inputs.leftConnected);
     rightDisconnectedAlert.set(!inputs.rightConnected);
     left2DisconnectedAlert.set(!inputs.left2Connected);
     left3DisconnectedAlert.set(!inputs.left3Connected);
+  }
+
+  public State getWantedState() {
+    return stateMachine.getWantedState();
+  }
+
+  public State getCurrentState() {
+    return stateMachine.getCurrentState();
   }
 }
